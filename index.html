@@ -125,12 +125,6 @@
             font-weight: 400;
         }
 
-        .hint {
-            font-size: 11px;
-            color: #6b7f9b;
-            margin-top: 3px;
-        }
-
         .fee-section {
             background: #f8faff;
             border-radius: 16px;
@@ -159,13 +153,6 @@
             border-radius: 10px;
             font-size: 13px;
             flex-shrink: 0;
-        }
-
-        .fee-item select {
-            width: 70px;
-            padding: 6px 4px;
-            border-radius: 10px;
-            font-size: 12px;
         }
 
         .btn-primary {
@@ -286,30 +273,8 @@
             background: #dce2ec;
         }
 
-        .text-center {
-            text-align: center;
-        }
-
-        .mt-2 {
-            margin-top: 12px;
-        }
-
-        .mt-1 {
-            margin-top: 6px;
-        }
-
         .hidden {
             display: none;
-        }
-
-        .badge-success {
-            background: #d1fae5;
-            color: #0b7e3b;
-        }
-
-        .badge-danger {
-            background: #fee2e2;
-            color: #b91c1c;
         }
 
         .toast {
@@ -355,25 +320,32 @@
     </div>
 
     <div class="card">
+        <!-- Current Market Price Added Here -->
+        <div class="input-group" style="background: #eef2ff; padding: 12px; border-radius: 14px; border: 1px solid #c7d2fe; margin-bottom: 16px;">
+            <label style="color: #3730a3;">বর্তমান মার্কেট প্রাইস (INR per PEPE)</label>
+            <input type="number" id="marketPrice" value="0.00045" min="0" step="0.00000001" placeholder="0.00045" style="border-color: #a5b4fc;">
+            <div style="font-size: 11px; color: #4f46e5; margin-top: 5px;">যেমন Binance স্পট প্রাইস বা অন্য এক্সচেঞ্জের দাম</div>
+        </div>
+
         <div class="input-row">
             <div class="input-group">
                 <label>Buy Price (INR per PEPE)</label>
-                <input type="number" id="buyPrice" value="0.00085" min="0" step="0.00000001" placeholder="0.00085">
+                <input type="number" id="buyPrice" value="0.00047435" min="0" step="0.00000001" placeholder="0.00047435">
             </div>
             <div class="input-group">
                 <label>Sell Price (INR per PEPE)</label>
-                <input type="number" id="sellPrice" value="0.00088" min="0" step="0.00000001" placeholder="0.00088">
+                <input type="number" id="sellPrice" value="0.00044263" min="0" step="0.00000001" placeholder="0.00044263">
             </div>
         </div>
 
         <div class="input-row">
             <div class="input-group">
                 <label>PEPE পরিমাণ</label>
-                <input type="number" id="pepeQty" value="10000000" min="0" step="1" placeholder="10000000">
+                <input type="number" id="pepeQty" value="2108147" min="0" step="1" placeholder="2108147">
             </div>
             <div class="input-group">
                 <label>বিনিয়োগ (INR)</label>
-                <input type="number" id="investmentInr" value="8500" min="0" step="100" placeholder="8500">
+                <input type="number" id="investmentInr" value="1000" min="0" step="100" placeholder="1000">
             </div>
         </div>
 
@@ -403,6 +375,13 @@
                     <div class="label">নিট লাভ / ক্ষতি (Net Profit)</div>
                     <div class="value" id="netProfitDisplay">₹ 0.00</div>
                 </div>
+                
+                <!-- New Market Difference Display -->
+                <div class="result-item span-2" style="background: #fffbeb; border: 1px solid #fde68a;">
+                    <div class="label">মার্কেট প্রাইসের সাথে পার্থক্য (Buy Price vs Market)</div>
+                    <div class="value" id="marketDiffDisplay" style="color: #b45309;">0.00%</div>
+                </div>
+
                 <div class="result-item"><div class="label">Profit / PEPE</div><div class="value" id="profitPerToken">₹ 0.00</div></div>
                 <div class="result-item"><div class="label">ROI (%)</div><div class="value" id="roiDisplay">0.00%</div></div>
                 <div class="result-item"><div class="label">মোট বিনিয়োগ</div><div class="value" id="totalInvestmentDisplay">₹ 0</div></div>
@@ -528,10 +507,11 @@
     (function() {
         'use strict';
 
-        const STORAGE_KEY = 'pepeP2pCalcState_v1';
+        const STORAGE_KEY = 'pepeP2pCalcState_v2'; // Updated version to load new input
         const HISTORY_KEY = 'pepeP2pCalcHistory_v1';
 
         const INPUT_IDS = [
+            'marketPrice',
             'buyPrice', 'sellPrice',
             'pepeQty', 'investmentInr',
             'buyFee', 'sellFee'
@@ -559,13 +539,13 @@
 
         const resultArea = document.getElementById('resultArea');
         const netProfitDisplay = document.getElementById('netProfitDisplay');
+        const marketDiffDisplay = document.getElementById('marketDiffDisplay');
         const profitPerToken = document.getElementById('profitPerToken');
         const roiDisplay = document.getElementById('roiDisplay');
         const totalInvestmentDisplay = document.getElementById('totalInvestmentDisplay');
         const totalRevenueDisplay = document.getElementById('totalRevenueDisplay');
         const totalCostDisplay = document.getElementById('totalCostDisplay');
         const warningBox = document.getElementById('warningBox');
-        const tradeModeBadge = document.getElementById('tradeModeBadge');
         const historyList = document.getElementById('historyList');
         const historyCount = document.getElementById('historyCount');
         const toastEl = document.getElementById('toast');
@@ -573,7 +553,6 @@
         function fmt(n) { return '₹ ' + n.toFixed(2); }
         function fmtInt(n) { return '₹ ' + Math.round(n).toLocaleString(); }
         function fmtPct(n) { return n.toFixed(2) + '%'; }
-        function fmtPrice(n) { return n.toFixed(8); }
 
         function showToast(msg) {
             toastEl.textContent = msg;
@@ -637,6 +616,7 @@
         }
 
         function calculate() {
+            const marketPrice = readPositive('marketPrice', 'বর্তমান মার্কেট প্রাইস');
             const buyPrice = readPositive('buyPrice', 'Buy Price');
             const sellPrice = readPositive('sellPrice', 'Sell Price');
             const pepeQty = readPositive('pepeQty', 'PEPE পরিমাণ');
@@ -660,19 +640,16 @@
 
             const profitPerPepe = netProfit / pepeQty;
 
-            const beSell = (buyCost + totalFixedFees) / pepeQty;
-
-            const beBuy = Math.max(
-                0,
-                sellPrice - totalFixedFees / pepeQty
-            );
+            // New Calculation: Market Price Difference
+            // (Buy Price - Market Price) / Market Price * 100
+            const marketDiffPercent = ((buyPrice - marketPrice) / marketPrice) * 100;
 
             return {
-                buyPrice, sellPrice, pepeQty,
+                marketPrice, buyPrice, sellPrice, pepeQty,
                 buyCost, sellRevenue, grossProfit,
                 totalFixedFees, totalCost,
                 capitalUsed, netProfit, roi, profitPerPepe,
-                beSell, beBuy
+                marketDiffPercent
             };
         }
 
@@ -692,6 +669,12 @@
             netProfitDisplay.textContent = fmt(result.netProfit);
             netProfitDisplay.className = 'value ' + (isProfit ? 'positive' : 'negative');
 
+            // Render Market Difference
+            const isBuyHigher = result.marketDiffPercent > 0;
+            marketDiffDisplay.textContent = (isBuyHigher ? '+' : '') + result.marketDiffPercent.toFixed(2) + '%';
+            marketDiffDisplay.className = 'value ' + (isBuyHigher ? 'negative' : 'positive'); 
+            // If buy price is higher than market, it's bad (red), if lower, it's good (green)
+
             profitPerToken.textContent = '₹ ' + result.profitPerPepe.toFixed(8);
             profitPerToken.className = 'value ' + (isProfit ? 'positive' : 'negative');
 
@@ -706,15 +689,13 @@
             if (result.netProfit < 0) {
                 warningBox.textContent = '⚠️ এই ট্রেডে সম্ভাব্য ক্ষতি হবে। Break-even price দেখে নিন।';
                 warningBox.classList.remove('hidden');
+            } else if (isBuyHigher && result.marketDiffPercent > 2) {
+                 warningBox.textContent = '⚠️ আপনি মার্কেট দামের চেয়ে '+result.marketDiffPercent.toFixed(2)+'% বেশি দামে কিনছেন!';
+                 warningBox.classList.remove('hidden');
             } else if (result.netProfit < 10 && result.capitalUsed > 500) {
                 warningBox.textContent = 'ℹ️ মুনাফা খুব কম। ফি পরীক্ষা করুন।';
                 warningBox.classList.remove('hidden');
-            } else if (result.grossProfit > 0 && result.totalCost > Math.abs(result.grossProfit) * 0.3) {
-                warningBox.textContent = '🧾 ফি ও খরচ মুনাফার তুলনায় বেশি। নেট লাভ কম হতে পারে।';
-                warningBox.classList.remove('hidden');
             }
-
-            tradeModeBadge.textContent = 'SPREAD · BUY → SELL';
 
             if (saveToHistory) {
                 addHistory(result);
@@ -776,10 +757,11 @@
         function resetCalculator() {
             clearAllStorage();
 
-            document.getElementById('buyPrice').value = '0.00085';
-            document.getElementById('sellPrice').value = '0.00088';
-            document.getElementById('pepeQty').value = '10000000';
-            document.getElementById('investmentInr').value = '8500';
+            document.getElementById('marketPrice').value = '0.00045';
+            document.getElementById('buyPrice').value = '0.00047435';
+            document.getElementById('sellPrice').value = '0.00044263';
+            document.getElementById('pepeQty').value = '2108147';
+            document.getElementById('investmentInr').value = '1000';
             document.getElementById('buyFee').value = '0';
             document.getElementById('sellFee').value = '0';
 
@@ -802,15 +784,11 @@
             const text = `
 PEPE P2P Trade Result (Binance / INR)
 Buy: ${result.buyPrice.toFixed(8)} INR | Sell: ${result.sellPrice.toFixed(8)} INR
+Market Price: ${result.marketPrice.toFixed(8)} INR
+Market Difference: ${result.marketDiffPercent.toFixed(2)}%
 PEPE: ${result.pepeQty.toLocaleString()} | Capital Used: ${result.capitalUsed.toFixed(2)} INR
-Gross Profit: ${result.grossProfit.toFixed(2)} INR
-Fixed Fees: ${result.totalFixedFees.toFixed(2)} INR
-Total Cost: ${result.totalCost.toFixed(2)} INR
 Net Profit: ${result.netProfit.toFixed(2)} INR
 ROI: ${result.roi.toFixed(2)}%
-Profit/PEPE: ${result.profitPerPepe.toFixed(8)} INR
-Break-even Sell: ${result.beSell.toFixed(8)} INR
-Max Buy (break-even): ${result.beBuy.toFixed(8)} INR
             `.trim();
             navigator.clipboard.writeText(text).then(() => {
                 showToast('ফলাফল কপি করা হয়েছে!');
@@ -870,35 +848,6 @@ Max Buy (break-even): ${result.beBuy.toFixed(8)} INR
             } else {
                 setTimeout(() => renderResult({ saveToHistory: false }), 100);
             }
-        })();
-
-        (function registerSW() {
-            if (!('serviceWorker' in navigator)) return;
-            if (location.protocol !== 'http:' && location.protocol !== 'https:') return;
-
-            const swCode = `
-                const CACHE = 'pepe-p2p-calc-v1';
-                self.addEventListener('install', e => { self.skipWaiting(); });
-                self.addEventListener('activate', e => { e.waitUntil(self.clients.claim()); });
-                self.addEventListener('fetch', e => {
-                    if (e.request.method !== 'GET') return;
-                    e.respondWith(
-                        caches.match(e.request).then(cached => {
-                            const fetchPromise = fetch(e.request).then(res => {
-                                const copy = res.clone();
-                                caches.open(CACHE).then(c => c.put(e.request, copy)).catch(()=>{});
-                                return res;
-                            }).catch(() => cached);
-                            return cached || fetchPromise;
-                        })
-                    );
-                });
-            `;
-            try {
-                const blob = new Blob([swCode], { type: 'application/javascript' });
-                const swUrl = URL.createObjectURL(blob);
-                navigator.serviceWorker.register(swUrl).catch(() => {});
-            } catch (e) {}
         })();
     })();
 </script>
