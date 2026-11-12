@@ -6,15 +6,11 @@
     <title>PEPE Arbitrage · INR → PEPE → BDT</title>
 
     <meta name="google" content="notranslate">
-    <meta name="google-translate-customization" content="none">
-
     <meta name="theme-color" content="#0b1a33">
-    <meta name="description" content="INR → USDT → PEPE → USDT → BDT Arbitrage Calculator with Live Chart">
+    <meta name="description" content="Direct PEPE/INR → PEPE/BDT P2P Arbitrage Calculator">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="PEPE Arbitrage">
     <meta name="mobile-web-app-capable" content="yes">
-    <meta name="application-name" content="PEPE Arbitrage">
 
     <link rel="manifest" id="appManifest">
     <link rel="apple-touch-icon" id="appleIcon">
@@ -22,91 +18,79 @@
 
     <style>
         .notranslate, .notranslate * { translate: no !important; }
-
         * {
             margin: 0; padding: 0; box-sizing: border-box;
             font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
             -webkit-tap-highlight-color: transparent;
         }
-
         body {
-            background: #f4f7fc;
-            padding: 16px;
-            min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: flex-start;
+            background: #f4f7fc; padding: 16px; min-height: 100vh;
+            display: flex; justify-content: center; align-items: flex-start;
         }
-
         .app-container { max-width: 620px; width: 100%; margin: 0 auto; }
-
         .card {
-            background: #fff;
-            border-radius: 24px;
-            padding: 20px 18px;
-            margin-bottom: 18px;
-            box-shadow: 0 8px 24px rgba(0, 20, 50, 0.06);
+            background: #fff; border-radius: 24px; padding: 20px 18px;
+            margin-bottom: 18px; box-shadow: 0 8px 24px rgba(0,20,50,0.06);
             border: 1px solid #eef2f6;
         }
-
         .card-header {
             display: flex; justify-content: space-between; align-items: center;
             margin-bottom: 16px;
         }
-
         .card-header h2 {
-            font-size: 17px; font-weight: 600; color: #0b1a33;
-            letter-spacing: -0.3px;
+            font-size: 17px; font-weight: 600; color: #0b1a33; letter-spacing: -0.3px;
         }
-
         .badge {
             background: #e9edf4; padding: 4px 12px; border-radius: 40px;
             font-size: 11px; font-weight: 600; color: #2c3e66;
         }
-
         .badge.live { background: #d1fae5; color: #0b7e3b; }
-        .badge.stale { background: #fef3c7; color: #92400e; }
         .badge.manual { background: #e0e7ff; color: #3730a3; }
+        .badge.info { background: #dbeafe; color: #1e40af; }
+        .badge.warn { background: #fef3c7; color: #92400e; }
 
         .input-group { margin-bottom: 14px; }
-
         .input-group label {
             display: block; font-size: 13px; font-weight: 500;
             color: #1f344f; margin-bottom: 5px;
         }
-
         .input-row { display: flex; gap: 10px; }
         .input-row .input-group { flex: 1; }
 
-        input, select {
-            width: 100%; padding: 12px 14px;
-            border: 1.5px solid #dce2ec; border-radius: 14px;
-            font-size: 15px; background: #fafcff;
+        input {
+            width: 100%; padding: 12px 14px; border: 1.5px solid #dce2ec;
+            border-radius: 14px; font-size: 15px; background: #fafcff;
             transition: border 0.2s; color: #0b1a33;
         }
-
-        input:focus, select:focus {
-            border-color: #2563eb; outline: none; background: #fff;
-        }
-
+        input:focus { border-color: #2563eb; outline: none; background: #fff; }
         input::placeholder { color: #9aabbf; font-weight: 400; }
         input[readonly] { background: #eef2f6; color: #4a5b7a; }
+        input.highlight { border-color: #0b7e3b; background: #f0fdf4; }
 
         .hint { font-size: 11px; color: #6b7f9b; margin-top: 3px; }
+        .hint.strong { color: #1e40af; font-weight: 600; }
 
-        .fee-section {
-            background: #f8faff; border-radius: 16px;
-            padding: 12px 14px; margin: 8px 0 16px 0;
-            border: 1px solid #e3eaf3;
+        .step-section {
+            background: #f8faff; border-radius: 16px; padding: 12px 14px;
+            margin: 10px 0; border: 1px solid #e3eaf3;
+        }
+        .step-title {
+            font-size: 12px; font-weight: 700; color: #0b1a33;
+            margin-bottom: 10px; text-transform: uppercase; letter-spacing: 0.5px;
+        }
+        .step-num {
+            display: inline-block; width: 20px; height: 20px;
+            background: #0b1a33; color: #fff; border-radius: 50%;
+            text-align: center; line-height: 20px; font-size: 11px;
+            margin-right: 6px; font-weight: 700;
         }
 
         .btn-primary {
-            width: 100%; padding: 14px;
-            background: #0b1a33; color: #fff; border: none;
-            border-radius: 60px; font-weight: 600; font-size: 15px;
-            cursor: pointer; transition: background 0.2s; margin-top: 6px;
+            width: 100%; padding: 14px; background: #0b1a33; color: #fff;
+            border: none; border-radius: 60px; font-weight: 600;
+            font-size: 15px; cursor: pointer; transition: background 0.2s;
+            margin-top: 6px;
         }
-
         .btn-primary:hover { background: #1c3152; }
 
         .btn-secondary {
@@ -114,42 +98,34 @@
             border-radius: 40px; font-weight: 500; font-size: 13px;
             cursor: pointer; color: #1f344f;
         }
-
         .btn-secondary:hover { background: #dce2ec; }
-
-        .result-card {
-            background: #fff; border-radius: 24px; padding: 20px 18px;
-            margin-top: 16px; border: 1px solid #eef2f6;
-        }
 
         .result-grid {
             display: grid; grid-template-columns: 1fr 1fr;
             gap: 10px 12px; margin: 14px 0 10px;
         }
-
         .result-item {
             background: #f8fbff; padding: 12px 10px; border-radius: 16px;
         }
-
         .result-item .label {
             font-size: 11px; color: #6b7f9b;
             text-transform: uppercase; letter-spacing: 0.3px;
         }
-
         .result-item .value {
             font-size: 16px; font-weight: 700; color: #0b1a33;
             margin-top: 2px; word-break: break-word;
         }
-
         .result-item .value.positive { color: #0b7e3b; }
         .result-item .value.negative { color: #b91c1c; }
         .result-item .value.small { font-size: 13px; font-weight: 600; }
-
         .result-item.span-2 { grid-column: span 2; }
-
         .result-item.hero {
             background: linear-gradient(135deg, #f0f7ff, #e0ecff);
             border: 1px solid #dbeafe;
+        }
+        .result-item.hero.loss {
+            background: linear-gradient(135deg, #fef2f2, #fee2e2);
+            border-color: #fecaca;
         }
 
         .warning-box {
@@ -157,67 +133,56 @@
             padding: 10px 14px; border-radius: 12px;
             margin: 12px 0 6px; font-size: 13px; color: #7b5d1e;
         }
+        .info-box {
+            background: #eff6ff; border-left: 4px solid #2563eb;
+            padding: 10px 14px; border-radius: 12px;
+            margin: 8px 0; font-size: 12px; color: #1e40af;
+        }
 
         .history-item {
             display: flex; justify-content: space-between; gap: 8px;
             padding: 10px 0; border-bottom: 1px solid #eef2f6;
             font-size: 12px; line-height: 1.5;
         }
-
         .history-item .win { color: #0b7e3b; font-weight: 600; }
         .history-item .loss { color: #b91c1c; font-weight: 600; }
 
         .flex { display: flex; gap: 8px; }
         .flex .btn-secondary { flex: 1; }
-
-        .text-center { text-align: center; }
         .mt-2 { margin-top: 12px; }
-        .mt-1 { margin-top: 6px; }
         .hidden { display: none; }
 
-        .chart-wrap {
-            position: relative; width: 100%; height: 240px;
-            background: #f8fbff; border-radius: 16px;
-            border: 1px solid #e3eaf3; overflow: hidden;
-            margin-bottom: 12px;
+        .flow-diagram {
+            display: flex; align-items: center; justify-content: space-around;
+            background: #f8faff; border-radius: 14px; padding: 14px 8px;
+            margin-bottom: 14px; border: 1px solid #e3eaf3;
+            flex-wrap: wrap; gap: 4px;
         }
-
-        .chart-wrap canvas { width: 100%; height: 100%; display: block; }
-
-        .chart-legend {
-            display: flex; flex-wrap: wrap; gap: 10px;
-            font-size: 11px; color: #4a5b7a; margin-bottom: 6px;
+        .flow-step {
+            text-align: center; font-size: 11px; color: #2c3e66;
+            font-weight: 600; padding: 4px 6px;
         }
-
-        .chart-legend .dot {
-            display: inline-block; width: 8px; height: 8px;
-            border-radius: 50%; margin-right: 4px; vertical-align: middle;
-        }
+        .flow-step .icon { display: block; font-size: 20px; margin-bottom: 2px; }
+        .flow-arrow { color: #9aabbf; font-size: 16px; font-weight: 700; }
 
         .buy-pill {
-            display: inline-block; padding: 3px 10px;
+            display: inline-block; padding: 5px 10px;
             background: #eef2f6; border-radius: 20px;
-            font-size: 11px; color: #2c3e66;
-            margin: 4px 4px 0 0;
+            font-size: 11px; color: #2c3e66; margin: 4px 4px 0 0;
         }
-
         .buy-pill .x {
-            color: #b91c1c; cursor: pointer; margin-left: 6px;
-            font-weight: 700;
+            color: #b91c1c; cursor: pointer; margin-left: 6px; font-weight: 700;
         }
 
         .toast {
             position: fixed; left: 50%; bottom: 24px;
             transform: translateX(-50%) translateY(80px);
-            background: #0b1a33; color: #fff;
-            padding: 10px 20px; border-radius: 40px;
-            font-size: 13px; font-weight: 500;
-            box-shadow: 0 8px 24px rgba(0, 20, 50, 0.25);
-            opacity: 0; transition: all 0.3s ease;
-            z-index: 9999; pointer-events: none;
+            background: #0b1a33; color: #fff; padding: 10px 20px;
+            border-radius: 40px; font-size: 13px; font-weight: 500;
+            box-shadow: 0 8px 24px rgba(0,20,50,0.25); opacity: 0;
+            transition: all 0.3s ease; z-index: 9999; pointer-events: none;
             max-width: 90vw; text-align: center;
         }
-
         .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
         @media (max-width: 480px) {
@@ -235,133 +200,125 @@
             PEPE Arbitrage Dashboard
         </h1>
         <p style="color: #4a5b7a; font-size: 13px;">
-            INR → USDT → PEPE → USDT → BDT
+            Direct P2P · INR → PEPE → BDT
         </p>
     </div>
 
-    <!-- M1 + M5: P2P RATES -->
-    <div class="card">
-        <div class="card-header">
-            <h2>💱 P2P Rates</h2>
-            <span class="badge manual" id="rateSourceBadge">MANUAL</span>
-        </div>
-
-        <div class="input-row">
-            <div class="input-group">
-                <label>INR / USDT (buy rate)</label>
-                <input type="number" id="inrPerUsdt" value="83.50" min="0" step="0.01" placeholder="83.50">
-                <div class="hint" id="inrSourceHint">manual · just now</div>
-            </div>
-            <div class="input-group">
-                <label>BDT / USDT (sell rate)</label>
-                <input type="number" id="bdtPerUsdt" value="119.20" min="0" step="0.01" placeholder="119.20">
-                <div class="hint" id="bdtSourceHint">manual · just now</div>
-            </div>
-        </div>
-
-        <div class="input-row">
-            <div class="input-group">
-                <label>INR P2P Fee %</label>
-                <input type="number" id="inrFeePct" value="0" min="0" step="0.01" placeholder="0">
-            </div>
-            <div class="input-group">
-                <label>BDT P2P Fee %</label>
-                <input type="number" id="bdtFeePct" value="0" min="0" step="0.01" placeholder="0">
-            </div>
-        </div>
-
-        <div class="hint" style="margin-top: 4px;">
-            ⚠️ Binance P2P অফার API-তে নেই — ম্যানুয়াল ইনপুট। Spot price auto-fetch হয়।
-        </div>
+    <!-- FLOW DIAGRAM -->
+    <div class="flow-diagram">
+        <div class="flow-step"><span class="icon">🇮🇳</span>INR<br>(India P2P)</div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step"><span class="icon">🐸</span>PEPE<br>(Buy)</div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step"><span class="icon">🇧🇩</span>BDT<br>(BD P2P)</div>
     </div>
 
-    <!-- M2 + M3: BUY LEG -->
+    <!-- ============ STEP 1: BUY LEG (INR → PEPE) ============ -->
     <div class="card">
         <div class="card-header">
-            <h2>💰 Buy Leg (INR → PEPE)</h2>
-            <span class="badge" id="pepePriceBadge">—</span>
+            <h2>💰 Step 1 · Buy PEPE with INR</h2>
+            <span class="badge info">🇮🇳 P2P India</span>
         </div>
 
-        <div class="input-row">
-            <div class="input-group">
-                <label>Investment (INR)</label>
-                <input type="number" id="inrAmount" value="10000" min="0" step="1" placeholder="10000">
+        <div class="step-section">
+            <div class="step-title">
+                <span class="step-num">1</span> Binance P2P India-তে PEPE কিনুন
             </div>
-            <div class="input-group">
-                <label>PEPE / USDT (live)</label>
-                <input type="number" id="pepeUsdt" value="0.00001234" min="0" step="0.00000001" placeholder="0.00001234">
-                <div class="hint" id="pepeSourceHint">manual</div>
-            </div>
-        </div>
 
-        <div class="input-row">
-            <div class="input-group">
-                <label>Spot Fee %</label>
-                <input type="number" id="spotFeePct" value="0.1" min="0" step="0.01" placeholder="0.1">
+            <div class="input-row">
+                <div class="input-group">
+                    <label>Investment (INR) 💵</label>
+                    <input type="number" id="inrAmount" value="10000" min="0" step="1" placeholder="10000">
+                    <div class="hint">আপনি কত রুপি বিনিয়োগ করবেন</div>
+                </div>
+                <div class="input-group">
+                    <label>PEPE / INR (buy price) 🐸</label>
+                    <input type="number" id="pepeINR" value="0.00039" min="0" step="0.00000001" placeholder="0.00039" class="highlight">
+                    <div class="hint strong">Binance P2P India → PEPE/INR থেকে দেখুন</div>
+                </div>
             </div>
-            <div class="input-group">
-                <label>USDT Bought (auto)</label>
-                <input type="number" id="usdtBought" readonly placeholder="—">
+
+            <div class="input-row">
+                <div class="input-group">
+                    <label>INR P2P Fee %</label>
+                    <input type="number" id="inrFeePct" value="0" min="0" step="0.01" placeholder="0">
+                    <div class="hint">সাধারণত 0</div>
+                </div>
+                <div class="input-group">
+                    <label>PEPE Bought (auto)</label>
+                    <input type="number" id="pepeQty" readonly placeholder="—">
+                    <div class="hint">স্বয়ংক্রিয় হিসাব</div>
+                </div>
             </div>
         </div>
 
         <button class="btn-primary" id="addBuyBtn">➕ Add Buy Order</button>
-
         <div id="buyOrdersList" style="margin-top: 10px;"></div>
     </div>
 
-    <!-- M4: CHART -->
+    <!-- ============ STEP 2: SELL LEG (PEPE → BDT) ============ -->
     <div class="card">
         <div class="card-header">
-            <h2>📈 PEPE / USDT Chart</h2>
-            <span class="badge" id="chartUpdated">loading…</span>
+            <h2>💸 Step 2 · Sell PEPE for BDT</h2>
+            <span class="badge info">🇧🇩 P2P Bangladesh</span>
         </div>
 
-        <div class="chart-legend">
-            <span><span class="dot" style="background:#2563eb;"></span>Live Price</span>
-            <span><span class="dot" style="background:#0b7e3b;"></span>Buy Marker (profit)</span>
-            <span><span class="dot" style="background:#b91c1c;"></span>Buy Marker (loss)</span>
+        <div class="step-section">
+            <div class="step-title">
+                <span class="step-num">2</span> Binance P2P BD-তে PEPE বিক্রি করুন
+            </div>
+
+            <div class="input-row">
+                <div class="input-group">
+                    <label>PEPE / BDT (sell price) 🇧🇩</label>
+                    <input type="number" id="pepeBDT" value="0.00066882" min="0" step="0.00000001" placeholder="0.00066882" class="highlight">
+                    <div class="hint strong">Binance P2P BD → PEPE/BDT থেকে দেখুন</div>
+                </div>
+                <div class="input-group">
+                    <label>BDT P2P Fee %</label>
+                    <input type="number" id="bdtFeePct" value="0" min="0" step="0.01" placeholder="0">
+                    <div class="hint">সাধারণত 0</div>
+                </div>
+            </div>
+
+            <div class="input-row">
+                <div class="input-group">
+                    <label>BDT Expected (auto)</label>
+                    <input type="number" id="bdtExpected" readonly placeholder="—">
+                    <div class="hint">PEPE × PEPE/BDT (ফি বাদে)</div>
+                </div>
+                <div class="input-group">
+                    <label>BDT per INR (cross)</label>
+                    <input type="number" id="bdtPerINR" value="1.52" min="0" step="0.01" placeholder="1.52">
+                    <div class="hint">লাভ/ক্ষতি তুলনার জন্য</div>
+                </div>
+            </div>
         </div>
 
-        <div class="chart-wrap">
-            <canvas id="pepeChart"></canvas>
-        </div>
-
-        <div class="result-grid" id="chartStats">
-            <div class="result-item">
-                <div class="label">Live PEPE/USDT</div>
-                <div class="value small" id="livePrice">—</div>
-            </div>
-            <div class="result-item">
-                <div class="label">Avg Buy (USDT)</div>
-                <div class="value small" id="avgBuyUsdt">—</div>
-            </div>
-            <div class="result-item">
-                <div class="label">Delta from Buy</div>
-                <div class="value small" id="deltaPct">—</div>
-            </div>
-            <div class="result-item">
-                <div class="label">Position</div>
-                <div class="value small" id="positionState">—</div>
-            </div>
+        <div class="info-box">
+            ℹ️ <b>Cross Rate:</b> ১ INR = কত BDT। এটা দিয়ে বোঝা যায় আপনার INR বিনিয়োগের সমতুল্য BDT কত।
         </div>
     </div>
 
-    <!-- M5 + M6: EXIT & P&L -->
-    <div class="card result-card">
+    <!-- ============ FINAL: NET P&L ============ -->
+    <div class="card">
         <div class="card-header">
-            <h2>🎯 Exit &amp; Net P&amp;L</h2>
+            <h2>🎯 Net Profit / Loss</h2>
             <span class="badge" id="exitBadge">—</span>
         </div>
 
-        <div class="result-grid" id="exitGrid">
-            <div class="result-item hero span-2">
-                <div class="label">Net Profit / Loss (BDT)</div>
+        <div class="result-grid">
+            <div class="result-item hero span-2" id="heroPnl">
+                <div class="label">Net P&L (BDT)</div>
                 <div class="value" id="netPnL">৳ 0.00</div>
             </div>
             <div class="result-item">
                 <div class="label">ROI</div>
                 <div class="value" id="roiDisplay">0.00%</div>
+            </div>
+            <div class="result-item">
+                <div class="label">BDT Expected</div>
+                <div class="value small" id="bdtFinal">—</div>
             </div>
             <div class="result-item">
                 <div class="label">PEPE Held</div>
@@ -370,18 +327,6 @@
             <div class="result-item">
                 <div class="label">Avg Buy (INR)</div>
                 <div class="value small" id="avgBuyInr">—</div>
-            </div>
-            <div class="result-item">
-                <div class="label">Avg Buy (USDT)</div>
-                <div class="value small" id="avgBuyUsdt2">—</div>
-            </div>
-            <div class="result-item">
-                <div class="label">USDT Out (sell)</div>
-                <div class="value small" id="usdtOut">—</div>
-            </div>
-            <div class="result-item">
-                <div class="label">BDT Expected</div>
-                <div class="value small" id="bdtExpected">—</div>
             </div>
             <div class="result-item">
                 <div class="label">INR Invested</div>
@@ -396,8 +341,8 @@
                 <div class="value small" id="feesBdt">—</div>
             </div>
             <div class="result-item">
-                <div class="label">INR/BDT Cross</div>
-                <div class="value small" id="crossRate">—</div>
+                <div class="label">Effective Sell (BDT/PEPE)</div>
+                <div class="value small" id="effectiveSell">—</div>
             </div>
         </div>
 
@@ -407,9 +352,12 @@
             <button class="btn-secondary" id="resetBtn">↺ Reset</button>
             <button class="btn-secondary" id="copyBtn">📋 Copy</button>
         </div>
+        <button class="btn-secondary" style="width:100%; margin-top:8px;" id="recordBtn">
+            📌 Record to History
+        </button>
     </div>
 
-    <!-- M7: HISTORY -->
+    <!-- ============ HISTORY ============ -->
     <div class="card" id="historyCard">
         <div class="card-header">
             <h2>📋 Trade History</h2>
@@ -426,7 +374,7 @@
     </div>
 
     <div style="font-size: 11px; color: #6b7f9b; text-align: center; margin-top: 20px; border-top: 1px solid #e3eaf3; padding-top: 14px;">
-        ⚠️ শুধুমাত্র শিক্ষামূলক · P2P ও স্পট মার্কেট ঝুঁকিপূর্ণ · নিজ দায়িত্বে ব্যবহার করুন
+        ⚠️ শুধুমাত্র শিক্ষামূলক · P2P মার্কেট ঝুঁকিপূর্ণ · নিজ দায়িত্বে ব্যবহার করুন
     </div>
 </div>
 
@@ -437,9 +385,9 @@
     (function buildIcon() {
         const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
             <rect width="512" height="512" rx="96" fill="#0b1a33"/>
-            <text x="50%" y="42%" font-family="Segoe UI, Arial, sans-serif" font-size="110" font-weight="700"
+            <text x="50%" y="42%" font-family="Segoe UI, Arial, sans-serif" font-size="100" font-weight="700"
                   fill="#ffffff" text-anchor="middle" dominant-baseline="middle">PEPE</text>
-            <text x="50%" y="68%" font-family="Segoe UI, Arial, sans-serif" font-size="80" font-weight="600"
+            <text x="50%" y="68%" font-family="Segoe UI, Arial, sans-serif" font-size="72" font-weight="600"
                   fill="#7fb2ff" text-anchor="middle" dominant-baseline="middle">₹→৳</text>
         </svg>`;
         const dataUri = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
@@ -467,15 +415,9 @@
         const manifest = {
             name: "PEPE Arbitrage",
             short_name: "PEPE Arb",
-            description: "INR → PEPE → BDT Arbitrage Calculator",
-            start_url: ".",
-            scope: ".",
-            display: "standalone",
-            orientation: "portrait",
-            background_color: "#f4f7fc",
-            theme_color: "#0b1a33",
-            lang: "bn",
-            icons: []
+            description: "INR → PEPE → BDT Direct P2P Calculator",
+            start_url: ".", scope: ".", display: "standalone", orientation: "portrait",
+            background_color: "#f4f7fc", theme_color: "#0b1a33", lang: "bn", icons: []
         };
 
         (async function () {
@@ -517,16 +459,14 @@
     (function() {
         'use strict';
 
-        /* =====================================================
-           STORAGE
-           ===================================================== */
-        const STORAGE_KEY = 'pepeArbState_v4';
-        const HISTORY_KEY = 'pepeArbHistory_v4';
-        const BUY_ORDERS_KEY = 'pepeArbBuyOrders_v4';
+        /* ============ STORAGE ============ */
+        const STORAGE_KEY = 'pepeDirectP2P_v6';
+        const HISTORY_KEY = 'pepeDirectP2PHistory_v6';
+        const BUY_ORDERS_KEY = 'pepeDirectP2PBuyOrders_v6';
 
         const INPUT_IDS = [
-            'inrPerUsdt', 'bdtPerUsdt', 'inrFeePct', 'bdtFeePct',
-            'inrAmount', 'pepeUsdt', 'spotFeePct'
+            'inrAmount', 'pepeINR', 'inrFeePct',
+            'pepeBDT', 'bdtFeePct', 'bdtPerINR'
         ];
 
         const storage = {
@@ -544,29 +484,13 @@
             }
         };
 
-        /* ----- State ----- */
         let history = [];
-        let buyOrders = [];   // [{pepeQty, usdtPaid, inrSpent, buyINR, buyUSDT, ts}]
-        let marketPepe = null;
-        let marketPepeAt = 0;
+        let buyOrders = [];
 
-        /* ----- DOM refs ----- */
         const $ = id => document.getElementById(id);
-        const usdtBoughtInput = $('usdtBought');
-        const pepeUsdtInput = $('pepeUsdt');
-        const inrAmountInput = $('inrAmount');
-        const inrPerUsdtInput = $('inrPerUsdt');
-        const bdtPerUsdtInput = $('bdtPerUsdt');
-        const inrFeePctInput = $('inrFeePct');
-        const bdtFeePctInput = $('bdtFeePct');
-        const spotFeePctInput = $('spotFeePct');
-        const pepeSourceHint = $('pepeSourceHint');
-        const pepePriceBadge = $('pepePriceBadge');
-        const chartUpdated = $('chartUpdated');
-        const chartCanvas = $('pepeChart');
         const toastEl = $('toast');
 
-        /* ----- Helpers ----- */
+        /* ============ FORMATTERS ============ */
         function fmt(n) {
             if (!isFinite(n)) return '—';
             return '৳ ' + n.toFixed(2);
@@ -579,12 +503,9 @@
             if (!isFinite(n)) return '—';
             return (n >= 0 ? '+' : '') + n.toFixed(2) + '%';
         }
-        function fmtUsdt(n) {
-            if (!isFinite(n)) return '—';
-            return n.toFixed(4) + ' USDT';
-        }
         function fmtPepe(n) {
             if (!isFinite(n)) return '—';
+            if (n >= 1e9) return (n / 1e9).toFixed(2) + 'B';
             if (n >= 1e6) return (n / 1e6).toFixed(2) + 'M';
             if (n >= 1e3) return (n / 1e3).toFixed(2) + 'K';
             return n.toFixed(2);
@@ -602,20 +523,18 @@
             showToast._t = setTimeout(() => toastEl.classList.remove('show'), 2400);
         }
 
-        function readNum(id, label, { positive = false, nonNeg = true } = {}) {
+        function readNum(id, label, { positive = false } = {}) {
             const el = $(id);
             const raw = (el.value || '').trim();
             if (raw === '') throw new Error(`${label} পূরণ করুন`);
             const v = Number(raw);
             if (!Number.isFinite(v)) throw new Error(`${label} বৈধ সংখ্যা নয়`);
-            if (nonNeg && v < 0) throw new Error(`${label} ঋণাত্মক নয়`);
+            if (v < 0) throw new Error(`${label} ঋণাত্মক নয়`);
             if (positive && v <= 0) throw new Error(`${label} শূন্যের বেশি হতে হবে`);
             return v;
         }
 
-        /* =====================================================
-           PERSISTENCE
-           ===================================================== */
+        /* ============ PERSISTENCE ============ */
         function saveState() {
             const state = {};
             INPUT_IDS.forEach(id => {
@@ -624,7 +543,6 @@
             });
             storage.set(STORAGE_KEY, state);
         }
-
         function restoreState() {
             const s = storage.get(STORAGE_KEY, null);
             if (!s) return false;
@@ -634,13 +552,11 @@
             });
             return true;
         }
-
         function saveAll() {
             saveState();
             storage.set(HISTORY_KEY, history);
             storage.set(BUY_ORDERS_KEY, buyOrders);
         }
-
         function restoreAll() {
             const h = storage.get(HISTORY_KEY, null);
             if (Array.isArray(h)) history = h;
@@ -649,213 +565,159 @@
             restoreState();
         }
 
-        /* =====================================================
-           M1+M2+M3+M5+M6 : CORE CALCULATION
-           -----------------------------------------------------
-           INR → USDT → PEPE → USDT → BDT
-           ===================================================== */
-        function buildLegs() {
+        /* ============ CORE CALCULATION ============
+           INR → PEPE → BDT (Direct P2P)
+           ========================================= */
+        function calculateBuyLeg() {
             const inrAmount = readNum('inrAmount', 'Investment INR', { positive: true });
-            const inrPerUsdt = readNum('inrPerUsdt', 'INR/USDT rate', { positive: true });
-            const bdtPerUsdt = readNum('bdtPerUsdt', 'BDT/USDT rate', { positive: true });
-            const pepeUsdt = readNum('pepeUsdt', 'PEPE/USDT price', { positive: true });
+            const pepeINR = readNum('pepeINR', 'PEPE/INR price', { positive: true });
+            const inrFeePct = readNum('inrFeePct', 'INR Fee %');
 
-            const inrFeePct = readNum('inrFeePct', 'INR P2P Fee');
-            const bdtFeePct = readNum('bdtFeePct', 'BDT P2P Fee');
-            const spotFeePct = readNum('spotFeePct', 'Spot Fee');
-
-            // M1: INR → USDT
             const inrFee = inrAmount * inrFeePct / 100;
-            const usdtGross = (inrAmount - inrFee) / inrPerUsdt;
-            const usdtNet = usdtGross;
+            const inrNet = inrAmount - inrFee;
 
-            // M2: USDT → PEPE
-            const spotFeeUsdt = usdtNet * spotFeePct / 100;
-            const usdtForPepe = usdtNet - spotFeeUsdt;
-            const pepeQty = usdtForPepe / pepeUsdt;
-
-            // M3: per-PEPE snapshot
-            const buyINR = inrAmount / pepeQty;
-            const buyUSDT = usdtForPepe / pepeQty; // == pepeUsdt in this simple path
+            // Direct: INR ÷ (PEPE/INR) = PEPE quantity
+            const pepeQty = inrNet / pepeINR;
 
             return {
-                inrAmount, inrPerUsdt, bdtPerUsdt, pepeUsdt,
-                inrFeePct, bdtFeePct, spotFeePct,
-                inrFee, usdtGross, usdtNet, spotFeeUsdt, usdtForPepe,
-                pepeQty, buyINR, buyUSDT
+                inrAmount, pepeINR, inrFeePct, inrFee, inrNet,
+                pepeQty,
+                buyINR: pepeINR
             };
         }
 
-        /**
-         * Live exit value for a given PEPE quantity using live rates.
-         * If `livePepe` is null, falls back to input price.
-         */
-        function exitValue(pepeQty, rates) {
-            const { bdtPerUsdt, bdtFeePct } = rates;
-            const livePepe = marketPepe || Number(pepeUsdtInput.value) || 0;
+        function calculateSellLeg(pepeQty) {
+            const pepeBDT = readNum('pepeBDT', 'PEPE/BDT price', { positive: true });
+            const bdtFeePct = readNum('bdtFeePct', 'BDT Fee %');
 
-            // M5: PEPE → USDT
-            const usdtOut = pepeQty * livePepe;
-            // USDT → BDT (with P2P fee)
-            const bdtGross = usdtOut * bdtPerUsdt;
+            const bdtGross = pepeQty * pepeBDT;
             const bdtFee = bdtGross * bdtFeePct / 100;
             const bdtNet = bdtGross - bdtFee;
 
-            return { usdtOut, bdtGross, bdtFee, bdtNet, livePepe };
+            return { pepeBDT, bdtGross, bdtFee, bdtNet };
         }
 
-        /* =====================================================
-           AGGREGATED BUY ORDERS (multiple buys)
-           ===================================================== */
         function aggregateOrders() {
             if (!buyOrders.length) return null;
-            let totalPepe = 0, totalInr = 0, totalUsdt = 0;
+            let totalPepe = 0, totalInr = 0;
             buyOrders.forEach(o => {
                 totalPepe += o.pepeQty;
                 totalInr += o.inrSpent;
-                totalUsdt += o.usdtPaid;
             });
             if (totalPepe === 0) return null;
             return {
                 pepeQty: totalPepe,
                 inrSpent: totalInr,
-                usdtPaid: totalUsdt,
-                buyINR: totalInr / totalPepe,
-                buyUSDT: totalUsdt / totalPepe
+                buyINR: totalInr / totalPepe
             };
         }
 
-        /* =====================================================
-           RENDER: FULL DASHBOARD
-           ===================================================== */
+        /* ============ RENDER ============ */
         function renderAll() {
-            try {
-                renderAutoFields();
-                renderExit();
-                renderChartStats();
-                renderBuyOrdersList();
-                drawChart();
-            } catch (e) {
-                // silent — fields not fully filled
-            }
+            renderAutoFields();
+            renderPnL();
+            renderBuyOrdersList();
         }
 
         function renderAutoFields() {
             try {
-                const legs = buildLegs();
-                usdtBoughtInput.value = legs.usdtNet.toFixed(4);
+                const legs = calculateBuyLeg();
+                $('pepeQty').value = legs.pepeQty.toFixed(2);
 
-                const badge = pepePriceBadge;
-                if (marketPepe) {
-                    badge.textContent = 'LIVE · ' + fmtPrice(marketPepe);
-                    badge.className = 'badge live';
-                } else {
-                    badge.textContent = 'MANUAL';
-                    badge.className = 'badge manual';
+                // BDT Expected
+                try {
+                    const sell = calculateSellLeg(legs.pepeQty);
+                    $('bdtExpected').value = sell.bdtNet.toFixed(2);
+                } catch {
+                    $('bdtExpected').value = '';
                 }
             } catch (e) {
-                usdtBoughtInput.value = '';
-                pepePriceBadge.textContent = '—';
-                pepePriceBadge.className = 'badge';
+                $('pepeQty').value = '';
+                $('bdtExpected').value = '';
             }
         }
 
-        function renderExit() {
-            // Aggregated buy = source of truth if multiple orders exist.
-            // Otherwise fall back to current inputs (what-if mode).
+        function renderPnL() {
             const agg = aggregateOrders();
 
-            let pepeQty, inrSpent, buyINR, buyUSDT;
+            let pepeQty, inrSpent, buyINR;
 
             if (agg) {
                 pepeQty = agg.pepeQty;
                 inrSpent = agg.inrSpent;
                 buyINR = agg.buyINR;
-                buyUSDT = agg.buyUSDT;
             } else {
                 try {
-                    const legs = buildLegs();
+                    const legs = calculateBuyLeg();
                     pepeQty = legs.pepeQty;
                     inrSpent = legs.inrAmount;
                     buyINR = legs.buyINR;
-                    buyUSDT = legs.buyUSDT;
                 } catch {
                     $('pepeHeld').textContent = '—';
+                    $('netPnL').textContent = '৳ 0.00';
+                    $('netPnL').className = 'value';
                     return;
                 }
             }
 
-            const bdtPerUsdt = Number(bdtPerUsdtInput.value) || 0;
-            const inrPerUsdt = Number(inrPerUsdtInput.value) || 0;
-            const bdtFeePct = Number(bdtFeePctInput.value) || 0;
-            const inrFeePct = Number(inrFeePctInput.value) || 0;
-            const spotFeePct = Number(spotFeePctInput.value) || 0;
+            let sell;
+            try {
+                sell = calculateSellLeg(pepeQty);
+            } catch {
+                $('pepeHeld').textContent = fmtPepe(pepeQty);
+                $('avgBuyInr').textContent = '₹ ' + buyINR.toFixed(8);
+                $('inrInvested').textContent = '₹ ' + Math.round(inrSpent).toLocaleString();
+                $('netPnL').textContent = '৳ 0.00';
+                $('netPnL').className = 'value';
+                return;
+            }
 
-            const exit = exitValue(pepeQty, { bdtPerUsdt, bdtFeePct });
+            // Cross rate
+            let bdtPerINR = 0;
+            try {
+                bdtPerINR = readNum('bdtPerINR', 'BDT/INR', { positive: true });
+            } catch {}
 
-            // M6: Net P&L — INR invested converted to BDT via cross rate
-            const cross = inrPerUsdt > 0 ? bdtPerUsdt / inrPerUsdt : 0;
-            const inrInBdt = inrSpent * cross;
-            const pnlBdt = exit.bdtNet - inrInBdt;
+            const inrInBdt = inrSpent * bdtPerINR;
+            const pnlBdt = sell.bdtNet - inrInBdt;
             const roi = inrInBdt > 0 ? (pnlBdt / inrInBdt) * 100 : 0;
 
-            // Fee totals (BDT equivalent)
-            const inrFeeBdt = (inrSpent * inrFeePct / 100) * cross;
-            const spotFeeBdt = ((buyUSDT * pepeQty) * spotFeePct / 100) * bdtPerUsdt;
-            const totalFeesBdt = inrFeeBdt + spotFeeBdt + exit.bdtFee;
+            const bdtFeePctVal = Number($('bdtFeePct').value) || 0;
+            const inrFeePctVal = Number($('inrFeePct').value) || 0;
+            const inrFeeBdt = (inrSpent * inrFeePctVal / 100) * bdtPerINR;
+            const totalFeesBdt = inrFeeBdt + sell.bdtFee;
+
+            const effectiveSell = pepeQty > 0 ? sell.bdtNet / pepeQty : 0;
 
             const isProfit = pnlBdt >= 0;
 
             $('netPnL').textContent = fmt(pnlBdt);
             $('netPnL').className = 'value ' + (isProfit ? 'positive' : 'negative');
+            $('heroPnl').className = 'result-item hero span-2' + (isProfit ? '' : ' loss');
 
             $('roiDisplay').textContent = fmtPct(roi);
             $('roiDisplay').className = 'value ' + (isProfit ? 'positive' : 'negative');
 
+            $('bdtFinal').textContent = fmtInt(sell.bdtNet);
             $('pepeHeld').textContent = fmtPepe(pepeQty);
             $('avgBuyInr').textContent = '₹ ' + buyINR.toFixed(8);
-            $('avgBuyUsdt').textContent = buyUSDT.toFixed(8);
-            $('avgBuyUsdt2').textContent = buyUSDT.toFixed(8);
-            $('usdtOut').textContent = fmtUsdt(exit.usdtOut);
-            $('bdtExpected').textContent = fmtInt(exit.bdtNet);
             $('inrInvested').textContent = '₹ ' + Math.round(inrSpent).toLocaleString();
             $('inrInBdt').textContent = fmtInt(inrInBdt);
             $('feesBdt').textContent = fmt(totalFeesBdt);
-            $('crossRate').textContent = cross.toFixed(4) + ' ৳/₹';
+            $('effectiveSell').textContent = '৳ ' + effectiveSell.toFixed(8);
 
-            // Exit badge
-            $('exitBadge').textContent = agg ? 'BASED ON ' + buyOrders.length + ' BUYS' : 'WHAT-IF';
+            $('exitBadge').textContent = agg ? 'BASED ON ' + buyOrders.length + ' BUY' + (buyOrders.length > 1 ? 'S' : '') : 'WHAT-IF';
+            $('exitBadge').className = 'badge ' + (agg ? 'live' : 'manual');
 
-            // Warning
             const wb = $('warningBox');
             wb.classList.add('hidden');
             if (pnlBdt < 0) {
-                wb.textContent = '⚠️ এই ট্রেডে সম্ভাব্য ক্ষতি হবে। Exit rate বা PEPE price পুনর্বিবেচনা করুন।';
+                wb.textContent = '⚠️ এই ট্রেডে সম্ভাব্য ক্ষতি হবে। PEPE/BDT রেট বা বিনিয়োগ পুনর্বিবেচনা করুন।';
                 wb.classList.remove('hidden');
-            } else if (roi > 0 && roi < 0.5 && inrSpent > 5000) {
+            } else if (roi > 0 && roi < 1 && inrSpent > 5000) {
                 wb.textContent = 'ℹ️ ROI খুব কম — ফি ও P2P স্প্রেড চেক করুন।';
                 wb.classList.remove('hidden');
             }
-        }
-
-        function renderChartStats() {
-            const live = marketPepe || Number(pepeUsdtInput.value) || 0;
-            $('livePrice').textContent = fmtPrice(live);
-
-            const agg = aggregateOrders();
-            if (!agg) {
-                $('avgBuyUsdt').textContent = '—';
-                $('deltaPct').textContent = '—';
-                $('positionState').textContent = 'No buys yet';
-                return;
-            }
-            const avg = agg.buyUSDT;
-            $('avgBuyUsdt').textContent = avg.toFixed(8);
-            const delta = avg > 0 ? ((live - avg) / avg) * 100 : 0;
-            $('deltaPct').textContent = fmtPct(delta);
-            $('deltaPct').className = 'value small ' + (delta >= 0 ? 'positive' : 'negative');
-            $('positionState').textContent = delta >= 0 ? '✅ In Profit' : '⚠️ In Loss';
-            $('positionState').className = 'value small ' + (delta >= 0 ? 'positive' : 'negative');
         }
 
         function renderBuyOrdersList() {
@@ -882,193 +744,20 @@
             });
         }
 
-        /* =====================================================
-           M4: CANVAS CHART + BUY MARKERS
-           ===================================================== */
-        function drawChart(closes) {
-            const canvas = chartCanvas;
-            const dpr = window.devicePixelRatio || 1;
-            const rect = canvas.getBoundingClientRect();
-            const w = rect.width || 300;
-            const h = rect.height || 240;
-            canvas.width = w * dpr;
-            canvas.height = h * dpr;
-            const ctx = canvas.getContext('2d');
-            ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-            ctx.clearRect(0, 0, w, h);
-
-            // Use cached closes if not supplied
-            if (!closes) closes = drawChart._last || [];
-
-            // Build y-series: closes + buy levels
-            const buyLevels = buyOrders.map(o => o.buyUSDT);
-            const allValues = closes.concat(buyLevels);
-
-            if (!allValues.length) {
-                ctx.fillStyle = '#9aabbf';
-                ctx.font = '13px Segoe UI, sans-serif';
-                ctx.textAlign = 'center';
-                ctx.fillText('chart data loading…', w / 2, h / 2);
-                return;
-            }
-
-            const min = Math.min(...allValues);
-            const max = Math.max(...allValues);
-            const pad = (max - min) * 0.12 || max * 0.05 || 0.0000001;
-            const yMin = min - pad;
-            const yMax = max + pad;
-
-            const padL = 8, padR = 78, padT = 12, padB = 10;
-            const plotW = w - padL - padR;
-            const plotH = h - padT - padB;
-
-            const xAt = (i, n) => padL + (n > 1 ? (i / (n - 1)) * plotW : plotW / 2);
-            const yAt = v => padT + (1 - (v - yMin) / (yMax - yMin)) * plotH;
-
-            // Grid
-            ctx.strokeStyle = '#e3eaf3';
-            ctx.lineWidth = 1;
-            for (let g = 0; g <= 4; g++) {
-                const y = padT + (plotH * g) / 4;
-                ctx.beginPath();
-                ctx.moveTo(padL, y);
-                ctx.lineTo(padL + plotW, y);
-                ctx.stroke();
-            }
-
-            // Price line
-            if (closes.length > 1) {
-                ctx.strokeStyle = '#2563eb';
-                ctx.lineWidth = 2;
-                ctx.lineJoin = 'round';
-                ctx.beginPath();
-                closes.forEach((v, i) => {
-                    const x = xAt(i, closes.length);
-                    const y = yAt(v);
-                    if (i === 0) ctx.moveTo(x, y);
-                    else ctx.lineTo(x, y);
-                });
-                ctx.stroke();
-
-                // Fill under line
-                ctx.lineTo(xAt(closes.length - 1, closes.length), padT + plotH);
-                ctx.lineTo(xAt(0, closes.length), padT + plotH);
-                ctx.closePath();
-                const grad = ctx.createLinearGradient(0, padT, 0, padT + plotH);
-                grad.addColorStop(0, 'rgba(37,99,235,0.18)');
-                grad.addColorStop(1, 'rgba(37,99,235,0.0)');
-                ctx.fillStyle = grad;
-                ctx.fill();
-            }
-
-            // Buy markers
-            const live = marketPepe || Number(pepeUsdtInput.value) || 0;
-            buyLevels.forEach((lv, i) => {
-                const y = yAt(lv);
-                const isProfit = live >= lv;
-                ctx.strokeStyle = isProfit ? '#0b7e3b' : '#b91c1c';
-                ctx.setLineDash([5, 4]);
-                ctx.lineWidth = 1.5;
-                ctx.beginPath();
-                ctx.moveTo(padL, y);
-                ctx.lineTo(padL + plotW, y);
-                ctx.stroke();
-                ctx.setLineDash([]);
-
-                ctx.fillStyle = isProfit ? '#0b7e3b' : '#b91c1c';
-                ctx.font = '10px Segoe UI, sans-serif';
-                ctx.textAlign = 'left';
-                ctx.fillText(`Buy #${i + 1} ${lv.toFixed(8)}`, padL + plotW + 6, y + 3);
-            });
-
-            // Live price dot
-            if (live > 0 && closes.length > 0) {
-                const y = yAt(live);
-                ctx.fillStyle = '#2563eb';
-                ctx.beginPath();
-                ctx.arc(padL + plotW, y, 3.5, 0, Math.PI * 2);
-                ctx.fill();
-            }
-
-            // Y-axis label right
-            ctx.fillStyle = '#6b7f9b';
-            ctx.font = '10px Segoe UI, sans-serif';
-            ctx.textAlign = 'right';
-            ctx.fillText(yMax.toFixed(8), w - 4, padT + 10);
-            ctx.fillText(yMin.toFixed(8), w - 4, padT + plotH - 2);
-
-            drawChart._last = closes;
-        }
-
-        /* =====================================================
-           LIVE MARKET: Binance public API
-           ===================================================== */
-        async function refreshPepePrice() {
-            try {
-                const r = await fetch(
-                    'https://api.binance.com/api/v3/ticker/price?symbol=PEPEUSDT',
-                    { cache: 'no-store' }
-                );
-                if (!r.ok) throw new Error('http');
-                const j = await r.json();
-                const p = parseFloat(j.price);
-                if (!isFinite(p) || p <= 0) throw new Error('bad price');
-                marketPepe = p;
-                marketPepeAt = Date.now();
-                pepeUsdtInput.value = p;
-                pepeSourceHint.textContent = 'Binance · ' + new Date().toLocaleTimeString();
-                pepePriceBadge.textContent = 'LIVE · ' + fmtPrice(p);
-                pepePriceBadge.className = 'badge live';
-            } catch (e) {
-                pepeSourceHint.textContent = '⚠️ Binance unavailable — use manual';
-                pepePriceBadge.textContent = 'MANUAL';
-                pepePriceBadge.className = 'badge stale';
-            }
-            renderAll();
-        }
-
-        async function refreshChart() {
-            try {
-                const r = await fetch(
-                    'https://api.binance.com/api/v3/klines?symbol=PEPEUSDT&interval=15m&limit=96',
-                    { cache: 'no-store' }
-                );
-                if (!r.ok) throw new Error('http');
-                const klines = await r.json();
-                const closes = klines.map(k => parseFloat(k[4])).filter(v => isFinite(v));
-                chartUpdated.textContent = 'Binance · ' + new Date().toLocaleTimeString();
-                chartUpdated.className = 'badge live';
-                drawChart(closes);
-            } catch (e) {
-                chartUpdated.textContent = 'offline';
-                chartUpdated.className = 'badge stale';
-            }
-        }
-
-        /* =====================================================
-           ADD BUY ORDER
-           ===================================================== */
+        /* ============ ADD BUY ORDER ============ */
         function addBuyOrder() {
             let legs;
             try {
-                legs = buildLegs();
+                legs = calculateBuyLeg();
             } catch (e) {
                 showToast(e.message);
                 return;
             }
 
-            const liveNow = marketPepe || Number(pepeUsdtInput.value) || 0;
-            if (liveNow <= 0) {
-                showToast('PEPE price বৈধ নয়');
-                return;
-            }
-
             buyOrders.push({
                 pepeQty: legs.pepeQty,
-                usdtPaid: legs.usdtForPepe,
                 inrSpent: legs.inrAmount,
                 buyINR: legs.buyINR,
-                buyUSDT: legs.buyUSDT,
                 ts: Date.now()
             });
 
@@ -1078,29 +767,95 @@
             showToast('Buy order যোগ হয়েছে · ' + fmtPepe(legs.pepeQty) + ' PEPE');
         }
 
-        /* =====================================================
-           COPY / RESET / HISTORY
-           ===================================================== */
+        /* ============ HISTORY ============ */
+        function recordToHistory() {
+            const agg = aggregateOrders();
+            if (!agg) {
+                showToast('আগে Buy Order যোগ করুন');
+                return;
+            }
+
+            let sell;
+            try {
+                sell = calculateSellLeg(agg.pepeQty);
+            } catch (e) {
+                showToast(e.message);
+                return;
+            }
+
+            let bdtPerINR = 0;
+            try {
+                bdtPerINR = readNum('bdtPerINR', 'BDT/INR', { positive: true });
+            } catch {
+                showToast('BDT/INR cross rate পূরণ করুন');
+                return;
+            }
+
+            const inrInBdt = agg.inrSpent * bdtPerINR;
+            const pnlBdt = sell.bdtNet - inrInBdt;
+            const roi = inrInBdt > 0 ? (pnlBdt / inrInBdt) * 100 : 0;
+
+            history.unshift({
+                ts: Date.now(),
+                inr: agg.inrSpent,
+                pepe: agg.pepeQty,
+                buyINR: agg.buyINR,
+                pepeBDT: sell.pepeBDT,
+                bdtOut: sell.bdtNet,
+                pnlBdt, roi
+            });
+            if (history.length > 20) history.pop();
+            storage.set(HISTORY_KEY, history);
+            renderHistory();
+            showToast('History-তে সেভ হয়েছে');
+        }
+
+        function renderHistory() {
+            const list = $('historyList');
+            $('historyCount').textContent = history.length;
+            if (!history.length) {
+                list.innerHTML = '<div style="color:#9aabbf;font-size:13px;text-align:center;padding:12px 0;">কোনো ট্রেড নেই</div>';
+                return;
+            }
+            list.innerHTML = '';
+            history.forEach((h, i) => {
+                const div = document.createElement('div');
+                div.className = 'history-item';
+                const sign = h.pnlBdt >= 0 ? 'win' : 'loss';
+                const d = new Date(h.ts);
+                div.innerHTML = `
+                    <div>
+                        <div>#${i + 1} · ${d.toLocaleDateString()} ${d.toLocaleTimeString()}</div>
+                        <div style="color:#6b7f9b;">₹${Math.round(h.inr).toLocaleString()} → ${fmtPepe(h.pepe)} PEPE</div>
+                    </div>
+                    <div class="${sign}" style="text-align:right;">
+                        ${h.pnlBdt >= 0 ? '+' : ''}${h.pnlBdt.toFixed(2)} ৳<br>
+                        <span style="font-size:11px;">(${h.roi.toFixed(2)}%)</span>
+                    </div>
+                `;
+                list.appendChild(div);
+            });
+        }
+
+        /* ============ COPY ============ */
         function copyResult() {
             try {
-                renderExit();
                 const agg = aggregateOrders();
                 const lines = [
-                    'PEPE Arbitrage — INR → USDT → PEPE → USDT → BDT',
-                    '--------------------------------------------',
-                    'INR/USDT rate:  ' + inrPerUsdtInput.value,
-                    'BDT/USDT rate:  ' + bdtPerUsdtInput.value,
-                    'PEPE/USDT live: ' + (marketPepe || pepeUsdtInput.value),
-                    'Cross INR→BDT:  ' + $('crossRate').textContent,
-                    '--------------------------------------------',
+                    'PEPE Arbitrage — Direct P2P',
+                    'INR → PEPE → BDT',
+                    '================================',
+                    'PEPE/INR (buy): ' + $('pepeINR').value,
+                    'PEPE/BDT (sell): ' + $('pepeBDT').value,
+                    'BDT/INR cross: ' + $('bdtPerINR').value,
+                    '================================',
                     'INR invested:   ₹ ' + (agg ? Math.round(agg.inrSpent).toLocaleString() : '—'),
                     'PEPE bought:    ' + (agg ? fmtPepe(agg.pepeQty) : '—'),
                     'Avg buy (INR):  ' + (agg ? agg.buyINR.toFixed(8) : '—'),
-                    'Avg buy (USDT): ' + (agg ? agg.buyUSDT.toFixed(8) : '—'),
-                    '--------------------------------------------',
+                    '================================',
                     'Net P&L (BDT):  ' + $('netPnL').textContent,
                     'ROI:            ' + $('roiDisplay').textContent,
-                    'Expected BDT:   ' + $('bdtExpected').textContent,
+                    'BDT expected:   ' + $('bdtFinal').textContent,
                     'Total fees:     ' + $('feesBdt').textContent
                 ];
                 const text = lines.join('\n');
@@ -1121,13 +876,12 @@
             storage.remove(HISTORY_KEY);
             storage.remove(BUY_ORDERS_KEY);
 
-            $('inrPerUsdt').value = '83.50';
-            $('bdtPerUsdt').value = '119.20';
-            $('inrFeePct').value = '0';
-            $('bdtFeePct').value = '0';
             $('inrAmount').value = '10000';
-            $('pepeUsdt').value = marketPepe ? marketPepe.toString() : '0.00001234';
-            $('spotFeePct').value = '0.1';
+            $('pepeINR').value = '0.00039';
+            $('inrFeePct').value = '0';
+            $('pepeBDT').value = '0.00066882';
+            $('bdtFeePct').value = '0';
+            $('bdtPerINR').value = '1.52';
 
             buyOrders = [];
             history = [];
@@ -1136,89 +890,17 @@
             showToast('সব রিসেট হয়েছে');
         }
 
-        /* =====================================================
-           M7: HISTORY (ledger on exit)
-           ===================================================== */
-        function addHistoryFromCurrent() {
-            const agg = aggregateOrders();
-            if (!agg) {
-                showToast('আগে Buy Order যোগ করুন');
-                return;
-            }
-            const cross = (Number(bdtPerUsdtInput.value) || 0) / (Number(inrPerUsdtInput.value) || 1);
-            const exit = exitValue(agg.pepeQty, {
-                bdtPerUsdt: Number(bdtPerUsdtInput.value) || 0,
-                bdtFeePct: Number(bdtFeePctInput.value) || 0
-            });
-            const inrInBdt = agg.inrSpent * cross;
-            const pnlBdt = exit.bdtNet - inrInBdt;
-            const roi = inrInBdt > 0 ? (pnlBdt / inrInBdt) * 100 : 0;
-
-            history.unshift({
-                ts: Date.now(),
-                inr: agg.inrSpent,
-                pepe: agg.pepeQty,
-                buyINR: agg.buyINR,
-                buyUSDT: agg.buyUSDT,
-                exitUSDT: exit.usdtOut,
-                exitBDT: exit.bdtNet,
-                pnlBDT: pnlBdt,
-                roi
-            });
-            if (history.length > 20) history.pop();
-            storage.set(HISTORY_KEY, history);
-            renderHistory();
-        }
-
-        function renderHistory() {
-            const list = $('historyList');
-            $('historyCount').textContent = history.length;
-            if (!history.length) {
-                list.innerHTML = '<div style="color:#9aabbf;font-size:13px;text-align:center;padding:12px 0;">কোনো ট্রেড নেই</div>';
-                return;
-            }
-            list.innerHTML = '';
-            history.forEach((h, i) => {
-                const div = document.createElement('div');
-                div.className = 'history-item';
-                const sign = h.pnlBDT >= 0 ? 'win' : 'loss';
-                const d = new Date(h.ts);
-                div.innerHTML = `
-                    <div>
-                        <div>#${i + 1} · ${d.toLocaleDateString()} ${d.toLocaleTimeString()}</div>
-                        <div style="color:#6b7f9b;">₹${Math.round(h.inr).toLocaleString()} → ${fmtPepe(h.pepe)} PEPE</div>
-                    </div>
-                    <div class="${sign}" style="text-align:right;">
-                        ${h.pnlBDT >= 0 ? '+' : ''}${h.pnlBDT.toFixed(2)} ৳<br>
-                        <span style="font-size:11px;">(${h.roi.toFixed(2)}%)</span>
-                    </div>
-                `;
-                list.appendChild(div);
-            });
-        }
-
-        /* =====================================================
-           EVENT WIRING
-           ===================================================== */
+        /* ============ EVENTS ============ */
         $('addBuyBtn').addEventListener('click', addBuyOrder);
         $('resetBtn').addEventListener('click', resetAll);
         $('copyBtn').addEventListener('click', copyResult);
+        $('recordBtn').addEventListener('click', recordToHistory);
 
         $('clearHistoryBtn').addEventListener('click', () => {
             history = [];
             storage.remove(HISTORY_KEY);
             renderHistory();
             showToast('History মুছে ফেলা হয়েছে');
-        });
-
-        // Manual PEPE price edit → drop "live" flag
-        pepeUsdtInput.addEventListener('input', () => {
-            if (marketPepe && Math.abs(Number(pepeUsdtInput.value) - marketPepe) > 1e-12) {
-                // user overrode — keep marketPepe for chart but mark hint
-                pepeSourceHint.textContent = 'manual override';
-                pepePriceBadge.textContent = 'MANUAL';
-                pepePriceBadge.className = 'badge manual';
-            }
         });
 
         INPUT_IDS.forEach(id => {
@@ -1236,77 +918,11 @@
             if (document.visibilityState === 'hidden') saveAll();
         });
 
-        // Resize → redraw chart
-        let rz;
-        window.addEventListener('resize', () => {
-            clearTimeout(rz);
-            rz = setTimeout(() => drawChart(), 150);
-        });
-
-        /* =====================================================
-           INIT
-           ===================================================== */
+        /* ============ INIT ============ */
         (function init() {
             restoreAll();
             renderHistory();
             renderAll();
-
-            // Fetch live data
-            refreshPepePrice();
-            refreshChart();
-
-            // Poll
-            setInterval(refreshPepePrice, 15000);
-            setInterval(refreshChart, 60000);
-
-            // Add a "record exit" button dynamically if not present
-            // (kept simple — user can copy result; history records on demand below)
-            const exitGrid = document.getElementById('exitGrid');
-            const recordBtn = document.createElement('button');
-            recordBtn.className = 'btn-secondary';
-            recordBtn.style.width = '100%';
-            recordBtn.style.marginTop = '10px';
-            recordBtn.textContent = '📌 Record Exit to History';
-            recordBtn.addEventListener('click', () => {
-                addHistoryFromCurrent();
-                showToast('History-তে যোগ হয়েছে');
-            });
-            exitGrid.parentNode.insertBefore(recordBtn, exitGrid.nextSibling);
-        })();
-
-        /* =====================================================
-           SERVICE WORKER
-           ===================================================== */
-        (function registerSW() {
-            if (!('serviceWorker' in navigator)) return;
-            if (location.protocol !== 'http:' && location.protocol !== 'https:') return;
-            const swCode = `
-                const CACHE = 'pepe-arb-v4';
-                self.addEventListener('install', () => self.skipWaiting());
-                self.addEventListener('activate', e => e.waitUntil(self.clients.claim()));
-                self.addEventListener('fetch', e => {
-                    if (e.request.method !== 'GET') return;
-                    // Do NOT cache Binance API — always live
-                    if (e.request.url.includes('binance.com')) {
-                        e.respondWith(fetch(e.request).catch(() => new Response('', {status: 503})));
-                        return;
-                    }
-                    e.respondWith(
-                        caches.match(e.request).then(cached => {
-                            const fetchPromise = fetch(e.request).then(res => {
-                                const copy = res.clone();
-                                caches.open(CACHE).then(c => c.put(e.request, copy)).catch(() => {});
-                                return res;
-                            }).catch(() => cached);
-                            return cached || fetchPromise;
-                        })
-                    );
-                });
-            `;
-            try {
-                const blob = new Blob([swCode], { type: 'application/javascript' });
-                navigator.serviceWorker.register(URL.createObjectURL(blob)).catch(() => {});
-            } catch (e) {}
         })();
     })();
 </script>
