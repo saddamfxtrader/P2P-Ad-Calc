@@ -4,7 +4,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>PEPE Smart Trader — Binance Convert</title>
-
 <meta name="google" content="notranslate">
 <meta name="theme-color" content="#0a0f1e">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -15,7 +14,6 @@
 <link rel="manifest" id="appManifest">
 <link rel="apple-touch-icon" id="appleIcon">
 <link rel="icon" id="favIcon">
-
 <style>
 .notranslate,.notranslate *{translate:no!important}
 *{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;-webkit-tap-highlight-color:transparent}
@@ -25,7 +23,7 @@
   --pos:#22c55e;--neg:#ef4444;--warn:#f59e0b;--gold:#fbbf24;
   --r:18px;
 }
-body{background:linear-gradient(180deg,#080c17 0%,#0a0f1e 100%);color:var(--txt);min-height:100vh;padding:14px 12px 90px;display:flex;justify-content:center;align-items:flex-start}
+body{background:linear-gradient(180deg,#080c17 0%,#0a0f1e 100%);color:var(--txt);min-height:100vh;padding:14px 12px 120px;display:flex;justify-content:center;align-items:flex-start}
 .app{max-width:600px;width:100%;margin:0 auto}
 
 .brand{text-align:center;margin-bottom:14px}
@@ -34,54 +32,34 @@ body{background:linear-gradient(180deg,#080c17 0%,#0a0f1e 100%);color:var(--txt)
 .brand .pair{display:inline-block;margin-top:6px;background:#132238;color:#7dd3fc;border:1px solid #1e3a5f;padding:2px 10px;border-radius:20px;font-size:11px;font-weight:600}
 
 .card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:16px;margin-bottom:14px;box-shadow:0 6px 24px rgba(0,0,0,.35)}
-.card h2{font-size:14px;font-weight:700;color:var(--txt);margin-bottom:10px;display:flex;justify-content:space-between;align-items:center}
+.card h2{font-size:14px;font-weight:700;color:var(--txt);margin-bottom:10px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px}
 .card h2 .tag{font-size:10px;font-weight:600;color:var(--mut);background:#0d1626;border:1px solid var(--line);padding:2px 8px;border-radius:20px}
 
-/* chat */
-.chat{display:flex;flex-direction:column;gap:10px;max-height:60vh;overflow-y:auto;padding:4px 2px 6px;scroll-behavior:smooth}
-.chat::-webkit-scrollbar{width:6px}
-.chat::-webkit-scrollbar-thumb{background:#22304e;border-radius:6px}
-.msg{display:flex;gap:8px;max-width:92%;animation:fadein .25s ease}
-@keyframes fadein{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
-.msg .avatar{width:26px;height:26px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800}
-.msg.bot{align-self:flex-start}
-.msg.bot .avatar{background:linear-gradient(135deg,#1d4ed8,#22d3ee);color:#fff}
-.msg.user{align-self:flex-end;flex-direction:row-reverse}
-.msg.user .avatar{background:#243149;color:#93b4e0}
-.msg .bubble{padding:10px 13px;border-radius:14px;font-size:13.5px;line-height:1.5;white-space:pre-wrap;word-break:break-word}
-.msg.bot .bubble{background:#16213a;border:1px solid #1e2c47;border-top-left-radius:4px;color:#dbe7fa}
-.msg.user .bubble{background:linear-gradient(135deg,#1e3a8a,#0e7490);border-top-right-radius:4px;color:#fff}
-.msg .bubble b{color:#7dd3fc}
-.msg .bubble .hl{color:var(--gold);font-weight:700}
-.msg .bubble .pos{color:var(--pos);font-weight:700}
-.msg .bubble .neg{color:var(--neg);font-weight:700}
-.msg .bubble code{background:#0a1424;padding:1px 5px;border-radius:5px;font-size:12px;color:#7dd3fc}
-
-/* input dock */
-.dock{position:fixed;left:0;right:0;bottom:0;background:rgba(10,15,30,.95);backdrop-filter:blur(10px);border-top:1px solid var(--line);padding:10px 12px calc(10px + env(safe-area-inset-bottom));z-index:50}
-.dock-inner{max-width:600px;margin:0 auto;display:flex;gap:8px;align-items:center}
-.dock input{flex:1;padding:13px 14px;border-radius:26px;border:1.5px solid #26344f;background:#0d1626;color:#fff;font-size:15px;font-weight:600;letter-spacing:.3px;outline:none;transition:border .2s}
-.dock input:focus{border-color:var(--acc)}
-.dock input::placeholder{color:#5c7299;font-weight:400;letter-spacing:0}
-.dock button{width:46px;height:46px;border-radius:50%;border:none;background:linear-gradient(135deg,#2563eb,#0891b2);color:#fff;font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:transform .15s,opacity .2s;flex-shrink:0}
-.dock button:active{transform:scale(.92)}
-.dock button:disabled{opacity:.4;cursor:not-allowed}
-.dock .quick{display:flex;gap:6px;margin-bottom:8px;max-width:600px;margin-left:auto;margin-right:auto;overflow-x:auto;scrollbar-width:none}
-.dock .quick::-webkit-scrollbar{display:none}
-.dock .quick button{width:auto;height:auto;padding:6px 12px;border-radius:20px;background:#132238;border:1px solid #22304e;color:#93b4e0;font-size:11.5px;font-weight:600;white-space:nowrap}
-.dock .quick button:hover{background:#1a2c47;color:#fff}
+/* price ticker */
+.ticker{display:flex;justify-content:space-between;align-items:center;background:linear-gradient(135deg,#0c1e3a,#0a2a3a);border:1px solid #1e4a6f;border-radius:14px;padding:11px 14px;margin-bottom:14px}
+.ticker .lbl{font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:#7dd3fc;font-weight:700}
+.ticker .price{font-size:19px;font-weight:800;color:#fff;margin-top:2px;letter-spacing:.3px}
+.ticker .meta{font-size:10px;color:var(--mut);margin-top:3px}
+.ticker .live{display:inline-flex;align-items:center;gap:5px;font-size:10px;font-weight:700;color:var(--pos)}
+.ticker .live .dot{width:7px;height:7px;border-radius:50%;background:var(--pos);animation:pulse 1.6s infinite}
+.ticker .live.stale{color:var(--warn)}
+.ticker .live.stale .dot{background:var(--warn)}
+.ticker .live.offline{color:var(--neg)}
+.ticker .live.offline .dot{background:var(--neg)}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
 
 /* dashboard */
 .grid{display:grid;grid-template-columns:1fr 1fr;gap:9px}
 .stat{background:var(--panel2);border:1px solid #182338;border-radius:13px;padding:10px 11px}
 .stat .l{font-size:10px;text-transform:uppercase;letter-spacing:.4px;color:var(--mut);font-weight:600}
-.stat .v{font-size:15px;font-weight:800;margin-top:3px;color:var(--txt);word-break:break-word}
+.stat .v{font-size:15px;font-weight:800;margin-top:3px;color:var(--txt);word-break:break-word;font-variant-numeric:tabular-nums}
 .stat .v small{font-size:11px;font-weight:600;color:var(--mut)}
 .stat.wide{grid-column:span 2}
 .stat.hero{grid-column:span 2;background:linear-gradient(135deg,#0c1e3a,#0a2a3a);border-color:#1e4a6f}
 .stat.hero .v{font-size:22px}
 .pos{color:var(--pos)!important}.neg{color:var(--neg)!important}
 .gold{color:var(--gold)!important}
+.mut{color:var(--mut)!important}
 
 .badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:10.5px;font-weight:700;letter-spacing:.3px}
 .b-ready{background:#132a3f;color:#7dd3fc}
@@ -95,6 +73,7 @@ body{background:linear-gradient(180deg,#080c17 0%,#0a0f1e 100%);color:var(--txt)
 .row{display:flex;gap:8px;margin-top:10px}
 .row button{flex:1;padding:11px;border-radius:12px;border:1px solid var(--line);background:#132238;color:#c7d6ee;font-weight:600;font-size:12.5px;cursor:pointer;transition:.15s}
 .row button:hover{background:#1a2c47;color:#fff}
+.row button:active{transform:scale(.97)}
 .row button.danger{color:#fca5a5;border-color:#3a1a1a;background:#1c0f0f}
 .row button.danger:hover{background:#2a1414}
 .row button.good{color:#86efac;border-color:#14301f;background:#0c1c13}
@@ -108,36 +87,80 @@ body{background:linear-gradient(180deg,#080c17 0%,#0a0f1e 100%);color:var(--txt)
 
 .hist-item{display:flex;justify-content:space-between;gap:8px;padding:9px 0;border-bottom:1px solid #172236;font-size:12px;color:#c7d6ee}
 .hist-item:last-child{border-bottom:none}
-.hist-item .t{color:var(--mut);font-size:11px}
-.hist-item .pnl.pos{color:var(--pos);font-weight:700}
-.hist-item .pnl.neg{color:var(--neg);font-weight:700}
+.hist-item .t{color:var(--mut);font-size:11px;margin-top:2px}
 .empty{color:#5c7299;font-size:12.5px;text-align:center;padding:14px 0}
 
-.toast{position:fixed;left:50%;bottom:96px;transform:translateX(-50%) translateY(30px);background:#0b1a33;color:#fff;border:1px solid #1e3a5f;padding:11px 20px;border-radius:30px;font-size:13px;font-weight:600;box-shadow:0 10px 30px rgba(0,0,0,.5);opacity:0;transition:.3s;z-index:999;pointer-events:none;max-width:88%;text-align:center}
+.toast{position:fixed;left:50%;bottom:120px;transform:translateX(-50%) translateY(30px);background:#0b1a33;color:#fff;border:1px solid #1e3a5f;padding:11px 20px;border-radius:30px;font-size:13px;font-weight:600;box-shadow:0 10px 30px rgba(0,0,0,.5);opacity:0;transition:.3s;z-index:999;pointer-events:none;max-width:88%;text-align:center}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 
-.section-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--mut);margin:16px 0 8px}
-details{background:var(--panel2);border:1px solid #182338;border-radius:13px;padding:10px 12px;margin-top:8px}
-details summary{cursor:pointer;font-size:12.5px;font-weight:600;color:#93b4e0;list-style:none}
-details summary::-webkit-details-marker{display:none}
-details summary::before{content:'▸ ';color:var(--acc2);transition:.2s;display:inline-block}
-details[open] summary::before{transform:rotate(90deg)}
-details .body{margin-top:9px;font-size:12px;color:#b8c8e0;line-height:1.55}
-details .body b{color:#7dd3fc}
-details .body .k{color:var(--gold)}
+/* ---- floating chat widget ---- */
+.fab{position:fixed;z-index:400;width:58px;height:58px;border-radius:50%;background:linear-gradient(135deg,#2563eb,#0891b2);border:none;color:#fff;font-size:24px;cursor:grab;box-shadow:0 8px 24px rgba(37,99,235,.5);display:flex;align-items:center;justify-content:center;transition:transform .15s;touch-action:none;user-select:none}
+.fab:active{cursor:grabbing;transform:scale(.94)}
+.fab .badge-dot{position:absolute;top:0;right:0;width:14px;height:14px;border-radius:50%;background:var(--neg);border:2px solid var(--panel);display:none}
+.fab.has-msg .badge-dot{display:block}
 
-.modal{position:fixed;inset:0;background:rgba(3,6,14,.82);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;padding:20px;z-index:500;opacity:0;pointer-events:none;transition:.25s}
+.chatwin{position:fixed;z-index:399;right:12px;bottom:80px;width:min(380px,calc(100vw - 24px));height:min(520px,calc(100vh - 160px));background:var(--panel);border:1px solid #22304e;border-radius:20px;box-shadow:0 20px 60px rgba(0,0,0,.6);display:flex;flex-direction:column;overflow:hidden;opacity:0;pointer-events:none;transform:translateY(20px) scale(.96);transition:.25s cubic-bezier(.2,.9,.3,1)}
+.chatwin.open{opacity:1;pointer-events:auto;transform:none}
+.chatwin header{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:linear-gradient(135deg,#0c1e3a,#0a2a3a);border-bottom:1px solid #1e3a5f}
+.chatwin header .title{display:flex;align-items:center;gap:9px}
+.chatwin header .title .av{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#1d4ed8,#22d3ee);display:flex;align-items:center;justify-content:center;font-size:16px}
+.chatwin header .title .nm{font-size:13px;font-weight:700;color:#fff}
+.chatwin header .title .st{font-size:10px;color:#7dd3fc;margin-top:1px}
+.chatwin header .cls{background:transparent;border:none;color:#93b4e0;font-size:18px;cursor:pointer;padding:4px 8px;border-radius:8px}
+.chatwin header .cls:hover{background:#1a2c47;color:#fff}
+.chatwin .chat{flex:1;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:10px;max-height:none}
+.chatwin .chat::-webkit-scrollbar{width:6px}
+.chatwin .chat::-webkit-scrollbar-thumb{background:#22304e;border-radius:6px}
+
+.msg{display:flex;gap:8px;max-width:92%;animation:fadein .25s ease}
+@keyframes fadein{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.msg .avatar{width:26px;height:26px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800}
+.msg.bot{align-self:flex-start}
+.msg.bot .avatar{background:linear-gradient(135deg,#1d4ed8,#22d3ee);color:#fff}
+.msg.user{align-self:flex-end;flex-direction:row-reverse}
+.msg.user .avatar{background:#243149;color:#93b4e0}
+.msg .bubble{padding:10px 13px;border-radius:14px;font-size:13px;line-height:1.5;white-space:pre-wrap;word-break:break-word}
+.msg.bot .bubble{background:#16213a;border:1px solid #1e2c47;border-top-left-radius:4px;color:#dbe7fa}
+.msg.user .bubble{background:linear-gradient(135deg,#1e3a8a,#0e7490);border-top-right-radius:4px;color:#fff}
+.msg .bubble b{color:#7dd3fc}
+.msg .bubble .hl{color:var(--gold);font-weight:700}
+.msg .bubble .pos{color:var(--pos);font-weight:700}
+.msg .bubble .neg{color:var(--neg);font-weight:700}
+.msg .bubble code{background:#0a1424;padding:1px 5px;border-radius:5px;font-size:12px;color:#7dd3fc}
+
+.chatwin .dock-chat{border-top:1px solid var(--line);padding:8px 10px calc(8px + env(safe-area-inset-bottom));background:#0d1626}
+.chatwin .quick{display:flex;gap:6px;margin-bottom:7px;overflow-x:auto;scrollbar-width:none;padding-bottom:2px}
+.chatwin .quick::-webkit-scrollbar{display:none}
+.chatwin .quick button{width:auto;height:auto;padding:6px 12px;border-radius:20px;background:#132238;border:1px solid #22304e;color:#93b4e0;font-size:11px;font-weight:600;white-space:nowrap;cursor:pointer;flex-shrink:0}
+.chatwin .quick button:hover{background:#1a2c47;color:#fff}
+.chatwin .dock-inner{display:flex;gap:8px;align-items:center}
+.chatwin .dock-inner input{flex:1;padding:11px 14px;border-radius:24px;border:1.5px solid #26344f;background:#0a1220;color:#fff;font-size:14px;font-weight:600;outline:none;transition:border .2s}
+.chatwin .dock-inner input:focus{border-color:var(--acc)}
+.chatwin .dock-inner input::placeholder{color:#5c7299;font-weight:400}
+.chatwin .dock-inner button{width:42px;height:42px;border-radius:50%;border:none;background:linear-gradient(135deg,#2563eb,#0891b2);color:#fff;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:transform .15s}
+.chatwin .dock-inner button:active{transform:scale(.9)}
+.chatwin .dock-inner button:disabled{opacity:.4;cursor:not-allowed}
+
+/* modal */
+.modal{position:fixed;inset:0;background:rgba(3,6,14,.82);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;padding:20px;z-index:600;opacity:0;pointer-events:none;transition:.25s}
 .modal.show{opacity:1;pointer-events:auto}
 .modal-box{background:var(--panel);border:1px solid #22304e;border-radius:20px;padding:22px 18px;max-width:420px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,.6);transform:scale(.92);transition:.25s}
 .modal.show .modal-box{transform:scale(1)}
 .modal-box h3{font-size:17px;margin-bottom:6px;color:#fff}
 .modal-box p{font-size:13px;color:var(--mut);line-height:1.5;margin-bottom:14px}
+.modal-box label{display:block;font-size:12px;color:#93b4e0;margin-bottom:4px}
+.modal-box input{width:100%;padding:11px;border-radius:11px;border:1px solid #26344f;background:#0d1626;color:#fff;font-size:14px;margin-bottom:12px}
 .modal-box .actions{display:flex;gap:8px}
 .modal-box .actions button{flex:1;padding:11px;border-radius:12px;border:none;font-weight:700;font-size:13px;cursor:pointer}
 .modal-box .actions .cancel{background:#1a2438;color:#93b4e0}
 .modal-box .actions .ok{background:linear-gradient(135deg,#2563eb,#0891b2);color:#fff}
 
-@media(max-width:420px){.grid{grid-template-columns:1fr}.stat.wide,.stat.hero{grid-column:span 1}.brand h1{font-size:18px}}
+@media(max-width:420px){
+  .grid{grid-template-columns:1fr}
+  .stat.wide,.stat.hero{grid-column:span 1}
+  .brand h1{font-size:18px}
+  .chatwin{right:8px;bottom:76px;width:calc(100vw - 16px);height:calc(100vh - 140px)}
+}
 </style>
 </head>
 <body class="notranslate">
@@ -149,10 +172,14 @@ details .body .k{color:var(--gold)}
     <div class="pair">PEPE / USDT</div>
   </div>
 
-  <!-- Chat -->
-  <div class="card">
-    <h2>💬 Trading Assistant <span class="tag" id="sessionTag">Session #1</span></h2>
-    <div class="chat" id="chat"></div>
+  <!-- Live price ticker -->
+  <div class="ticker">
+    <div>
+      <div class="lbl">Binance Live Market</div>
+      <div class="price" id="livePrice">— USDT</div>
+      <div class="meta" id="liveMeta">সংযোগ স্থাপন হচ্ছে…</div>
+    </div>
+    <div class="live" id="liveStatus"><span class="dot"></span><span id="liveTxt">LIVE</span></div>
   </div>
 
   <!-- Dashboard -->
@@ -163,12 +190,12 @@ details .body .k{color:var(--gold)}
         <div class="l">Final Sell Target (USDT)</div>
         <div class="v gold" id="sSellTarget">—</div>
       </div>
-      <div class="stat"><div class="l">Total Buy Cost</div><div class="v" id="sCost">0</div></div>
+      <div class="stat"><div class="l">Total Buy Cost</div><div class="v" id="sCost">0.00</div></div>
       <div class="stat"><div class="l">PEPE Holdings</div><div class="v" id="sQty">0</div></div>
       <div class="stat"><div class="l">Weighted Avg Buy</div><div class="v" id="sWap">—</div></div>
       <div class="stat"><div class="l">Break-even</div><div class="v" id="sBe">—</div></div>
       <div class="stat"><div class="l">Unrealized P/L</div><div class="v" id="sUpl">—</div></div>
-      <div class="stat"><div class="l">Realized Net P/L</div><div class="v" id="sRpl">0</div></div>
+      <div class="stat"><div class="l">Realized Net P/L</div><div class="v" id="sRpl">0.00</div></div>
       <div class="stat"><div class="l">Target Profit %</div><div class="v" id="sTargetPct">0%</div></div>
       <div class="stat"><div class="l">Realized P/L %</div><div class="v" id="sRplPct">0%</div></div>
       <div class="stat wide">
@@ -183,9 +210,8 @@ details .body .k{color:var(--gold)}
       <button id="btnSellDone">✅ Record Sell</button>
     </div>
     <div class="row">
-      <button id="btnExport">⬇ Export</button>
       <button id="btnSettings">⚙ Settings</button>
-      <button class="danger" id="btnReset">↺ Reset Session</button>
+      <button class="danger" id="btnReset">↺ Reset</button>
     </div>
   </div>
 
@@ -193,37 +219,32 @@ details .body .k{color:var(--gold)}
   <div class="card">
     <h2>📋 Active Session Orders <span class="tag" id="orderCount">0</span></h2>
     <div id="ordersList"><div class="empty">এখনো কোনো order নেই</div></div>
-    <details>
-      <summary>Order lifecycle নিয়ম</summary>
-      <div class="body">
-        <b>Planned</b> — order তৈরি হয়েছে, Binance-এ set করা হয়নি।<br>
-        <b>Pending</b> — Binance-এ set করা হয়েছে, fill হয়নি।<br>
-        <b>Partial</b> — আংশিক fill হয়েছে; শুধু filled অংশ position-এ যোগ হবে।<br>
-        <b>Filled</b> — সম্পূর্ণ fill; সম্পূর্ণ position-এ যোগ হবে।<br>
-        <b>Cancelled / Expired</b> — position-এ কোনো প্রভাব নেই।<br>
-        <span class="k">⚠ কোনো order "Filled" না হওয়া পর্যন্ত calculator সেটি position হিসেবে ধরে না।</span>
-      </div>
-    </details>
   </div>
-
-  <!-- History archive -->
-  <div class="card">
-    <h2>🗂 Session Archive <span class="tag" id="archiveCount">0</span></h2>
-    <div id="archiveList"><div class="empty">কোনো সম্পন্ন session নেই</div></div>
-  </div>
-
-  <p style="text-align:center;font-size:10.5px;color:#5c7299;margin-top:10px;line-height:1.5">
-    ⚠️ শিক্ষামূলক টুল · কোনো লাভের প্রতিশ্রুতি নয় · Actual execution data নিজে যাচাই করুন<br>
-    Binance Convert Limit Only · Instant Convert Buy নিষিদ্ধ
-  </p>
 </div>
 
-<!-- Input dock -->
-<div class="dock">
-  <div class="quick" id="quickBtns"></div>
-  <div class="dock-inner">
-    <input id="chatInput" type="text" inputmode="decimal" autocomplete="off" placeholder="উত্তর লিখুন..." disabled>
-    <button id="sendBtn" disabled>➤</button>
+<!-- Floating Chat -->
+<button class="fab" id="fab" aria-label="Trading Assistant">
+  💬<span class="badge-dot"></span>
+</button>
+
+<div class="chatwin" id="chatwin">
+  <header>
+    <div class="title">
+      <div class="av">🐸</div>
+      <div>
+        <div class="nm">Trading Assistant</div>
+        <div class="st" id="sessionTag">Session #1</div>
+      </div>
+    </div>
+    <button class="cls" id="chatClose">✕</button>
+  </header>
+  <div class="chat" id="chat"></div>
+  <div class="dock-chat">
+    <div class="quick" id="quickBtns"></div>
+    <div class="dock-inner">
+      <input id="chatInput" type="text" inputmode="decimal" autocomplete="off" placeholder="উত্তর লিখুন..." disabled>
+      <button id="sendBtn" disabled>➤</button>
+    </div>
   </div>
 </div>
 
@@ -233,11 +254,11 @@ details .body .k{color:var(--gold)}
 <div class="modal" id="settingsModal">
   <div class="modal-box">
     <h3>⚙ Risk & Settings</h3>
-    <p style="font-size:12px">এই মানগুলো শুধু সতর্কতা দেখানোর জন্য; কোনো order auto-place হবে না।</p>
-    <label style="display:block;font-size:12px;color:#93b4e0;margin-bottom:4px">Max Session Investment (USDT)</label>
-    <input id="setMaxInv" type="number" min="0" step="0.01" style="width:100%;padding:11px;border-radius:11px;border:1px solid #26344f;background:#0d1626;color:#fff;font-size:14px;margin-bottom:10px">
-    <label style="display:block;font-size:12px;color:#93b4e0;margin-bottom:4px">Max Buy Orders (0 = unlimited)</label>
-    <input id="setMaxBuys" type="number" min="0" step="1" style="width:100%;padding:11px;border-radius:11px;border:1px solid #26344f;background:#0d1626;color:#fff;font-size:14px;margin-bottom:14px">
+    <p>শুধু সতর্কতা দেখানোর জন্য; কোনো order auto-place হবে না।</p>
+    <label>Max Session Investment (USDT)</label>
+    <input id="setMaxInv" type="number" min="0" step="0.01" placeholder="0 = unlimited">
+    <label>Max Buy Orders (0 = unlimited)</label>
+    <input id="setMaxBuys" type="number" min="0" step="1" placeholder="0 = unlimited">
     <div class="actions">
       <button class="cancel" id="setCancel">বাতিল</button>
       <button class="ok" id="setSave">সেভ</button>
@@ -258,73 +279,69 @@ details .body .k{color:var(--gold)}
 </div>
 
 <script>
-/* ============================================================
-   P2P → PEPE Smart Trader — full rebuild
-   Modules: Conversation · Calculation · Position/Recovery ·
-            Order Manager · Profit Verification · Session Mgmt ·
-            Storage · Dashboard
-   ============================================================ */
+/* =====================================================================
+   PEPE Smart Trader — Complete Rebuild
+   Modules:
+     - BigInt decimal precision engine
+     - Binance live price (REST + polling)
+     - Persistent storage (IndexedDB w/ LS fallback)
+     - Financial calculation engine (WAP, break-even, realized P/L,
+       final sell target, recovery)
+     - Conversation state machine
+     - Floating chat widget (drag + touch)
+     - Dashboard renderer
+   ===================================================================== */
 (function(){
 'use strict';
 
-/* ---------- precision helpers (string-safe decimal math) ----------
-   PEPE price ~0.00000xxx — use scaled integer math to avoid
-   float drift. All monetary values kept as "float strings" with
-   up to 18 significant digits via Number when safe; for critical
-   storage we keep raw decimal strings and round only on display.
-------------------------------------------------------------------- */
+/* ---------- Decimal precision engine (BigInt) ---------- */
 const D = {
-  // multiply two decimal strings -> decimal string (12 dp)
   mul(a,b){
-    const A=decParts(a),B=decParts(b);
-    // use BigInt for exactness
+    const A=dp(a),B=dp(b);
     const ia=BigInt(A.i+A.f),ib=BigInt(B.i+B.f);
-    const scale=A.d+B.d;
-    let prod=ia*ib;
-    return formatScaled(prod,scale);
+    return fmtScaled(ia*ib, A.d+B.d);
   },
-  div(a,b,dp=18){
-    const A=decParts(a),B=decParts(b);
-    if(B.i==='0'&&B.f==='0') return '0';
+  div(a,b,dp_=18){
+    const A=dp(a),B=dp(b);
+    if(B.i==='0'&&!B.f.replace(/0/g,'')) return '0';
     const ia=BigInt(A.i+A.f),ib=BigInt(B.i+B.f);
-    // a/b = (ia/10^A.d)/(ib/10^B.d) = ia*10^B.d / (ib*10^A.d)
-    const num=ia*(10n**BigInt(B.d+dp));
+    const num=ia*(10n**BigInt(B.d+dp_));
     const den=ib*(10n**BigInt(A.d));
-    const q=num/den;
-    return formatScaled(q,dp);
+    return fmtScaled(num/den, dp_);
   },
   add(a,b){
-    const A=decParts(a),B=decParts(b);
-    const dp=Math.max(A.d,B.d);
-    const ia=BigInt(A.i+A.f)*(10n**BigInt(dp-A.d));
-    const ib=BigInt(B.i+B.f)*(10n**BigInt(dp-B.d));
-    return formatScaled(ia+ib,dp);
+    const A=dp(a),B=dp(b);
+    const dpv=Math.max(A.d,B.d);
+    const ia=BigInt(A.i+A.f)*(10n**BigInt(dpv-A.d));
+    const ib=BigInt(B.i+B.f)*(10n**BigInt(dpv-B.d));
+    return fmtScaled(ia+ib, dpv);
   },
   sub(a,b){ return D.add(a,D.neg(b)); },
-  neg(a){ return a.startsWith('-')?a.slice(1):(a==='0'||a==='0.000000'?'0':'-'+a); },
-  cmp(a,b){ // -1,0,1
-    const A=decParts(a),B=decParts(b);
-    const dp=Math.max(A.d,B.d,0);
-    const ia=BigInt(A.i+A.f)*(10n**BigInt(dp-A.d));
-    const ib=BigInt(B.i+B.f)*(10n**BigInt(dp-B.d));
+  neg(a){ if(!a||a==='0') return '0'; return a.startsWith('-')?a.slice(1):'-'+a; },
+  cmp(a,b){
+    const A=dp(a),B=dp(b);
+    const dpv=Math.max(A.d,B.d,0);
+    const ia=BigInt(A.i+A.f)*(10n**BigInt(dpv-A.d));
+    const ib=BigInt(B.i+B.f)*(10n**BigInt(dpv-B.d));
     return ia<ib?-1:ia>ib?1:0;
   },
   gt(a,b){return D.cmp(a,b)>0;},
-  abs(a){ return a.startsWith('-')?a.slice(1):a; }
+  lt(a,b){return D.cmp(a,b)<0;}
 };
-function decParts(s){
-  s=String(s).trim();
+function dp(s){
+  s=String(s==null?'0':s).trim();
+  if(s===''||s==='.') s='0';
   let neg=false;
   if(s.startsWith('-')){neg=true;s=s.slice(1);}
-  if(s===''||s==='.') s='0';
+  if(!/^\d*\.?\d*$/.test(s)){
+    // scientific notation fallback
+    s=Number(s).toFixed(18);
+  }
   let [i,f='']=s.split('.');
-  i=i||'0'; f=f||'';
-  // strip trailing zeros in fraction (keep at least one)
-  f=f.replace(/0+$/,'');
-  if(f==='') f='';
+  i=i||'0'; f=f.replace(/0+$/,'');
   return {i:(neg?'-':'')+i, f, d:f.length};
 }
-function formatScaled(big,scale){
+function fmtScaled(big, scale){
   let neg=false;
   if(big<0n){neg=true;big=-big;}
   let s=big.toString();
@@ -333,468 +350,501 @@ function formatScaled(big,scale){
   let i=s.slice(0,s.length-scale);
   let f=s.slice(s.length-scale).replace(/0+$/,'');
   let out=(neg?'-':'')+i+(f?'.'+f:'');
-  if(out==='-0')out='0';
+  if(out==='-0') return '0';
   return out;
 }
-// display helpers
-function n(x){ return Number(x)||0; }
-function fmtU(x,dp=4){ // USDT
+
+/* ---------- formatters ---------- */
+function n(x){ const v=Number(x); return isFinite(v)?v:0; }
+function fmtU(x,dp_=2){
   const v=n(x);
-  if(v===0) return '0.00';
-  return v.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:dp});
+  if(Math.abs(v)<1e-12) return '0.00';
+  return v.toLocaleString('en-US',{minimumFractionDigits:dp_,maximumFractionDigits:dp_});
 }
-function fmtP(x){ // PEPE price high precision
+// PEPE price: up to 11 decimals, trimmed
+function fmtP(x){
   const v=n(x);
   if(!v) return '—';
-  // up to 10 significant decimals
-  return v.toFixed(11).replace(/0+$/,'').replace(/\.$/,'');
+  const fixed=v.toFixed(11);
+  return fixed.replace(/0+$/,'').replace(/\.$/,'');
 }
-function fmtQ(x){ // PEPE qty
+// PEPE qty: full value with grouping
+function fmtQ(x){
   const v=n(x);
   if(!v) return '0';
-  if(v>=1e6) return (v/1e6).toFixed(3)+'M';
-  if(v>=1e3) return (v/1e3).toFixed(3)+'K';
-  return v.toLocaleString('en-US',{maximumFractionDigits:4});
+  return v.toLocaleString('en-US',{maximumFractionDigits:4,minimumFractionDigits:0});
+}
+function fmtQFull(x){
+  const v=n(x);
+  if(!v) return '0';
+  return v.toLocaleString('en-US',{maximumFractionDigits:8});
 }
 function fmtPct(x){ const v=n(x); return (v>=0?'+':'')+v.toFixed(2)+'%'; }
 
-/* ---------- storage ---------- */
-const LS_SESSION='pepeActive_v1';
-const LS_ARCHIVE='pepeArchive_v1';
-const LS_SET='pepeSettings_v1';
-
-const store={
-  get(k,f){ try{const r=localStorage.getItem(k);return r?JSON.parse(r):f;}catch(e){return f;} },
-  set(k,v){ try{localStorage.setItem(k,JSON.stringify(v));}catch(e){} },
-  del(k){ try{localStorage.removeItem(k);}catch(e){} }
+/* ---------- Binance live market ---------- */
+const BINANCE_PRICE='https://api.binance.com/api/v3/ticker/price?symbol=PEPEUSDT';
+const BINANCE_EXINFO='https://api.binance.com/api/v3/exchangeInfo?symbol=PEPEUSDT';
+const market = {
+  price: null,        // decimal string
+  ts: 0,
+  tickSize: null,     // decimal string
+  stepSize: null,
+  status: 'init',     // init|live|stale|offline
+  failCount: 0
 };
 
-/* ---------- session state ---------- */
-/* Session model:
-   {
-     id, startTs, endTs,
-     targetPct,
-     orders: [ { id, side:'buy'|'sell', type:'limit',
-                 price, usdt, qty,            // planned
-                 status:'planned'|'pending'|'partial'|'filled'|'cancelled'|'expired',
-                 filledUsdt, filledQty, fillPrice,
-                 ts, note } ],
-     notes: []
-   }
-*/
-let session = null;
-let settings = { maxInv:0, maxBuys:0 };
-
-function newSession(id){
-  return {
-    id: id||1,
-    startTs: Date.now(),
-    endTs: null,
-    targetPct: '0',
-    orders: []
-  };
+async function fetchLivePrice(){
+  try{
+    const ctrl = new AbortController();
+    const t = setTimeout(()=>ctrl.abort(), 8000);
+    const res = await fetch(BINANCE_PRICE, {signal:ctrl.signal, cache:'no-store'});
+    clearTimeout(t);
+    if(!res.ok) throw new Error('HTTP '+res.status);
+    const json = await res.json();
+    if(!json || !json.price) throw new Error('no price');
+    market.price = String(json.price);
+    market.ts = Date.now();
+    market.status = 'live';
+    market.failCount = 0;
+  }catch(e){
+    market.failCount++;
+    if(market.price && Date.now()-market.ts < 5*60*1000){
+      market.status = 'stale';
+    }else{
+      market.status = 'offline';
+    }
+  }
+  renderTicker();
 }
 
-/* ---------- position computation ---------- */
-/* Accounting rules (per spec §15):
-   - Only filled/partial contributes.
-   - Total Buy Cost  = Σ buy.filledUsdt
-   - Remaining PEPE  = Σ buy.filledQty − Σ sell.filledQty
-   - Cost basis of remaining = Σ buy.filledUsdt − (proportional
-     cost removed by sells). We track remainingCostBasis directly.
-   - Realized Net P/L = Σ sell.filledUsdt − (Σ buy.filledUsdt − remainingCostBasis)
-   Actually simpler: realized = Σ sellProceeds − Σ costOfSold.
-   costOfSold uses weighted avg at time of sell.
+async function fetchExchangeInfo(){
+  try{
+    const res = await fetch(BINANCE_EXINFO, {cache:'no-store'});
+    if(!res.ok) return;
+    const j = await res.json();
+    const sym = j.symbols && j.symbols[0];
+    if(!sym) return;
+    const f = (sym.filters||[]).find(x=>x.filterType==='PRICE_FILTER');
+    if(f && f.tickSize) market.tickSize = f.tickSize;
+    const lf = (sym.filters||[]).find(x=>x.filterType==='LOT_SIZE');
+    if(lf && lf.stepSize) market.stepSize = lf.stepSize;
+  }catch(e){}
+}
+
+function roundToTick(priceStr){
+  const ts = market.tickSize;
+  if(!ts || n(ts)===0) return priceStr;
+  const A = dp(priceStr), T = dp(ts);
+  const dpv = Math.max(A.d, T.d);
+  const ia = BigInt(A.i+A.f) * (10n**BigInt(dpv-A.d));
+  const it = BigInt(T.i+T.f) * (10n**BigInt(dpv-T.d));
+  const q = ia/it;
+  const r = q*it;
+  return fmtScaled(r, dpv);
+}
+
+function renderTicker(){
+  const elP=document.getElementById('livePrice');
+  const elM=document.getElementById('liveMeta');
+  const elS=document.getElementById('liveStatus');
+  const elT=document.getElementById('liveTxt');
+  if(market.price){
+    elP.textContent = fmtP(market.price)+' USDT';
+  }else{
+    elP.textContent = '— USDT';
+  }
+  if(market.status==='live'){
+    elS.className='live'; elT.textContent='LIVE';
+    elM.textContent = 'Binance · '+new Date(market.ts).toLocaleTimeString();
+  }else if(market.status==='stale'){
+    elS.className='live stale'; elT.textContent='STALE';
+    const age = Math.round((Date.now()-market.ts)/1000);
+    elM.textContent = 'সর্বশেষ: '+new Date(market.ts).toLocaleTimeString()+' ('+age+'s আগে)';
+  }else if(market.status==='offline'){
+    elS.className='live offline'; elT.textContent='OFFLINE';
+    elM.textContent = 'Binance থেকে price পাওয়া যাচ্ছে না';
+  }else{
+    elM.textContent = 'সংযোগ স্থাপন হচ্ছে…';
+  }
+}
+
+/* ---------- persistent storage (IndexedDB w/ LS fallback) ---------- */
+const DB_NAME='pepeSmartTrader';
+const DB_VER=1;
+const STORE='kv';
+let dbReady=null;
+
+function openDB(){
+  return new Promise((resolve)=>{
+    if(!('indexedDB' in window)) return resolve(null);
+    const req = indexedDB.open(DB_NAME, DB_VER);
+    req.onupgradeneeded = ()=>{
+      const db=req.result;
+      if(!db.objectStoreNames.contains(STORE)) db.createObjectStore(STORE);
+    };
+    req.onsuccess = ()=>resolve(req.result);
+    req.onerror = ()=>resolve(null);
+  });
+}
+function idbGet(db,key){
+  return new Promise((resolve)=>{
+    try{
+      const tx=db.transaction(STORE,'readonly');
+      const r=tx.objectStore(STORE).get(key);
+      r.onsuccess=()=>resolve(r.result);
+      r.onerror=()=>resolve(null);
+    }catch(e){resolve(null);}
+  });
+}
+function idbSet(db,key,val){
+  return new Promise((resolve)=>{
+    try{
+      const tx=db.transaction(STORE,'readwrite');
+      tx.objectStore(STORE).put(val,key);
+      tx.oncomplete=()=>resolve(true);
+      tx.onerror=()=>resolve(false);
+    }catch(e){resolve(false);}
+  });
+}
+function idbDel(db,key){
+  return new Promise((resolve)=>{
+    try{
+      const tx=db.transaction(STORE,'readwrite');
+      tx.objectStore(STORE).delete(key);
+      tx.oncomplete=()=>resolve(true);
+    }catch(e){resolve(false);}
+  });
+}
+
+const LS_PREFIX='pepe_v2_';
+const store = {
+  async get(key, fallback){
+    // try IndexedDB first
+    if(dbReady){
+      const db=await dbReady;
+      if(db){
+        const v = await idbGet(db, key);
+        if(v !== undefined && v !== null) return v;
+      }
+    }
+    // fallback to localStorage
+    try{
+      const raw = localStorage.getItem(LS_PREFIX+key);
+      return raw ? JSON.parse(raw) : fallback;
+    }catch(e){ return fallback; }
+  },
+  async set(key, val){
+    let ok=false;
+    if(dbReady){
+      const db=await dbReady;
+      if(db) ok = await idbSet(db,key,val);
+    }
+    try{ localStorage.setItem(LS_PREFIX+key, JSON.stringify(val)); ok=true; }catch(e){}
+    return ok;
+  },
+  async del(key){
+    if(dbReady){
+      const db=await dbReady;
+      if(db) await idbDel(db,key);
+    }
+    try{ localStorage.removeItem(LS_PREFIX+key); }catch(e){}
+  }
+};
+
+/* ---------- session model ---------- */
+/*
+  session = {
+    id, startTs,
+    targetPct,           // decimal string e.g. "2"
+    orders: [{
+      id, side:'buy'|'sell', type:'limit',
+      price, usdt, qty,               // planned
+      status:'planned'|'pending'|'partial'|'filled'|'cancelled',
+      filledUsdt, filledQty, fillPrice,
+      ts, note
+    }],
+    conversation: { state, data }    // persisted conversation
+  }
+*/
+let session = null;
+let settings = { maxInv: 0, maxBuys: 0 };
+let orderSeq = 1;
+
+function newSession(id){
+  return { id: id||1, startTs: Date.now(), targetPct: '0', orders: [], conversation:{state:'askBuyPrice', data:{}} };
+}
+
+async function persist(){
+  try{
+    await store.set('session', session);
+    await store.set('settings', settings);
+  }catch(e){}
+}
+
+async function loadAll(){
+  dbReady = openDB();
+  let s = await store.get('session', null);
+  if(s && s.id && Array.isArray(s.orders)){
+    session = s;
+  }else{
+    session = newSession(1);
+  }
+  const st = await store.get('settings', null);
+  if(st && typeof st==='object') settings = Object.assign({maxInv:0,maxBuys:0}, st);
+  // restore order sequence
+  let maxId=0;
+  for(const o of session.orders){
+    const num = parseInt(String(o.id).replace(/\D/g,''),10);
+    if(num>maxId) maxId=num;
+  }
+  orderSeq = maxId+1;
+  if(!session.conversation) session.conversation = {state:'askBuyPrice', data:{}};
+}
+
+/* ---------- financial engine ---------- */
+/*
+  Rules:
+   - Only filled or partial orders affect position.
+   - totalBuyCost     = Σ buy.filledUsdt
+   - totalBuyQty      = Σ buy.filledQty
+   - totalSellProceeds= Σ sell.filledUsdt
+   - totalSellQty     = Σ sell.filledQty
+   - remainingQty     = totalBuyQty - totalSellQty
+   - avgBuy           = totalBuyCost / totalBuyQty
+   - cost basis of remaining uses weighted average at time of sell.
+     Simplify: assume all sells happen at avg cost = totalBuyCost/totalBuyQty
+     realizedCostOfSold = totalSellQty * avgBuy
+     realizedNet = totalSellProceeds - realizedCostOfSold
+   - breakEven = (totalBuyCost - realizedCostOfSold) / remainingQty
+              = avgBuy (same thing under this model)
+   - final sell target:
+       targetReturn = totalBuyCost * (1 + targetPct/100)
+       neededProceeds = targetReturn - totalSellProceeds
+       sellTarget = neededProceeds / remainingQty
 */
 function computePosition(){
-  const s = session;
-  const buys = s.orders.filter(o=>o.side==='buy' && (o.status==='filled'||o.status==='partial'));
-  const sells= s.orders.filter(o=>o.side==='sell'&& (o.status==='filled'||o.status==='partial'));
+  const buys = session.orders.filter(o=>o.side==='buy' && (o.status==='filled'||o.status==='partial'));
+  const sells= session.orders.filter(o=>o.side==='sell'&& (o.status==='filled'||o.status==='partial'));
 
-  let totalBuyCost=0;      // cumulative filled buy USDT
-  let totalBuyQty =0;      // cumulative filled buy PEPE
-  let totalSellProceeds=0; // cumulative filled sell USDT
-  let totalSellQty=0;      // cumulative filled sell PEPE
+  let totalBuyCost='0', totalBuyQty='0';
+  let totalSellProceeds='0', totalSellQty='0';
 
   for(const b of buys){
-    totalBuyCost = n(D.add(totalBuyCost, b.filledUsdt||'0'));
-    totalBuyQty  = n(D.add(totalBuyQty,  b.filledQty ||'0'));
+    totalBuyCost = D.add(totalBuyCost, b.filledUsdt||'0');
+    totalBuyQty  = D.add(totalBuyQty,  b.filledQty ||'0');
   }
-  for(const sl of sells){
-    totalSellProceeds = n(D.add(totalSellProceeds, sl.filledUsdt||'0'));
-    totalSellQty      = n(D.add(totalSellQty,      sl.filledQty ||'0'));
+  for(const s of sells){
+    totalSellProceeds = D.add(totalSellProceeds, s.filledUsdt||'0');
+    totalSellQty      = D.add(totalSellQty,      s.filledQty ||'0');
   }
 
-  const remainingQty = Math.max(0, totalBuyQty - totalSellQty);
+  let remainingQty = D.sub(totalBuyQty, totalSellQty);
+  if(D.lt(remainingQty,'0')) remainingQty='0';
 
-  // weighted cost basis of remaining: 
-  // avgBuy * remainingQty (approx, assuming sells at avg cost for basis)
-  const avgBuy = totalBuyQty>0 ? totalBuyCost/totalBuyQty : 0;
-  const remainingBasis = remainingQty * avgBuy;
-  const realizedCostOfSold = totalSellQty * avgBuy;
-  const realizedNet = totalSellProceeds - realizedCostOfSold;
-  const realizedPct = totalBuyCost>0 ? (realizedNet/totalBuyCost)*100 : 0;
+  const avgBuy = D.gt(totalBuyQty,'0') ? D.div(totalBuyCost, totalBuyQty, 18) : '0';
+  const realizedCostOfSold = D.mul(totalSellQty, avgBuy);
+  const realizedNet = D.sub(totalSellProceeds, realizedCostOfSold);
+  const realizedPct = D.gt(totalBuyCost,'0') ? D.mul(D.div(realizedNet,totalBuyCost,18),'100') : '0';
 
-  // break-even = remainingBasis / remainingQty  (equals avgBuy)
-  const breakEven = remainingQty>0 ? remainingBasis/remainingQty : 0;
+  // cost basis of remaining
+  const remainingBasis = D.sub(totalBuyCost, realizedCostOfSold);
+  const breakEven = D.gt(remainingQty,'0') ? D.div(remainingBasis, remainingQty, 18) : '0';
 
-  // target
-  const targetPct = n(s.targetPct)||0;
-  const targetReturnTotal = totalBuyCost * (1+targetPct/100); // required cumulative proceeds for full session
-  const requiredProceeds = targetReturnTotal - totalSellProceeds; // additional needed
-  const sellTarget = remainingQty>0 ? requiredProceeds/remainingQty : 0;
+  const targetPct = session.targetPct || '0';
+  const targetReturnTotal = D.mul(totalBuyCost, D.add('1', D.div(targetPct,'100',18)));
+  const neededProceeds = D.sub(targetReturnTotal, totalSellProceeds);
+  const sellTarget = D.gt(remainingQty,'0') ? D.div(neededProceeds, remainingQty, 18) : '0';
 
-  // recovery: if realizedNet < 0 we are recovering; progress = 1 - |realizedNet|/|worst|
-  // simplest: progress = targetReturnTotal>0 ? (totalSellProceeds/targetReturnTotal)*100 : 0
-  const progress = targetReturnTotal>0 ? Math.max(0,Math.min(100,(totalSellProceeds/targetReturnTotal)*100)) : 0;
+  const progress = D.gt(targetReturnTotal,'0')
+    ? Math.max(0, Math.min(100, n(D.div(D.mul(totalSellProceeds,'100'), targetReturnTotal, 8))))
+    : 0;
 
-  // unrealized (needs current market price — optional)
+  // unrealized
+  let unrealized = '0', hasPrice=false;
+  if(market.price && D.gt(remainingQty,'0')){
+    hasPrice=true;
+    const mktVal = D.mul(remainingQty, market.price);
+    unrealized = D.sub(mktVal, remainingBasis);
+  }
+
   return {
     totalBuyCost, totalBuyQty, totalSellProceeds, totalSellQty,
     remainingQty, avgBuy, breakEven,
-    realizedNet, realizedPct, realizedCostOfSold,
-    targetPct, targetReturnTotal, requiredProceeds, sellTarget,
-    progress
+    realizedNet, realizedPct, realizedCostOfSold, remainingBasis,
+    targetPct, targetReturnTotal, neededProceeds, sellTarget,
+    progress, unrealized, hasPrice
   };
 }
 
-function sessionComplete(){
+function sessionTargetHit(){
   const p = computePosition();
-  const noHoldings = p.remainingQty < 1e-9; // effectively zero
-  const targetHit = p.realizedPct >= (n(session.targetPct)-1e-9);
-  return noHoldings && targetHit && p.totalBuyCost>0;
+  if(D.lt(p.totalBuyCost,'0.00000001')) return false;
+  return n(p.realizedPct) >= n(p.targetPct) - 0.001 && D.gt(p.remainingQty,'0')===false;
 }
 
-/* ---------- conversation engine ---------- */
-/* State machine. Each state asks one question; validator + handler. */
-const chat=document.getElementById('chat');
-const input=document.getElementById('chatInput');
-const sendBtn=document.getElementById('sendBtn');
-const quickBtns=document.getElementById('quickBtns');
+/* ---------- order helpers ---------- */
+function nextOrderId(){ return 'O'+(orderSeq++); }
 
-let conv = { state:'idle', data:{}, history:[] };
-
-function scrollChat(){ chat.scrollTop = chat.scrollHeight; }
-
-function botSay(text){
-  const d=document.createElement('div'); d.className='msg bot';
-  d.innerHTML='<div class="avatar">🐸</div><div class="bubble">'+text+'</div>';
-  chat.appendChild(d); scrollChat();
-  conv.history.push({who:'bot',text});
-}
-function userSay(text){
-  const d=document.createElement('div'); d.className='msg user';
-  d.innerHTML='<div class="avatar">👤</div><div class="bubble">'+escapeHtml(text)+'</div>';
-  chat.appendChild(d); scrollChat();
-  conv.history.push({who:'user',text});
-}
-function escapeHtml(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
-
-function setInputEnabled(on, placeholder, quick){
-  input.disabled=!on; sendBtn.disabled=!on;
-  input.placeholder = placeholder||(on?'উত্তর লিখুন...':'অপেক্ষা করুন...');
-  if(on) setTimeout(()=>input.focus(),50);
-  quickBtns.innerHTML='';
-  if(quick && quick.length){
-    quick.forEach(q=>{
-      const b=document.createElement('button');
-      b.textContent=q.label;
-      b.onclick=()=>{ input.value=q.value; handleSubmit(); };
-      quickBtns.appendChild(b);
-    });
-  }
+function pushOrder(order){
+  session.orders.push(order);
+  persist();
+  renderAll();
 }
 
-function handleSubmit(){
-  const raw = input.value.trim();
-  if(!raw) return;
-  input.value='';
-  userSay(raw);
-  if(!conv.state || conv.state==='idle'){ return; }
-  const st = STATES[conv.state];
-  if(!st){ botSay('⚠️ অপ্রত্যাশিত অবস্থা। Session রিসেট করুন।'); setInputEnabled(false); return; }
-  const result = st.validate(raw, conv.data);
-  if(!result.ok){
-    botSay('❌ '+result.msg);
-    // re-ask same question (don't advance)
-    setInputEnabled(true, st.placeholder, st.quick);
-    return;
-  }
-  conv.data[st.field] = result.value;
-  // move to next state
-  let next = st.next;
-  if(typeof next==='function') next = next(result.value, conv.data, result);
-  conv.state = next;
-  goToState(next);
+function fillOrder(id){
+  const o = session.orders.find(x=>x.id===id);
+  if(!o || o.status==='filled' || o.status==='cancelled') return;
+  o.status='filled';
+  o.filledUsdt = o.usdt;
+  o.filledQty  = o.qty;
+  o.fillPrice  = o.price;
+  persist();
+  renderAll();
+  toast('✅ Order filled');
 }
 
-function goToState(name){
-  if(name==='done' || !name){ setInputEnabled(false); return; }
-  const st = STATES[name];
-  if(!st){
-    botSay('✅ Conversation complete.');
-    setInputEnabled(false);
-    return;
-  }
-  const say = typeof st.say==='function'? st.say(conv.data) : st.say;
-  // typing effect (simple)
-  setTimeout(()=>{
-    botSay(say);
-    if(st.action) st.action(conv.data);
-    if(st.end){ setInputEnabled(false); return; }
-    setInputEnabled(true, st.placeholder, typeof st.quick==='function'?st.quick(conv.data):st.quick);
-  }, 120);
+function cancelOrder(id){
+  const o = session.orders.find(x=>x.id===id);
+  if(!o || o.status==='filled') return;
+  o.status='cancelled';
+  persist();
+  renderAll();
+  toast('Order cancelled');
 }
 
-/* ----- state definitions ----- */
+/* ---------- DOM refs ---------- */
+const el = id => document.getElementById(id);
+const chatBox = el('chat');
+const input = el('chatInput');
+const sendBtn = el('sendBtn');
+const quickBox = el('quickBtns');
+
+/* ---------- conversation ---------- */
+/*
+  states:
+    askBuyPrice     — ask user for buy limit price
+    askInvest       — ask for USDT investment
+    askTargetPct    — ask for target %
+    confirmBuy      — confirm and ask pending/filled
+    afterFirstBuy   — menu (buy/sell/done)
+    askSellPrice    — ask sell price
+    askSellQty      — ask % of position
+    askSellFill     — confirm sell pending/filled
+    afterSell       — menu
+    done
+*/
+
 const STATES = {
-  /* First buy planning */
-  askMarketPrice:{
-    field:'marketPrice',
-    say:'স্বাগতম! আমি আপনার PEPE/USDT Trading Assistant।\n\nশুরু করতে প্রথমে <b>বর্তমান Binance Market Price</b> (PEPE/USDT) জানান।\n\nউদাহরণ: <code>0.00000700</code>',
-    placeholder:'Market price (USDT)',
+  askBuyPrice: {
+    field:'buyPrice',
+    say:()=>{
+      const mp = market.price ? `<b>${fmtP(market.price)}</b> USDT` : '<i>লোড হচ্ছে…</i>';
+      return `👋 স্বাগতম!\n\nবর্তমান Binance Market Price: ${mp}\n\nএখন আপনি <b>কোন দামে Buy Limit Order</b> সেট করতে চান?`;
+    },
+    placeholder:'Buy limit price (USDT)',
     validate:(v)=>{
       const x = parsePEPEPrice(v);
-      if(x===null) return {ok:false,msg:'সঠিক price দিন। শুধু সংখ্যা, যেমন 0.00000700'};
-      return {ok:true,value:x};
-    },
-    next:'askBuyPrice'
-  },
-
-  askBuyPrice:{
-    field:'buyPrice',
-    say:(d)=>`বর্তমান Market Price পেয়েছি: <b>${fmtP(d.marketPrice)}</b>\n\nএখন আপনি <b>কোন দামে Buy Limit Order</b> সেট করতে চান? (Binance Convert Limit Buy)`,
-    placeholder:'Buy limit price',
-    validate:(v,d)=>{
-      const x = parsePEPEPrice(v);
-      if(x===null) return {ok:false,msg:'সঠিক price দিন।'};
+      if(x===null) return {ok:false,msg:'সঠিক price দিন, যেমন 0.00000680'};
       return {ok:true,value:x};
     },
     next:'askInvest'
   },
 
-  askInvest:{
+  askInvest: {
     field:'invest',
-    say:(d)=>`Buy Limit Price: <b>${fmtP(d.buyPrice)}</b>\n\nএখন এই Buy Order-এ কত <b>USDT</b> invest করতে চান?`,
+    say:(d)=>`Buy Limit: <b>${fmtP(d.buyPrice)}</b>\n\nএখন কত <b>USDT</b> invest করতে চান?`,
     placeholder:'USDT amount',
     validate:(v)=>{
-      const x = parseUSDT(v);
-      if(x===null||n(x)<=0) return {ok:false,msg:'Investment অবশ্যই 0-এর বেশি হতে হবে।'};
+      const x=parseUSDT(v);
+      if(x===null || n(x)<=0) return {ok:false,msg:'0-এর বেশি USDT দিন'};
       return {ok:true,value:x};
     },
     next:'askTargetPct'
   },
 
-  askTargetPct:{
+  askTargetPct: {
     field:'targetPct',
-    say:(d)=>`Investment: <b>${fmtU(d.invest)} USDT</b>\n\nসম্পূর্ণ Active Session-এর জন্য কত % <b>Net Profit Target</b> চান?\n(এটি session-এর সব buy-এর উপর প্রযোজ্য)`,
-    placeholder:'Profit % e.g. 2',
+    say:(d)=>`Investment: <b>${fmtU(d.invest)} USDT</b>\n\nসম্পূর্ণ Active Session-এর জন্য কত % <b>Net Profit Target</b> চান?`,
+    placeholder:'Profit % (যেমন 2)',
     validate:(v)=>{
-      const x = parseUSDT(v);
-      if(x===null||n(x)<=0) return {ok:false,msg:'Profit % 0-এর বেশি হতে হবে।'};
-      if(n(x)>1000) return {ok:false,msg:'Profit % অবাস্তব মনে হচ্ছে।'};
+      const x=parseUSDT(v);
+      if(x===null || n(x)<=0) return {ok:false,msg:'0-এর বেশি % দিন'};
+      if(n(x)>1000) return {ok:false,msg:'অবাস্তব মনে হচ্ছে'};
       return {ok:true,value:x};
     },
-    next:'confirmFirstBuy'
+    next:'confirmBuy'
   },
 
-  confirmFirstBuy:{
-    field:'_confirm',
+  confirmBuy: {
+    field:'_fill',
     say:(d)=>{
       const qty = D.div(d.invest, d.buyPrice, 12);
-      const target = n(d.invest)*(1+n(d.targetPct)/100);
-      const sellPrice = n(target)/n(qty);
-      return `📋 <b>আপনার প্রথম Buy Plan</b>\n\n`+
+      const p = computePosition();
+      const newTotalCost = D.add(p.totalBuyCost, d.invest);
+      const newTotalQty  = D.add(p.remainingQty, qty);
+      const newWap = D.gt(newTotalQty,'0') ? D.div(newTotalCost, newTotalQty, 18) : '0';
+      const newTargetReturn = D.mul(newTotalCost, D.add('1', D.div(d.targetPct,'100',18)));
+      const newSellTarget = D.gt(newTotalQty,'0') ? D.div(D.sub(newTargetReturn, p.totalSellProceeds), newTotalQty, 18) : '0';
+      return `📋 <b>Buy Plan</b>\n\n`+
         `Buy Limit: <span class="hl">${fmtP(d.buyPrice)}</span>\n`+
         `Investment: <span class="hl">${fmtU(d.invest)} USDT</span>\n`+
-        `Est. PEPE Qty: <b>${fmtQ(qty)}</b>\n`+
-        `Target %: <b>${d.targetPct}%</b>\n`+
-        `Est. Final Sell Target: <span class="hl">${fmtP(sellPrice)}</span>\n\n`+
-        `Binance Convert-এ এই Limit Buy Order সেট করুন।\n`+
-        `Order fill হলে "Filled" জানান, নাহলে "Pending"।\n\n`+
-        `<i>নিশ্চিত করুন?</i>`;
-    },
-    placeholder:'filled / pending',
-    quick:[{label:'✅ Filled',value:'filled'},{label:'⏳ Pending',value:'pending'}],
-    validate:(v)=>{
-      const s=v.toLowerCase().trim();
-      if(['filled','fill','done','হয়েছে','yes'].includes(s)) return {ok:true,value:'filled'};
-      if(['pending','pend','অপেক্ষা','no','not'].includes(s)) return {ok:true,value:'pending'};
-      return {ok:false,msg:'উত্তর দিন: "filled" অথবা "pending"।'};
-    },
-    next:(v,d)=>{
-      // create the order
-      const qty = D.div(d.invest, d.buyPrice, 12);
-      session.targetPct = String(d.targetPct);
-      session.orders.push({
-        id: nextOrderId(),
-        side:'buy', type:'limit',
-        price:d.buyPrice, usdt:d.invest, qty:qty,
-        status: v==='filled'?'filled':'pending',
-        filledUsdt: v==='filled'?d.invest:'0',
-        filledQty:  v==='filled'?qty:'0',
-        fillPrice:  v==='filled'?d.buyPrice:null,
-        ts: Date.now(),
-        note:''
-      });
-      persist();
-      renderAll();
-      return v==='filled'?'afterFirstBuyFilled':'afterFirstBuyPending';
-    }
-  },
-
-  afterFirstBuyFilled:{
-    field:'_go',
-    say:(d)=>{
-      const p = computePosition();
-      return `✅ প্রথম Buy Order fill হয়েছে!\n\n`+
-        `Total Investment: <b>${fmtU(p.totalBuyCost)} USDT</b>\n`+
-        `PEPE Holdings: <b>${fmtQ(p.remainingQty)}</b>\n`+
-        `Weighted Avg: ${fmtP(p.avgBuy)}\n`+
-        `Final Sell Target: <span class="hl">${fmtP(p.sellTarget)}</span>\n\n`+
-        `এখন মার্কেট আরও নিচে নামলে আপনি নতুন Buy করতে পারেন, অথবা Target price-এ Sell plan করতে পারেন।\n\n`+
-        `আপনি কী করতে চান?`;
-    },
-    placeholder:'buy / sell / done',
-    quick:[{label:'📉 নতুন Buy',value:'buy'},{label:'📈 Sell Target',value:'sell'},{label:'✅ শেষ',value:'done'}],
-    validate:(v)=>{
-      const s=v.toLowerCase();
-      if(s.includes('buy')||s.includes('কেন')||s.includes('নতুন buy')) return {ok:true,value:'buy'};
-      if(s.includes('sell')||s.includes('বিক্রি')) return {ok:true,value:'sell'};
-      if(s.includes('done')||s.includes('শেষ')) return {ok:true,value:'done'};
-      return {ok:false,msg:'বলুন: "buy", "sell", অথবা "done"।'};
-    },
-    next:(v)=>{
-      if(v==='buy') return 'askMarketPrice2';
-      if(v==='sell') return 'askSellNow';
-      return 'done';
-    }
-  },
-
-  afterFirstBuyPending:{
-    field:'_go',
-    say:'⏳ Order pending। Fill হলে জানাবেন।\n\nআপনি চাইলে Pending order cancel করে নতুন price-এ আবার set করতে পারেন।',
-    placeholder:'filled / cancel',
-    quick:[{label:'✅ এখন Filled',value:'filled'},{label:'❌ Cancel',value:'cancel'}],
-    validate:(v)=>{
-      const s=v.toLowerCase();
-      if(['filled','fill','done'].includes(s)) return {ok:true,value:'filled'};
-      if(['cancel','no'].includes(s)) return {ok:true,value:'cancel'};
-      return {ok:false,msg:'বলুন "filled" অথবা "cancel"।'};
-    },
-    next:(v)=>{
-      // find last pending buy
-      const last = [...session.orders].reverse().find(o=>o.side==='buy'&&o.status==='pending');
-      if(last){
-        if(v==='filled'){ last.status='filled'; last.filledUsdt=last.usdt; last.filledQty=last.qty; last.fillPrice=last.price; }
-        else { last.status='cancelled'; }
-        persist(); renderAll();
-      }
-      return v==='filled'?'afterFirstBuyFilled':'askMarketPrice2';
-    }
-  },
-
-  /* Subsequent buy planning */
-  askMarketPrice2:{
-    field:'marketPrice',
-    say:'নতুন Buy Plan।\n\nবর্তমান <b>Binance Market Price</b> জানান (PEPE/USDT)।',
-    placeholder:'Market price',
-    validate:(v)=>{const x=parsePEPEPrice(v);return x===null?{ok:false,msg:'সঠিক price দিন।'}:{ok:true,value:x};},
-    next:'askBuyPrice2'
-  },
-  askBuyPrice2:{
-    field:'buyPrice',
-    say:(d)=>`Market Price: <b>${fmtP(d.marketPrice)}</b>\n\nনতুন <b>Buy Limit Price</b> কত?`,
-    placeholder:'Buy limit price',
-    validate:(v)=>{const x=parsePEPEPrice(v);return x===null?{ok:false,msg:'সঠিক price দিন।'}:{ok:true,value:x};},
-    next:'askInvest2'
-  },
-  askInvest2:{
-    field:'invest',
-    say:(d)=>`Buy Limit: <b>${fmtP(d.buyPrice)}</b>\n\nনতুন কত <b>USDT</b> invest করবেন?`,
-    placeholder:'USDT amount',
-    validate:(v)=>{const x=parseUSDT(v);if(x===null||n(x)<=0)return{ok:false,msg:'0-এর বেশি হতে হবে।'};return{ok:true,value:x};},
-    next:'askTargetPct2'
-  },
-  askTargetPct2:{
-    field:'targetPct',
-    say:(d)=>`Investment: <b>${fmtU(d.invest)} USDT</b>\n\nSession-এর নতুন <b>Net Profit Target %</b> কত? (আগের target override করবে)`,
-    placeholder:'Profit %',
-    validate:(v)=>{const x=parseUSDT(v);if(x===null||n(x)<=0)return{ok:false,msg:'0-এর বেশি হতে হবে।'};return{ok:true,value:x};},
-    next:'confirmNewBuy'
-  },
-  confirmNewBuy:{
-    field:'_confirm',
-    say:(d)=>{
-      const p = computePosition();
-      const newQty = D.div(d.invest, d.buyPrice, 12);
-      const newTotalCost = n(D.add(p.totalBuyCost, d.invest));
-      const newTotalQty  = n(D.add(p.remainingQty, newQty));
-      const newAvg = newTotalQty>0? newTotalCost/newTotalQty : 0;
-      const target = newTotalCost*(1+n(d.targetPct)/100);
-      const newSell = newTotalQty>0? target/newTotalQty : 0;
-      return `📋 <b>নতুন Buy Plan</b>\n\n`+
-        `Buy Limit: <span class="hl">${fmtP(d.buyPrice)}</span>\n`+
-        `Investment: <span class="hl">${fmtU(d.invest)} USDT</span>\n`+
-        `Est. PEPE Qty: <b>${fmtQ(newQty)}</b>\n`+
-        `নতুন Target: <b>${d.targetPct}%</b>\n\n`+
-        `<b>Position after fill:</b>\n`+
+        `Est. PEPE: <b>${fmtQ(qty)}</b>\n`+
+        `Target: <b>${d.targetPct}%</b>\n\n`+
+        `<b>Fill হলে Position:</b>\n`+
         `Total Cost: ${fmtU(newTotalCost)} USDT\n`+
         `Total PEPE: ${fmtQ(newTotalQty)}\n`+
-        `New WAP: ${fmtP(newAvg)}\n`+
-        `New Sell Target: <span class="hl">${fmtP(newSell)}</span>\n\n`+
+        `WAP: ${fmtP(newWap)}\n`+
+        `Sell Target: <span class="hl">${fmtP(newSellTarget)}</span>\n\n`+
         `Binance-এ Limit Buy set করুন। Fill হলে জানান।`;
     },
     placeholder:'filled / pending',
     quick:[{label:'✅ Filled',value:'filled'},{label:'⏳ Pending',value:'pending'}],
     validate:(v)=>{
       const s=v.toLowerCase().trim();
-      if(['filled','fill','done','হয়েছে'].includes(s)) return {ok:true,value:'filled'};
-      if(['pending','pend','অপেক্ষা'].includes(s)) return {ok:true,value:'pending'};
-      return {ok:false,msg:'"filled" অথবা "pending" দিন।'};
+      if(['filled','fill','done','হয়েছে','yes','y'].includes(s)) return {ok:true,value:'filled'};
+      if(['pending','pend','অপেক্ষা','no','n'].includes(s)) return {ok:true,value:'pending'};
+      return {ok:false,msg:'"filled" অথবা "pending" দিন'};
     },
     next:(v,d)=>{
       const qty = D.div(d.invest, d.buyPrice, 12);
       session.targetPct = String(d.targetPct);
-      session.orders.push({
+      const order = {
         id: nextOrderId(),
         side:'buy', type:'limit',
-        price:d.buyPrice, usdt:d.invest, qty:qty,
+        price:d.buyPrice, usdt:d.invest, qty,
         status: v==='filled'?'filled':'pending',
         filledUsdt: v==='filled'?d.invest:'0',
         filledQty:  v==='filled'?qty:'0',
         fillPrice:  v==='filled'?d.buyPrice:null,
         ts: Date.now(), note:''
-      });
-      persist(); renderAll();
-      if(v==='pending') return 'afterPendingGeneric';
-      return 'afterBuyFilled';
+      };
+      pushOrder(order);
+      return v==='filled' ? 'afterBuyFilled' : 'afterPending';
     }
   },
 
-  afterPendingGeneric:{
+  afterPending: {
     field:'_go',
-    say:'⏳ Order pending। Fill হলে জানান, অথবা cancel করুন।',
+    say:'⏳ Order pending। Fill হলে জানান অথবা cancel করুন।',
     placeholder:'filled / cancel',
     quick:[{label:'✅ Filled',value:'filled'},{label:'❌ Cancel',value:'cancel'}],
     validate:(v)=>{
       const s=v.toLowerCase();
       if(['filled','fill','done'].includes(s)) return {ok:true,value:'filled'};
       if(['cancel','no'].includes(s)) return {ok:true,value:'cancel'};
-      return {ok:false,msg:'"filled" বা "cancel"।'};
+      return {ok:false,msg:'"filled" বা "cancel" দিন'};
     },
     next:(v)=>{
       const last = [...session.orders].reverse().find(o=>o.status==='pending');
       if(last){
-        if(v==='filled'){ last.status='filled'; last.filledUsdt=last.usdt; last.filledQty=last.qty; last.fillPrice=last.price; }
-        else last.status='cancelled';
-        persist(); renderAll();
+        if(v==='filled') fillOrder(last.id);
+        else cancelOrder(last.id);
       }
-      return v==='filled'?'afterBuyFilled':'afterFirstBuyFilled';
+      return v==='filled' ? 'afterBuyFilled' : 'askBuyPrice';
     }
   },
 
-  afterBuyFilled:{
+  afterBuyFilled: {
     field:'_go',
     say:(d)=>{
       const p = computePosition();
@@ -806,68 +856,64 @@ const STATES = {
         `পরবর্তী পদক্ষেপ?`;
     },
     placeholder:'buy / sell / done',
-    quick:[{label:'📉 আবার Buy',value:'buy'},{label:'📈 Sell Plan',value:'sell'},{label:'✅ শেষ',value:'done'}],
+    quick:[{label:'📉 নতুন Buy',value:'buy'},{label:'📈 Sell',value:'sell'},{label:'✅ শেষ',value:'done'}],
     validate:(v)=>{
       const s=v.toLowerCase();
       if(s.includes('buy')||s.includes('কেন')) return {ok:true,value:'buy'};
       if(s.includes('sell')||s.includes('বিক্রি')) return {ok:true,value:'sell'};
       if(s.includes('done')||s.includes('শেষ')) return {ok:true,value:'done'};
-      return {ok:false,msg:'"buy", "sell", বা "done"।'};
+      return {ok:false,msg:'"buy", "sell", বা "done" দিন'};
     },
     next:(v)=>{
-      if(v==='buy') return 'askMarketPrice2';
-      if(v==='sell') return 'askSellNow';
+      if(v==='buy') return 'askBuyPrice';
+      if(v==='sell') return 'askSellPrice';
       return 'done';
     }
   },
 
-  /* Sell planning */
-  askSellNow:{
+  askSellPrice: {
     field:'sellPrice',
-    say:(d)=>{
+    say:()=>{
       const p = computePosition();
       return `🎯 <b>Sell Planning</b>\n\n`+
-        `Current Position:\n`+
-        `PEPE: ${fmtQ(p.remainingQty)}\n`+
-        `Target: ${p.targetPct}%\n`+
-        `Suggested Sell Limit: <span class="hl">${fmtP(p.sellTarget)}</span>\n\n`+
-        `আপনি কোন price-এ Sell Limit দিতে চান? (suggested value ব্যবহার করতে চাইলে ওটাই লিখুন)`;
+        `Position: ${fmtQ(p.remainingQty)} PEPE\n`+
+        `Suggested Sell Limit: <span class="hl">${fmtP(p.sellTarget)}</span> USDT\n\n`+
+        `কোন price-এ Sell Limit দিতে চান?`;
     },
     placeholder:'Sell limit price',
-    quick:[{label:'🎯 Suggested',value:'__suggested__'}],
-    validate:(v,d)=>{
+    quick:()=>[{label:'🎯 Suggested',value:'__suggested__'}],
+    validate:(v)=>{
       let x;
-      if(v==='__suggested__'){ x = String(computePosition().sellTarget); }
-      else { x = parsePEPEPrice(v); }
-      if(x===null||n(x)<=0) return {ok:false,msg:'সঠিক price দিন।'};
+      if(v==='__suggested__') x = computePosition().sellTarget;
+      else x = parsePEPEPrice(v);
+      if(x===null || n(x)<=0) return {ok:false,msg:'সঠিক price দিন'};
       return {ok:true,value:x};
     },
     next:'askSellQty'
   },
-  askSellQty:{
-    field:'sellQty',
-    say:(d)=>{
-      const p = computePosition();
-      return `Sell Price: <b>${fmtP(d.sellPrice)}</b>\n\nকত % PEPE বিক্রি করবেন? (100% = সম্পূর্ণ position)`;
-    },
+
+  askSellQty: {
+    field:'sellQtyPct',
+    say:(d)=>`Sell Price: <b>${fmtP(d.sellPrice)}</b>\n\nকত % PEPE বিক্রি করবেন? (100 = সম্পূর্ণ)`,
     placeholder:'0-100',
     quick:[{label:'100%',value:'100'},{label:'50%',value:'50'},{label:'25%',value:'25'}],
     validate:(v)=>{
       const x=parseUSDT(v);
-      if(x===null||n(x)<=0||n(x)>100) return {ok:false,msg:'0-100 এর মধ্যে দিন।'};
+      if(x===null || n(x)<=0 || n(x)>100) return {ok:false,msg:'0-100 এর মধ্যে দিন'};
       return {ok:true,value:x};
     },
-    next:'askSellFill'
+    next:'confirmSell'
   },
-  askSellFill:{
+
+  confirmSell: {
     field:'_fill',
     say:(d)=>{
       const p = computePosition();
-      const qty = p.remainingQty * (n(d.sellQty)/100);
-      const gross = qty * n(d.sellPrice);
+      const qty = D.mul(p.remainingQty, D.div(d.sellQtyPct,'100',18));
+      const gross = D.mul(qty, d.sellPrice);
       return `📋 <b>Sell Plan</b>\n\n`+
         `Price: <span class="hl">${fmtP(d.sellPrice)}</span>\n`+
-        `Qty: ${fmtQ(qty)} PEPE (${d.sellQty}%)\n`+
+        `Qty: ${fmtQ(qty)} PEPE (${d.sellQtyPct}%)\n`+
         `Est. Proceeds: <b>${fmtU(gross)} USDT</b>\n\n`+
         `Binance-এ Limit Sell set করুন। Fill হলে জানান।`;
     },
@@ -877,28 +923,28 @@ const STATES = {
       const s=v.toLowerCase();
       if(['filled','fill','done','হয়েছে'].includes(s)) return {ok:true,value:'filled'};
       if(['pending','pend'].includes(s)) return {ok:true,value:'pending'};
-      return {ok:false,msg:'"filled" বা "pending"।'};
+      return {ok:false,msg:'"filled" বা "pending" দিন'};
     },
     next:(v,d)=>{
       const p = computePosition();
-      const qty = D.mul(p.remainingQty, D.div(String(n(d.sellQty)),'100',8));
+      const qty = D.mul(p.remainingQty, D.div(d.sellQtyPct,'100',18));
       const usdt = D.mul(qty, d.sellPrice);
-      session.orders.push({
+      const order = {
         id: nextOrderId(),
         side:'sell', type:'limit',
-        price:d.sellPrice, usdt:usdt, qty:qty,
+        price:d.sellPrice, usdt, qty,
         status: v==='filled'?'filled':'pending',
         filledUsdt: v==='filled'?usdt:'0',
         filledQty:  v==='filled'?qty:'0',
         fillPrice:  v==='filled'?d.sellPrice:null,
         ts: Date.now(), note:''
-      });
-      persist(); renderAll();
-      if(v==='pending') return 'afterSellPending';
-      return 'afterSellFilled';
+      };
+      pushOrder(order);
+      return v==='filled' ? 'afterSellFilled' : 'afterSellPending';
     }
   },
-  afterSellPending:{
+
+  afterSellPending: {
     field:'_go',
     say:'⏳ Sell pending। Fill হলে জানান বা cancel করুন।',
     placeholder:'filled / cancel',
@@ -907,40 +953,42 @@ const STATES = {
       const s=v.toLowerCase();
       if(['filled','fill','done'].includes(s)) return {ok:true,value:'filled'};
       if(['cancel','no'].includes(s)) return {ok:true,value:'cancel'};
-      return {ok:false,msg:'"filled" বা "cancel"।'};
+      return {ok:false,msg:'"filled" বা "cancel" দিন'};
     },
     next:(v)=>{
       const last = [...session.orders].reverse().find(o=>o.status==='pending');
       if(last){
-        if(v==='filled'){ last.status='filled'; last.filledUsdt=last.usdt; last.filledQty=last.qty; last.fillPrice=last.price; }
-        else last.status='cancelled';
-        persist(); renderAll();
+        if(v==='filled') fillOrder(last.id);
+        else cancelOrder(last.id);
       }
-      return v==='filled'?'afterSellFilled':'afterBuyFilled';
+      return v==='filled' ? 'afterSellFilled' : 'afterBuyFilled';
     }
   },
-  afterSellFilled:{
+
+  afterSellFilled: {
     field:'_go',
-    say:(d)=>{
+    say:()=>{
       const p = computePosition();
-      const complete = sessionComplete();
-      if(complete){
-        return `🎉 <b>TARGET PROFIT ACHIEVED!</b>\n\n`+
+      const done = sessionTargetHit();
+      if(done){
+        return `🎉 <b>TARGET ACHIEVED!</b>\n\n`+
           `Total Cost: ${fmtU(p.totalBuyCost)} USDT\n`+
           `Total Proceeds: ${fmtU(p.totalSellProceeds)} USDT\n`+
           `Net Profit: <span class="pos">${fmtU(p.realizedNet)} USDT</span>\n`+
           `Net P/L: <span class="pos">${fmtPct(p.realizedPct)}</span> (Target ${p.targetPct}%)\n\n`+
-          `Trading Session Completed! ✅\n`+
-          `আপনি নতুন Session শুরু করতে পারেন।`;
+          `Trading Session সম্পন্ন! ✅\n`+
+          `নতুন Session শুরু করতে Reset চাপুন।`;
       }
+      const warn = D.lt(p.remainingQty,'0.00000001') && n(p.realizedPct)<n(p.targetPct)
+        ? `\n\n⚠️ সব PEPE বিক্রি হয়েছে কিন্তু Target পূরণ হয়নি — Loss Recovery Mode active.`
+        : '';
       return `✅ Sell fill হয়েছে।\n\n`+
         `Remaining PEPE: <b>${fmtQ(p.remainingQty)}</b>\n`+
-        `Realized P/L: <span class="${p.realizedNet>=0?'pos':'neg'}">${fmtU(p.realizedNet)} USDT</span> (${fmtPct(p.realizedPct)})\n`+
+        `Realized P/L: <span class="${n(p.realizedNet)>=0?'pos':'neg'}">${fmtU(p.realizedNet)} USDT</span> (${fmtPct(p.realizedPct)})\n`+
         `Target: ${p.targetPct}%\n`+
-        `Next Sell Target: <span class="hl">${fmtP(p.sellTarget)}</span>\n\n`+
-        (p.remainingQty>0
-          ? `Position এখনো শেষ হয়নি। পরবর্তী পদক্ষেপ?`
-          : `⚠️ সব PEPE বিক্রি হয়েছে কিন্তু Target পূরণ হয়নি — Loss Recovery Mode active.\nপরবর্তী Buy plan করতে পারেন।`);
+        `Next Sell Target: <span class="hl">${fmtP(p.sellTarget)}</span>`+
+        warn+
+        `\n\nপরবর্তী পদক্ষেপ?`;
     },
     placeholder:'buy / sell / done',
     quick:[{label:'📉 Buy',value:'buy'},{label:'📈 আরও Sell',value:'sell'},{label:'✅ শেষ',value:'done'}],
@@ -949,309 +997,420 @@ const STATES = {
       if(s.includes('buy')||s.includes('কেন')) return {ok:true,value:'buy'};
       if(s.includes('sell')||s.includes('বিক্রি')) return {ok:true,value:'sell'};
       if(s.includes('done')||s.includes('শেষ')) return {ok:true,value:'done'};
-      return {ok:false,msg:'"buy", "sell", বা "done"।'};
+      return {ok:false,msg:'"buy", "sell", বা "done" দিন'};
     },
     next:(v)=>{
-      if(v==='buy') return 'askMarketPrice2';
-      if(v==='sell') return 'askSellNow';
+      if(v==='buy') return 'askBuyPrice';
+      if(v==='sell') return 'askSellPrice';
       return 'done';
     }
   },
 
-  done:{
-    say:'ধন্যবাদ! আপনি যেকোনো সময় dashboard থেকে নতুন Buy বা Sell plan করতে পারেন।',
+  done: {
+    say:'ধন্যবাদ! Dashboard থেকে যেকোনো সময় নতুন Buy বা Sell plan করতে পারেন।',
     end:true
   }
 };
 
 /* ---------- parsers ---------- */
 function parsePEPEPrice(v){
-  v=String(v).trim().replace(/,/g,'');
+  v=String(v==null?'':v).trim().replace(/,/g,'');
   if(!/^\d*\.?\d+(e-?\d+)?$/i.test(v)) return null;
   const num = Number(v);
-  if(!isFinite(num)||num<=0||num>1) return null;
+  if(!isFinite(num) || num<=0 || num>1) return null;
+  // format string safely
+  if(v.includes('e')||v.includes('E')){
+    return Number(v).toFixed(11).replace(/0+$/,'').replace(/\.$/,'');
+  }
   return v;
 }
 function parseUSDT(v){
-  v=String(v).trim().replace(/,/g,'');
+  v=String(v==null?'':v).trim().replace(/,/g,'');
   if(!/^\d*\.?\d+$/.test(v)) return null;
   const num=Number(v);
-  if(!isFinite(num)||num<0) return null;
+  if(!isFinite(num) || num<0) return null;
   return v;
 }
 
-/* ---------- order id ---------- */
-let orderSeq=1;
-function nextOrderId(){ return 'O'+(orderSeq++); }
+/* ---------- chat rendering ---------- */
+function scrollChat(){ chatBox.scrollTop = chatBox.scrollHeight; }
+function botSay(html){
+  const d=document.createElement('div');
+  d.className='msg bot';
+  d.innerHTML='<div class="avatar">🐸</div><div class="bubble">'+html+'</div>';
+  chatBox.appendChild(d); scrollChat();
+}
+function userSay(text){
+  const d=document.createElement('div');
+  d.className='msg user';
+  d.innerHTML='<div class="avatar">👤</div><div class="bubble">'+escapeHtml(text)+'</div>';
+  chatBox.appendChild(d); scrollChat();
+}
+function escapeHtml(s){
+  return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
 
-/* ---------- persistence ---------- */
-function persist(){
-  store.set(LS_SESSION, session);
-  store.set(LS_SET, settings);
-}
-function persistArchive(){
-  store.set(LS_ARCHIVE, store.get(LS_ARCHIVE,[]));
-}
-function loadAll(){
-  const s = store.get(LS_SESSION,null);
-  if(s && s.id){ session = s; }
-  else {
-    const arch = store.get(LS_ARCHIVE,[]);
-    session = newSession(arch.length+1);
+function setInputEnabled(on, placeholder, quick){
+  input.disabled=!on; sendBtn.disabled=!on;
+  input.placeholder = placeholder||(on?'উত্তর লিখুন...':'অপেক্ষা করুন...');
+  if(on) setTimeout(()=>{ try{input.focus({preventScroll:true});}catch(e){} },80);
+  quickBox.innerHTML='';
+  if(quick && quick.length){
+    quick.forEach(q=>{
+      const b=document.createElement('button');
+      b.textContent=q.label;
+      b.onclick=()=>{ input.value=q.value; handleSubmit(); };
+      quickBox.appendChild(b);
+    });
   }
-  const st = store.get(LS_SET,null);
-  if(st) settings = Object.assign(settings, st);
-  // recompute orderSeq
-  const maxId = session.orders.reduce((m,o)=>{
-    const num = parseInt(String(o.id).replace(/\D/g,''))||0;
-    return Math.max(m,num);
-  },0);
-  orderSeq = maxId+1;
 }
 
-/* ---------- render dashboard ---------- */
+function goToState(name){
+  if(!name || name==='done'){
+    const st = STATES.done;
+    setTimeout(()=>{ botSay(st.say); setInputEnabled(false); },120);
+    session.conversation = {state:'done', data:{}};
+    persist();
+    return;
+  }
+  const st = STATES[name];
+  if(!st){ setInputEnabled(false); return; }
+  session.conversation.state = name;
+  persist();
+  const say = typeof st.say==='function' ? st.say(session.conversation.data) : st.say;
+  setTimeout(()=>{
+    botSay(say);
+    if(st.end){ setInputEnabled(false); return; }
+    const q = typeof st.quick==='function' ? st.quick(session.conversation.data) : st.quick;
+    setInputEnabled(true, st.placeholder, q);
+  }, 120);
+}
+
+function handleSubmit(){
+  const raw = input.value.trim();
+  if(!raw) return;
+  const stateName = session.conversation.state;
+  const st = STATES[stateName];
+  if(!st){ botSay('⚠️ Conversation state অজানা। Reset করুন।'); setInputEnabled(false); return; }
+  const result = st.validate(raw, session.conversation.data);
+  if(!result.ok){
+    userSay(raw);
+    botSay('❌ '+result.msg);
+    input.value='';
+    // re-enable same state
+    const q = typeof st.quick==='function' ? st.quick(session.conversation.data) : st.quick;
+    setInputEnabled(true, st.placeholder, q);
+    return;
+  }
+  input.value='';
+  userSay(raw);
+  session.conversation.data[st.field] = result.value;
+  let next = st.next;
+  if(typeof next==='function') next = next(result.value, session.conversation.data, result);
+  session.conversation.data = session.conversation.data || {};
+  goToState(next);
+}
+
+/* ---------- boot conversation ---------- */
+function startConversation(){
+  chatBox.innerHTML='';
+  const p = computePosition();
+  if(D.gt(p.totalBuyCost,'0')){
+    botSay(`👋 Welcome back! Session #${session.id} active.\n\n`+
+      `Cost: <b>${fmtU(p.totalBuyCost)} USDT</b>\n`+
+      `PEPE: <b>${fmtQ(p.remainingQty)}</b>\n`+
+      `WAP: ${fmtP(p.avgBuy)}\n`+
+      `Target: ${p.targetPct}%\n`+
+      `Sell Target: <span class="hl">${fmtP(p.sellTarget)}</span>\n\n`+
+      `পরবর্তী পদক্ষেপ?`);
+    session.conversation = {state:'afterBuyFilled', data:session.conversation.data||{}};
+    const st = STATES.afterBuyFilled;
+    setInputEnabled(true, st.placeholder, st.quick);
+  }else{
+    session.conversation = {state:'askBuyPrice', data:{}};
+    goToState('askBuyPrice');
+  }
+  persist();
+}
+
+/* ---------- dashboard render ---------- */
 function renderAll(){
   renderDashboard();
   renderOrders();
-  renderArchive();
+  el('sessionTag').textContent = 'Session #'+session.id;
 }
 
 function renderDashboard(){
   const p = computePosition();
-  document.getElementById('sessionTag').textContent = 'Session #'+session.id;
-  const badge = document.getElementById('statusBadge');
+  const badge = el('statusBadge');
   let status='Ready to Start', cls='b-ready';
-  if(sessionComplete()){ status='Session Completed'; cls='b-done'; }
-  else if(p.remainingQty>0 && p.realizedPct<0){ status='Recovery Mode'; cls='b-rec'; }
-  else if(p.remainingQty>0){ status='In Position'; cls='b-buy'; }
-  else if(p.totalBuyCost>0){ status='Loss Recovery'; cls='b-rec'; }
-  else if(session.orders.some(o=>o.status==='pending')){ status='Order Pending'; cls='b-pend'; }
+  const hasPending = session.orders.some(o=>o.status==='pending');
+  if(sessionTargetHit()){ status='Target Achieved'; cls='b-done'; }
+  else if(D.gt(p.remainingQty,'0') && n(p.realizedNet)<0){ status='Recovery Mode'; cls='b-rec'; }
+  else if(D.gt(p.remainingQty,'0')){ status='In Position'; cls='b-buy'; }
+  else if(D.gt(p.totalBuyCost,'0')){ status='Loss Recovery'; cls='b-rec'; }
+  else if(hasPending){ status='Order Pending'; cls='b-pend'; }
   badge.textContent=status; badge.className='badge '+cls;
 
-  document.getElementById('sSellTarget').textContent = p.remainingQty>0 ? fmtP(p.sellTarget)+' USDT' : '—';
-  document.getElementById('sCost').textContent = fmtU(p.totalBuyCost);
-  document.getElementById('sQty').textContent = fmtQ(p.remainingQty);
-  document.getElementById('sWap').textContent = p.avgBuy?fmtP(p.avgBuy):'—';
-  document.getElementById('sBe').textContent = p.breakEven?fmtP(p.breakEven):'—';
+  el('sSellTarget').textContent = D.gt(p.remainingQty,'0') ? fmtP(p.sellTarget)+' USDT' : '—';
+  el('sCost').textContent = fmtU(p.totalBuyCost);
+  el('sQty').textContent = fmtQFull(p.remainingQty);
+  el('sWap').textContent = D.gt(p.avgBuy,'0') ? fmtP(p.avgBuy) : '—';
+  el('sBe').textContent = D.gt(p.breakEven,'0') ? fmtP(p.breakEven) : '—';
 
-  const upl = document.getElementById('sUpl');
-  upl.textContent = '—';
-  upl.className = 'v';
+  const upl = el('sUpl');
+  if(p.hasPrice && D.gt(p.remainingQty,'0')){
+    upl.textContent = (n(p.unrealized)>=0?'+':'')+fmtU(p.unrealized)+' USDT';
+    upl.className = 'v '+(n(p.unrealized)>=0?'pos':'neg');
+  }else{
+    upl.textContent='—'; upl.className='v';
+  }
 
-  const rpl = document.getElementById('sRpl');
+  const rpl = el('sRpl');
   rpl.textContent = fmtU(p.realizedNet);
-  rpl.className = 'v '+(p.realizedNet>=0?'pos':'neg');
+  rpl.className = 'v '+(n(p.realizedNet)>=0?'pos':'neg');
 
-  document.getElementById('sTargetPct').textContent = p.targetPct+'%';
-  const rpp = document.getElementById('sRplPct');
+  el('sTargetPct').textContent = p.targetPct+'%';
+  const rpp = el('sRplPct');
   rpp.textContent = fmtPct(p.realizedPct);
-  rpp.className = 'v '+(p.realizedPct>=0?'pos':'neg');
+  rpp.className = 'v '+(n(p.realizedPct)>=0?'pos':'neg');
 
-  const rec = document.getElementById('sRecovery');
-  rec.textContent = p.targetReturnTotal>0
+  el('sRecovery').textContent = D.gt(p.targetReturnTotal,'0')
     ? `${p.progress.toFixed(1)}% (${fmtU(p.totalSellProceeds)} / ${fmtU(p.targetReturnTotal)})`
     : '—';
-  document.getElementById('recBar').style.width = Math.min(100,p.progress)+'%';
+  el('recBar').style.width = Math.min(100,p.progress)+'%';
 
   // warnings
-  const wa = document.getElementById('warnArea');
-  wa.innerHTML='';
-  if(p.remainingQty===0 && p.totalBuyCost>0 && p.realizedPct<p.targetPct && session.orders.some(o=>o.side==='sell'&&o.status==='filled')){
-    wa.innerHTML='<div class="danger-msg">⚠️ Position শূন্য কিন্তু Target পূরণ হয়নি। Loss Recovery Mode — নতুন Buy plan করুন।</div>';
+  const wa = el('warnArea');
+  let html='';
+  if(D.lt(p.remainingQty,'0.00000001') && D.gt(p.totalBuyCost,'0') && n(p.realizedPct)<n(p.targetPct)
+     && session.orders.some(o=>o.side==='sell'&&o.status==='filled')){
+    html += '<div class="danger-msg">⚠️ Position শূন্য কিন্তু Target পূরণ হয়নি। নতুন Buy plan করুন।</div>';
   }
-  if(settings.maxInv>0 && p.totalBuyCost>=settings.maxInv*0.95){
-    wa.innerHTML+='<div class="warn">⚠️ Max Session Investment সীমার কাছাকাছি ('+fmtU(settings.maxInv)+' USDT)।</div>';
+  if(settings.maxInv>0 && n(p.totalBuyCost) >= settings.maxInv*0.95){
+    html += '<div class="warn">⚠️ Max Investment সীমার কাছাকাছি ('+fmtU(settings.maxInv)+' USDT)।</div>';
   }
   if(settings.maxBuys>0){
     const cnt = session.orders.filter(o=>o.side==='buy'&&(o.status==='filled'||o.status==='partial')).length;
-    if(cnt>=settings.maxBuys) wa.innerHTML+='<div class="warn">⚠️ Max Buy Orders সীমায় পৌঁছেছেন ('+settings.maxBuys+')।</div>';
+    if(cnt>=settings.maxBuys) html += '<div class="warn">⚠️ Max Buy Orders সীমায় পৌঁছেছেন ('+settings.maxBuys+')।</div>';
   }
+  wa.innerHTML = html;
 }
 
 function renderOrders(){
-  const box = document.getElementById('ordersList');
-  const orders = session.orders;
-  document.getElementById('orderCount').textContent = orders.length;
-  if(orders.length===0){ box.innerHTML='<div class="empty">এখনো কোনো order নেই</div>'; return; }
+  const box = el('ordersList');
+  el('orderCount').textContent = session.orders.length;
+  if(session.orders.length===0){
+    box.innerHTML='<div class="empty">এখনো কোনো order নেই</div>';
+    return;
+  }
   box.innerHTML='';
-  [...orders].reverse().forEach(o=>{
-    const d=document.createElement('div'); d.className='hist-item';
+  [...session.orders].reverse().forEach(o=>{
+    const d=document.createElement('div');
+    d.className='hist-item';
     const side = o.side==='buy'?'🟢 BUY':'🔴 SELL';
     const st = o.status;
-    const stBadge = '<span class="badge '+(st==='filled'?'b-win':st==='pending'?'b-pend':st==='cancelled'?'b-rec':st==='partial'?'b-buy':'b-ready')+'">'+st+'</span>';
-    d.innerHTML = `<div>
-      <div><b>${side}</b> @ ${fmtP(o.price)} ${stBadge}</div>
-      <div class="t">Plan: ${fmtU(o.usdt)} USDT · ${fmtQ(o.qty)} PEPE</div>
-      ${o.status==='filled'||o.status==='partial'?`<div class="t">Filled: ${fmtU(o.filledUsdt)} USDT · ${fmtQ(o.filledQty)} PEPE</div>`:''}
+    const badgeCls = st==='filled'?'b-win':st==='pending'?'b-pend':st==='cancelled'?'b-rec':st==='partial'?'b-buy':'b-ready';
+    let actions='';
+    if(o.status==='pending'){
+      actions = `<button data-fill="${o.id}" style="font-size:10px;padding:4px 8px;border-radius:8px;border:1px solid #14301f;background:#0c1c13;color:#86efac;cursor:pointer;margin-right:4px">Fill</button>
+                 <button data-cancel="${o.id}" style="font-size:10px;padding:4px 8px;border-radius:8px;border:1px solid #3a1a1a;background:#1c0f0f;color:#fca5a5;cursor:pointer">Cancel</button>`;
+    }
+    const filledRow = (o.status==='filled'||o.status==='partial')
+      ? `<div class="t">Filled: ${fmtU(o.filledUsdt)} USDT · ${fmtQFull(o.filledQty)} PEPE</div>` : '';
+    d.innerHTML = `<div style="flex:1;min-width:0">
+      <div><b>${side}</b> @ ${fmtP(o.price)} <span class="badge ${badgeCls}">${st}</span></div>
+      <div class="t">Plan: ${fmtU(o.usdt)} USDT · ${fmtQFull(o.qty)} PEPE</div>
+      ${filledRow}
     </div>
-    <div style="display:flex;flex-direction:column;gap:4px;align-items:flex-end">
-      ${(o.status==='pending')?`<button data-fill="${o.id}" style="font-size:10px;padding:4px 8px;border-radius:8px;border:1px solid #14301f;background:#0c1c13;color:#86efac;cursor:pointer">Fill</button>`:''}
-      ${(o.status==='pending')?`<button data-cancel="${o.id}" style="font-size:10px;padding:4px 8px;border-radius:8px;border:1px solid #3a1a1a;background:#1c0f0f;color:#fca5a5;cursor:pointer">Cancel</button>`:''}
+    <div style="display:flex;flex-direction:column;gap:4px;align-items:flex-end;flex-shrink:0">
+      ${actions}
     </div>`;
     box.appendChild(d);
   });
   box.querySelectorAll('[data-fill]').forEach(b=>{
-    b.onclick=()=>{
-      const id=b.getAttribute('data-fill');
-      const o=session.orders.find(x=>x.id===id);
-      if(o){ o.status='filled'; o.filledUsdt=o.usdt; o.filledQty=o.qty; o.fillPrice=o.price; persist(); renderAll(); toast('✅ Order marked Filled'); }
-    };
+    b.onclick=()=>fillOrder(b.getAttribute('data-fill'));
   });
   box.querySelectorAll('[data-cancel]').forEach(b=>{
-    b.onclick=()=>{
-      const id=b.getAttribute('data-cancel');
-      const o=session.orders.find(x=>x.id===id);
-      if(o){ o.status='cancelled'; persist(); renderAll(); toast('Order cancelled'); }
-    };
-  });
-}
-
-function renderArchive(){
-  const arch = store.get(LS_ARCHIVE,[]);
-  const box = document.getElementById('archiveList');
-  document.getElementById('archiveCount').textContent = arch.length;
-  if(arch.length===0){ box.innerHTML='<div class="empty">কোনো সম্পন্ন session নেই</div>'; return; }
-  box.innerHTML='';
-  [...arch].reverse().forEach(a=>{
-    const d=document.createElement('div'); d.className='hist-item';
-    const pnl = n(a.realizedNet);
-    d.innerHTML = `<div>
-      <div><b>Session #${a.id}</b> ${a.targetPct}% target</div>
-      <div class="t">${new Date(a.endTs||a.startTs).toLocaleString()}</div>
-      <div class="t">${a.orderCount} orders · Cost ${fmtU(a.totalBuyCost)} USDT</div>
-    </div>
-    <div class="pnl ${pnl>=0?'pos':'neg'}">${pnl>=0?'+':''}${fmtU(pnl)}<br><small>${fmtPct(a.realizedPct)}</small></div>`;
-    box.appendChild(d);
+    b.onclick=()=>cancelOrder(b.getAttribute('data-cancel'));
   });
 }
 
 /* ---------- toast ---------- */
 let toastT;
 function toast(msg){
-  const t=document.getElementById('toast');
+  const t=el('toast');
   t.textContent=msg; t.classList.add('show');
   clearTimeout(toastT);
   toastT=setTimeout(()=>t.classList.remove('show'),2200);
 }
 
-/* ---------- actions ---------- */
-document.getElementById('sendBtn').onclick = handleSubmit;
-input.addEventListener('keydown', e=>{ if(e.key==='Enter'){ e.preventDefault(); handleSubmit(); }});
-
-document.getElementById('btnSellPlan').onclick = ()=>{
-  if(computePosition().remainingQty<=0){ toast('কোনো PEPE নেই'); return; }
-  conv.state='askSellNow'; conv.data={}; goToState('askSellNow');
-};
-document.getElementById('btnSellDone').onclick = ()=>{
-  // shortcut: record a sell as filled using current sell target
-  const p = computePosition();
-  if(p.remainingQty<=0){ toast('কোনো PEPE নেই'); return; }
-  conv.state='askSellNow'; conv.data={}; goToState('askSellNow');
-};
-
-document.getElementById('btnReset').onclick = ()=>{
-  confirmDialog('নতুন Session শুরু করবেন?',
-    'বর্তমান session archive হবে (Target পূরণ না হলেও) এবং নতুন session শুরু হবে। পুরোনো history সংরক্ষিত থাকবে।',
-    ()=>{
-      const p = computePosition();
-      if(p.totalBuyCost>0){
-        const arch = store.get(LS_ARCHIVE,[]);
-        arch.push({
-          id: session.id, startTs: session.startTs, endTs: Date.now(),
-          targetPct: n(session.targetPct),
-          totalBuyCost: p.totalBuyCost, totalSellProceeds: p.totalSellProceeds,
-          realizedNet: p.realizedNet, realizedPct: p.realizedPct,
-          remainingQty: p.remainingQty,
-          orderCount: session.orders.length
-        });
-        store.set(LS_ARCHIVE, arch);
-      }
-      session = newSession((store.get(LS_ARCHIVE,[]).length)+1);
-      orderSeq=1;
-      persist();
-      chat.innerHTML=''; conv={state:'idle',data:{},history:[]};
-      renderAll();
-      startConversation();
-      toast('নতুন Session শুরু হয়েছে');
-    });
-};
-
-document.getElementById('btnExport').onclick = ()=>{
-  const data = { settings, session, archive: store.get(LS_ARCHIVE,[]) };
-  const blob = new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
-  const a=document.createElement('a');
-  a.href=URL.createObjectURL(blob);
-  a.download='pepe-trader-export-'+Date.now()+'.json';
-  a.click();
-  toast('Export হয়েছে');
-};
-
-document.getElementById('btnSettings').onclick = ()=>{
-  document.getElementById('setMaxInv').value = settings.maxInv||'';
-  document.getElementById('setMaxBuys').value = settings.maxBuys||'';
-  document.getElementById('settingsModal').classList.add('show');
-};
-document.getElementById('setCancel').onclick=()=>document.getElementById('settingsModal').classList.remove('show');
-document.getElementById('setSave').onclick=()=>{
-  const mi = Number(document.getElementById('setMaxInv').value)||0;
-  const mb = Number(document.getElementById('setMaxBuys').value)||0;
-  settings.maxInv = Math.max(0,mi);
-  settings.maxBuys = Math.max(0,Math.floor(mb));
-  persist();
-  document.getElementById('settingsModal').classList.remove('show');
-  renderDashboard();
-  toast('Settings সেভ হয়েছে');
-};
-
-/* confirm modal */
+/* ---------- confirm dialog ---------- */
 function confirmDialog(title,msg,onOk){
-  document.getElementById('cfTitle').textContent=title;
-  document.getElementById('cfMsg').textContent=msg;
-  const modal=document.getElementById('confirmModal');
+  el('cfTitle').textContent=title;
+  el('cfMsg').textContent=msg;
+  const modal=el('confirmModal');
   modal.classList.add('show');
-  const ok=document.getElementById('cfOk'), cancel=document.getElementById('cfCancel');
+  const ok=el('cfOk'), cancel=el('cfCancel');
   const cleanup=()=>{ modal.classList.remove('show'); ok.onclick=null; cancel.onclick=null; };
   ok.onclick=()=>{ cleanup(); onOk(); };
   cancel.onclick=cleanup;
 }
 
-/* ---------- init conversation ---------- */
-function startConversation(){
-  chat.innerHTML='';
-  conv={state:'idle',data:{},history:[]};
+/* ---------- action buttons ---------- */
+sendBtn.onclick = handleSubmit;
+input.addEventListener('keydown', e=>{ if(e.key==='Enter'){ e.preventDefault(); handleSubmit(); } });
+
+el('btnSellPlan').onclick = ()=>{
   const p = computePosition();
-  if(p.totalBuyCost>0){
-    // resume existing session
-    botSay(`👋 Welcome back! Session #${session.id} active.\n\n`+
-      `Current Position:\n`+
-      `Cost: <b>${fmtU(p.totalBuyCost)} USDT</b>\n`+
-      `PEPE: <b>${fmtQ(p.remainingQty)}</b>\n`+
-      `WAP: ${fmtP(p.avgBuy)}\n`+
-      `Target: ${p.targetPct}%\n`+
-      `Sell Target: <span class="hl">${fmtP(p.sellTarget)}</span>\n\n`+
-      `আপনি কী করতে চান?`);
-    conv.state='afterBuyFilled';
-    setInputEnabled(true,'buy / sell / done',STATES.afterBuyFilled.quick);
-  } else {
-    conv.state='askMarketPrice';
-    goToState('askMarketPrice');
-  }
+  if(!D.gt(p.remainingQty,'0')){ toast('কোনো PEPE নেই'); return; }
+  openChat();
+  session.conversation = {state:'askSellPrice', data:{}};
+  persist();
+  chatBox.innerHTML='';
+  botSay('🎯 Sell Planning শুরু করছি…');
+  goToState('askSellPrice');
+};
+el('btnSellDone').onclick = ()=>{
+  const p = computePosition();
+  if(!D.gt(p.remainingQty,'0')){ toast('কোনো PEPE নেই'); return; }
+  openChat();
+  session.conversation = {state:'askSellPrice', data:{}};
+  persist();
+  chatBox.innerHTML='';
+  botSay('✅ Sell Record করতে যাচ্ছি…');
+  goToState('askSellPrice');
+};
+
+el('btnReset').onclick = ()=>{
+  confirmDialog('সব ডেটা রিসেট করবেন?',
+    'বর্তমান Session-এর সব order, holdings, P/L, target এবং conversation মুছে যাবে। এটি আর ফিরিয়ে আনা যাবে না।',
+    async ()=>{
+      await store.del('session');
+      session = newSession(1);
+      orderSeq = 1;
+      await persist();
+      chatBox.innerHTML='';
+      renderAll();
+      startConversation();
+      toast('✅ Reset সম্পন্ন — নতুন Session');
+    });
+};
+
+el('btnSettings').onclick = ()=>{
+  el('setMaxInv').value = settings.maxInv||'';
+  el('setMaxBuys').value = settings.maxBuys||'';
+  el('settingsModal').classList.add('show');
+};
+el('setCancel').onclick=()=>el('settingsModal').classList.remove('show');
+el('setSave').onclick=async ()=>{
+  const mi = Number(el('setMaxInv').value)||0;
+  const mb = Number(el('setMaxBuys').value)||0;
+  settings.maxInv = Math.max(0,mi);
+  settings.maxBuys = Math.max(0,Math.floor(mb));
+  await persist();
+  el('settingsModal').classList.remove('show');
+  renderDashboard();
+  toast('✅ Settings সেভ হয়েছে');
+};
+
+/* ---------- floating chat: open/close/drag ---------- */
+const fab = el('fab');
+const chatwin = el('chatwin');
+let isOpen=false;
+let dragState=null;
+
+function openChat(){
+  isOpen=true;
+  chatwin.classList.add('open');
+  fab.classList.remove('has-msg');
+  setTimeout(()=>{ try{input.focus({preventScroll:true});}catch(e){} },250);
+}
+function closeChat(){
+  isOpen=false;
+  chatwin.classList.remove('open');
+}
+fab.onclick = ()=>{
+  if(dragState && dragState.moved) return; // ignore drag-end click
+  if(isOpen) closeChat(); else openChat();
+};
+el('chatClose').onclick = closeChat;
+
+/* drag logic for fab (mouse + touch) */
+function getFabPos(){
+  const r = fab.getBoundingClientRect();
+  return {x:r.left, y:r.top};
+}
+function setFabPos(x,y){
+  const w = fab.offsetWidth, h = fab.offsetHeight;
+  const maxX = window.innerWidth - w - 4;
+  const maxY = window.innerHeight - h - 4;
+  x = Math.max(4, Math.min(maxX, x));
+  y = Math.max(4, Math.min(maxY, y));
+  fab.style.left = x+'px';
+  fab.style.top = y+'px';
+  fab.style.right = 'auto';
+  fab.style.bottom = 'auto';
 }
 
-/* ---------- PWA icon + manifest (adapted) ---------- */
+function initFabPosition(){
+  if(fab.style.left) return;
+  const w = fab.offsetWidth||58, h = fab.offsetHeight||58;
+  setFabPos(window.innerWidth - w - 20, window.innerHeight - h - 20);
+}
+
+function dragStart(e){
+  const p = e.touches ? e.touches[0] : e;
+  const pos = getFabPos();
+  dragState = {
+    startX: p.clientX, startY: p.clientY,
+    offX: p.clientX - pos.x,
+    offY: p.clientY - pos.y,
+    moved:false
+  };
+}
+function dragMove(e){
+  if(!dragState) return;
+  const p = e.touches ? e.touches[0] : e;
+  const dx = p.clientX - dragState.startX;
+  const dy = p.clientY - dragState.startY;
+  if(Math.abs(dx)>4 || Math.abs(dy)>4) dragState.moved = true;
+  if(dragState.moved){
+    if(e.cancelable) e.preventDefault();
+    setFabPos(p.clientX - dragState.offX, p.clientY - dragState.offY);
+  }
+}
+function dragEnd(){
+  if(!dragState) return;
+  setTimeout(()=>{ dragState=null; }, 50);
+}
+
+fab.addEventListener('mousedown', dragStart);
+window.addEventListener('mousemove', dragMove);
+window.addEventListener('mouseup', dragEnd);
+fab.addEventListener('touchstart', dragStart, {passive:true});
+window.addEventListener('touchmove', dragMove, {passive:false});
+window.addEventListener('touchend', dragEnd);
+window.addEventListener('touchcancel', dragEnd);
+
+window.addEventListener('resize', ()=>{
+  const p = getFabPos();
+  setFabPos(p.x, p.y);
+  initFabPosition();
+});
+
+/* ---------- PWA icons + manifest ---------- */
 (function buildPWA(){
   const svg=`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
     <rect width="512" height="512" rx="96" fill="#0a0f1e"/>
     <circle cx="256" cy="200" r="70" fill="#22c55e"/>
     <circle cx="196" cy="180" r="12" fill="#fff"/><circle cx="316" cy="180" r="12" fill="#fff"/>
     <path d="M200 240 Q256 290 312 240" stroke="#0a0f1e" stroke-width="10" fill="none" stroke-linecap="round"/>
-    <text x="50%" y="400" font-family="Segoe UI,Arial" font-size="120" font-weight="800" fill="#7dd3fc" text-anchor="middle">PEPE</text>
-    <text x="50%" y="470" font-family="Segoe UI,Arial" font-size="60" font-weight="700" fill="#22c55e" text-anchor="middle">USDT</text>
+    <text x="50%" y="410" font-family="Segoe UI,Arial" font-size="120" font-weight="800" fill="#7dd3fc" text-anchor="middle">PEPE</text>
+    <text x="50%" y="480" font-family="Segoe UI,Arial" font-size="60" font-weight="700" fill="#22c55e" text-anchor="middle">USDT</text>
   </svg>`;
   const uri='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(svg);
-  const uriB64='data:image/svg+xml;base64,'+btoa(unescape(encodeURIComponent(svg)));
-  document.getElementById('favIcon').href=uri;
-  document.getElementById('appleIcon').href=uriB64;
+  try{ el('favIcon').href=uri; el('appleIcon').href=uri; }catch(e){}
 
   function toPng(size){
     return new Promise(res=>{
@@ -1273,18 +1432,20 @@ function startConversation(){
     background_color:'#0a0f1e',theme_color:'#0a0f1e',lang:'bn',icons:[]};
   (async()=>{
     const [a,b]=await Promise.all([toPng(192),toPng(512)]);
-    manifest.icons=[{src:a,sizes:'192x192',type:'image/png',purpose:'any'},
-                    {src:b,sizes:'512x512',type:'image/png',purpose:'any'}];
+    manifest.icons=[
+      {src:a,sizes:'192x192',type:'image/png',purpose:'any'},
+      {src:b,sizes:'512x512',type:'image/png',purpose:'any'}
+    ];
     const blob=new Blob([JSON.stringify(manifest)],{type:'application/manifest+json'});
-    document.getElementById('appManifest').href=URL.createObjectURL(blob);
+    el('appManifest').href=URL.createObjectURL(blob);
   })();
 })();
 
-/* ---------- service worker (blob) ---------- */
+/* ---------- service worker (inline) ---------- */
 (function sw(){
   if(!('serviceWorker' in navigator)) return;
-  if(location.protocol!=='http:'&&location.protocol!=='https:') return;
-  const code=`const C='pepe-v1';
+  if(location.protocol!=='http:' && location.protocol!=='https:') return;
+  const code=`const C='pepe-v3';
   self.addEventListener('install',e=>self.skipWaiting());
   self.addEventListener('activate',e=>e.waitUntil(self.clients.claim()));
   self.addEventListener('fetch',e=>{
@@ -1303,18 +1464,31 @@ function startConversation(){
 (function killTranslate(){
   const kill=()=>{
     document.querySelectorAll('.goog-te-banner-frame,.skiptranslate>iframe,iframe.goog-te-banner-frame,#goog-gt-tt,.goog-te-balloon-frame').forEach(el=>el.remove());
-    if(document.body)document.body.style.top='0px';
+    if(document.body) document.body.style.top='0px';
     document.documentElement.style.marginTop='0px';
   };
   kill();
-  try{new MutationObserver(kill).observe(document.documentElement,{childList:true,subtree:true});}catch(e){}
-  setTimeout(kill,500);setTimeout(kill,1500);
+  try{ new MutationObserver(kill).observe(document.documentElement,{childList:true,subtree:true}); }catch(e){}
+  setTimeout(kill,500); setTimeout(kill,1500);
 })();
 
 /* ---------- boot ---------- */
-loadAll();
-renderAll();
-startConversation();
+(async function boot(){
+  await loadAll();
+  renderAll();
+  initFabPosition();
+  startConversation();
+
+  // live price
+  await fetchExchangeInfo();
+  fetchLivePrice();
+  setInterval(fetchLivePrice, 15000); // 15s polling
+  setInterval(renderTicker, 1000);    // age refresh
+
+  // auto-save on visibility change
+  document.addEventListener('visibilitychange', ()=>{ if(document.hidden) persist(); });
+  window.addEventListener('beforeunload', ()=>{ persist(); });
+})();
 
 })();
 </script>
