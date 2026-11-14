@@ -160,6 +160,7 @@ body{background:linear-gradient(180deg,#080c17 0%,#0a0f1e 100%);color:var(--txt)
   .stat.wide,.stat.hero{grid-column:span 1}
   .brand h1{font-size:18px}
   .chatwin{right:8px;bottom:76px;width:calc(100vw - 16px);height:calc(100vh - 140px)}
+  .row button{font-size:12px;padding:10px 8px}
 }
 </style>
 </head>
@@ -206,12 +207,11 @@ body{background:linear-gradient(180deg,#080c17 0%,#0a0f1e 100%);color:var(--txt)
     </div>
     <div id="warnArea"></div>
     <div class="row">
-      <button class="good" id="btnSellPlan">🎯 Sell Target</button>
-      <button id="btnSellDone">✅ Record Sell</button>
+      <button class="good" id="btnSell" style="flex:2">💱 Sell / Record</button>
+      <button id="btnSettings" style="flex:1">⚙ Settings</button>
     </div>
     <div class="row">
-      <button id="btnSettings">⚙ Settings</button>
-      <button class="danger" id="btnReset">↺ Reset</button>
+      <button class="danger" id="btnReset" style="flex:1">↺ Reset</button>
     </div>
   </div>
 
@@ -280,7 +280,7 @@ body{background:linear-gradient(180deg,#080c17 0%,#0a0f1e 100%);color:var(--txt)
 
 <script>
 /* =====================================================================
-   PEPE Smart Trader — Complete Rebuild
+   PEPE Smart Trader — Complete Rebuild (Option A applied)
    Modules:
      - BigInt decimal precision engine
      - Binance live price (REST + polling)
@@ -290,6 +290,10 @@ body{background:linear-gradient(180deg,#080c17 0%,#0a0f1e 100%);color:var(--txt)
      - Conversation state machine
      - Floating chat widget (drag + touch)
      - Dashboard renderer
+   Change from v1:
+     - ❌ Removed "🎯 Sell Target" + "✅ Record Sell" (duplicate)
+     - ✅ Added single "💱 Sell / Record" button that shows
+          suggested target and starts sell flow correctly.
    ===================================================================== */
 (function(){
 'use strict';
@@ -334,7 +338,6 @@ function dp(s){
   let neg=false;
   if(s.startsWith('-')){neg=true;s=s.slice(1);}
   if(!/^\d*\.?\d*$/.test(s)){
-    // scientific notation fallback
     s=Number(s).toFixed(18);
   }
   let [i,f='']=s.split('.');
@@ -361,14 +364,12 @@ function fmtU(x,dp_=2){
   if(Math.abs(v)<1e-12) return '0.00';
   return v.toLocaleString('en-US',{minimumFractionDigits:dp_,maximumFractionDigits:dp_});
 }
-// PEPE price: up to 11 decimals, trimmed
 function fmtP(x){
   const v=n(x);
   if(!v) return '—';
   const fixed=v.toFixed(11);
   return fixed.replace(/0+$/,'').replace(/\.$/,'');
 }
-// PEPE qty: full value with grouping
 function fmtQ(x){
   const v=n(x);
   if(!v) return '0';
@@ -385,12 +386,8 @@ function fmtPct(x){ const v=n(x); return (v>=0?'+':'')+v.toFixed(2)+'%'; }
 const BINANCE_PRICE='https://api.binance.com/api/v3/ticker/price?symbol=PEPEUSDT';
 const BINANCE_EXINFO='https://api.binance.com/api/v3/exchangeInfo?symbol=PEPEUSDT';
 const market = {
-  price: null,        // decimal string
-  ts: 0,
-  tickSize: null,     // decimal string
-  stepSize: null,
-  status: 'init',     // init|live|stale|offline
-  failCount: 0
+  price: null, ts: 0, tickSize: null, stepSize: null,
+  status: 'init', failCount: 0
 };
 
 async function fetchLivePrice(){
@@ -429,18 +426,6 @@ async function fetchExchangeInfo(){
     const lf = (sym.filters||[]).find(x=>x.filterType==='LOT_SIZE');
     if(lf && lf.stepSize) market.stepSize = lf.stepSize;
   }catch(e){}
-}
-
-function roundToTick(priceStr){
-  const ts = market.tickSize;
-  if(!ts || n(ts)===0) return priceStr;
-  const A = dp(priceStr), T = dp(ts);
-  const dpv = Math.max(A.d, T.d);
-  const ia = BigInt(A.i+A.f) * (10n**BigInt(dpv-A.d));
-  const it = BigInt(T.i+T.f) * (10n**BigInt(dpv-T.d));
-  const q = ia/it;
-  const r = q*it;
-  return fmtScaled(r, dpv);
 }
 
 function renderTicker(){
@@ -519,7 +504,6 @@ function idbDel(db,key){
 const LS_PREFIX='pepe_v2_';
 const store = {
   async get(key, fallback){
-    // try IndexedDB first
     if(dbReady){
       const db=await dbReady;
       if(db){
@@ -527,7 +511,6 @@ const store = {
         if(v !== undefined && v !== null) return v;
       }
     }
-    // fallback to localStorage
     try{
       const raw = localStorage.getItem(LS_PREFIX+key);
       return raw ? JSON.parse(raw) : fallback;
@@ -552,20 +535,6 @@ const store = {
 };
 
 /* ---------- session model ---------- */
-/*
-  session = {
-    id, startTs,
-    targetPct,           // decimal string e.g. "2"
-    orders: [{
-      id, side:'buy'|'sell', type:'limit',
-      price, usdt, qty,               // planned
-      status:'planned'|'pending'|'partial'|'filled'|'cancelled',
-      filledUsdt, filledQty, fillPrice,
-      ts, note
-    }],
-    conversation: { state, data }    // persisted conversation
-  }
-*/
 let session = null;
 let settings = { maxInv: 0, maxBuys: 0 };
 let orderSeq = 1;
@@ -591,7 +560,6 @@ async function loadAll(){
   }
   const st = await store.get('settings', null);
   if(st && typeof st==='object') settings = Object.assign({maxInv:0,maxBuys:0}, st);
-  // restore order sequence
   let maxId=0;
   for(const o of session.orders){
     const num = parseInt(String(o.id).replace(/\D/g,''),10);
@@ -602,26 +570,6 @@ async function loadAll(){
 }
 
 /* ---------- financial engine ---------- */
-/*
-  Rules:
-   - Only filled or partial orders affect position.
-   - totalBuyCost     = Σ buy.filledUsdt
-   - totalBuyQty      = Σ buy.filledQty
-   - totalSellProceeds= Σ sell.filledUsdt
-   - totalSellQty     = Σ sell.filledQty
-   - remainingQty     = totalBuyQty - totalSellQty
-   - avgBuy           = totalBuyCost / totalBuyQty
-   - cost basis of remaining uses weighted average at time of sell.
-     Simplify: assume all sells happen at avg cost = totalBuyCost/totalBuyQty
-     realizedCostOfSold = totalSellQty * avgBuy
-     realizedNet = totalSellProceeds - realizedCostOfSold
-   - breakEven = (totalBuyCost - realizedCostOfSold) / remainingQty
-              = avgBuy (same thing under this model)
-   - final sell target:
-       targetReturn = totalBuyCost * (1 + targetPct/100)
-       neededProceeds = targetReturn - totalSellProceeds
-       sellTarget = neededProceeds / remainingQty
-*/
 function computePosition(){
   const buys = session.orders.filter(o=>o.side==='buy' && (o.status==='filled'||o.status==='partial'));
   const sells= session.orders.filter(o=>o.side==='sell'&& (o.status==='filled'||o.status==='partial'));
@@ -646,7 +594,6 @@ function computePosition(){
   const realizedNet = D.sub(totalSellProceeds, realizedCostOfSold);
   const realizedPct = D.gt(totalBuyCost,'0') ? D.mul(D.div(realizedNet,totalBuyCost,18),'100') : '0';
 
-  // cost basis of remaining
   const remainingBasis = D.sub(totalBuyCost, realizedCostOfSold);
   const breakEven = D.gt(remainingQty,'0') ? D.div(remainingBasis, remainingQty, 18) : '0';
 
@@ -659,7 +606,6 @@ function computePosition(){
     ? Math.max(0, Math.min(100, n(D.div(D.mul(totalSellProceeds,'100'), targetReturnTotal, 8))))
     : 0;
 
-  // unrealized
   let unrealized = '0', hasPrice=false;
   if(market.price && D.gt(remainingQty,'0')){
     hasPrice=true;
@@ -679,7 +625,7 @@ function computePosition(){
 function sessionTargetHit(){
   const p = computePosition();
   if(D.lt(p.totalBuyCost,'0.00000001')) return false;
-  return n(p.realizedPct) >= n(p.targetPct) - 0.001 && D.gt(p.remainingQty,'0')===false;
+  return n(p.realizedPct) >= n(p.targetPct) - 0.001 && !D.gt(p.remainingQty,'0');
 }
 
 /* ---------- order helpers ---------- */
@@ -719,21 +665,7 @@ const input = el('chatInput');
 const sendBtn = el('sendBtn');
 const quickBox = el('quickBtns');
 
-/* ---------- conversation ---------- */
-/*
-  states:
-    askBuyPrice     — ask user for buy limit price
-    askInvest       — ask for USDT investment
-    askTargetPct    — ask for target %
-    confirmBuy      — confirm and ask pending/filled
-    afterFirstBuy   — menu (buy/sell/done)
-    askSellPrice    — ask sell price
-    askSellQty      — ask % of position
-    askSellFill     — confirm sell pending/filled
-    afterSell       — menu
-    done
-*/
-
+/* ---------- conversation states ---------- */
 const STATES = {
   askBuyPrice: {
     field:'buyPrice',
@@ -846,7 +778,7 @@ const STATES = {
 
   afterBuyFilled: {
     field:'_go',
-    say:(d)=>{
+    say:()=>{
       const p = computePosition();
       return `✅ Order fill হয়েছে!\n\n`+
         `Total Cost: <b>${fmtU(p.totalBuyCost)} USDT</b>\n`+
@@ -856,7 +788,7 @@ const STATES = {
         `পরবর্তী পদক্ষেপ?`;
     },
     placeholder:'buy / sell / done',
-    quick:[{label:'📉 নতুন Buy',value:'buy'},{label:'📈 Sell',value:'sell'},{label:'✅ শেষ',value:'done'}],
+    quick:[{label:'📉 নতুন Buy',value:'buy'},{label:'💱 Sell',value:'sell'},{label:'✅ শেষ',value:'done'}],
     validate:(v)=>{
       const s=v.toLowerCase();
       if(s.includes('buy')||s.includes('কেন')) return {ok:true,value:'buy'};
@@ -875,12 +807,13 @@ const STATES = {
     field:'sellPrice',
     say:()=>{
       const p = computePosition();
-      return `🎯 <b>Sell Planning</b>\n\n`+
-        `Position: ${fmtQ(p.remainingQty)} PEPE\n`+
-        `Suggested Sell Limit: <span class="hl">${fmtP(p.sellTarget)}</span> USDT\n\n`+
-        `কোন price-এ Sell Limit দিতে চান?`;
+      return `💱 <b>Sell / Record Sell</b>\n\n`+
+        `Position: ${fmtQFull(p.remainingQty)} PEPE\n`+
+        `Suggested Sell Target: <span class="hl">${fmtP(p.sellTarget)} USDT</span>\n`+
+        `Target: ${p.targetPct}%\n\n`+
+        `Binance-এ যেই price-এ sell করেছেন সেটি দিন।`;
     },
-    placeholder:'Sell limit price',
+    placeholder:'Sell price (USDT)',
     quick:()=>[{label:'🎯 Suggested',value:'__suggested__'}],
     validate:(v)=>{
       let x;
@@ -894,7 +827,7 @@ const STATES = {
 
   askSellQty: {
     field:'sellQtyPct',
-    say:(d)=>`Sell Price: <b>${fmtP(d.sellPrice)}</b>\n\nকত % PEPE বিক্রি করবেন? (100 = সম্পূর্ণ)`,
+    say:(d)=>`Sell Price: <b>${fmtP(d.sellPrice)}</b>\n\nকত % PEPE বিক্রি করেছেন? (100 = সম্পূর্ণ)`,
     placeholder:'0-100',
     quick:[{label:'100%',value:'100'},{label:'50%',value:'50'},{label:'25%',value:'25'}],
     validate:(v)=>{
@@ -911,11 +844,11 @@ const STATES = {
       const p = computePosition();
       const qty = D.mul(p.remainingQty, D.div(d.sellQtyPct,'100',18));
       const gross = D.mul(qty, d.sellPrice);
-      return `📋 <b>Sell Plan</b>\n\n`+
+      return `📋 <b>Sell Record</b>\n\n`+
         `Price: <span class="hl">${fmtP(d.sellPrice)}</span>\n`+
         `Qty: ${fmtQ(qty)} PEPE (${d.sellQtyPct}%)\n`+
         `Est. Proceeds: <b>${fmtU(gross)} USDT</b>\n\n`+
-        `Binance-এ Limit Sell set করুন। Fill হলে জানান।`;
+        `Binance-এ এই Sell সম্পন্ন হয়েছে?`;
     },
     placeholder:'filled / pending',
     quick:[{label:'✅ Filled',value:'filled'},{label:'⏳ Pending',value:'pending'}],
@@ -979,7 +912,7 @@ const STATES = {
           `Trading Session সম্পন্ন! ✅\n`+
           `নতুন Session শুরু করতে Reset চাপুন।`;
       }
-      const warn = D.lt(p.remainingQty,'0.00000001') && n(p.realizedPct)<n(p.targetPct)
+      const warn = !D.gt(p.remainingQty,'0') && n(p.realizedPct)<n(p.targetPct)
         ? `\n\n⚠️ সব PEPE বিক্রি হয়েছে কিন্তু Target পূরণ হয়নি — Loss Recovery Mode active.`
         : '';
       return `✅ Sell fill হয়েছে।\n\n`+
@@ -991,7 +924,7 @@ const STATES = {
         `\n\nপরবর্তী পদক্ষেপ?`;
     },
     placeholder:'buy / sell / done',
-    quick:[{label:'📉 Buy',value:'buy'},{label:'📈 আরও Sell',value:'sell'},{label:'✅ শেষ',value:'done'}],
+    quick:[{label:'📉 Buy',value:'buy'},{label:'💱 আরও Sell',value:'sell'},{label:'✅ শেষ',value:'done'}],
     validate:(v)=>{
       const s=v.toLowerCase();
       if(s.includes('buy')||s.includes('কেন')) return {ok:true,value:'buy'};
@@ -1018,7 +951,6 @@ function parsePEPEPrice(v){
   if(!/^\d*\.?\d+(e-?\d+)?$/i.test(v)) return null;
   const num = Number(v);
   if(!isFinite(num) || num<=0 || num>1) return null;
-  // format string safely
   if(v.includes('e')||v.includes('E')){
     return Number(v).toFixed(11).replace(/0+$/,'').replace(/\.$/,'');
   }
@@ -1097,7 +1029,6 @@ function handleSubmit(){
     userSay(raw);
     botSay('❌ '+result.msg);
     input.value='';
-    // re-enable same state
     const q = typeof st.quick==='function' ? st.quick(session.conversation.data) : st.quick;
     setInputEnabled(true, st.placeholder, q);
     return;
@@ -1180,10 +1111,9 @@ function renderDashboard(){
     : '—';
   el('recBar').style.width = Math.min(100,p.progress)+'%';
 
-  // warnings
   const wa = el('warnArea');
   let html='';
-  if(D.lt(p.remainingQty,'0.00000001') && D.gt(p.totalBuyCost,'0') && n(p.realizedPct)<n(p.targetPct)
+  if(!D.gt(p.remainingQty,'0') && D.gt(p.totalBuyCost,'0') && n(p.realizedPct)<n(p.targetPct)
      && session.orders.some(o=>o.side==='sell'&&o.status==='filled')){
     html += '<div class="danger-msg">⚠️ Position শূন্য কিন্তু Target পূরণ হয়নি। নতুন Buy plan করুন।</div>';
   }
@@ -1261,24 +1191,19 @@ function confirmDialog(title,msg,onOk){
 sendBtn.onclick = handleSubmit;
 input.addEventListener('keydown', e=>{ if(e.key==='Enter'){ e.preventDefault(); handleSubmit(); } });
 
-el('btnSellPlan').onclick = ()=>{
+/* ✅ SINGLE "Sell / Record" button (Option A) */
+el('btnSell').onclick = ()=>{
   const p = computePosition();
   if(!D.gt(p.remainingQty,'0')){ toast('কোনো PEPE নেই'); return; }
   openChat();
+  chatBox.innerHTML='';
+  botSay(`💱 <b>Sell / Record Sell</b>\n\n`+
+    `Remaining: <b>${fmtQFull(p.remainingQty)} PEPE</b>\n`+
+    `Suggested Sell Target: <span class="hl">${fmtP(p.sellTarget)} USDT</span>\n`+
+    `Target: ${p.targetPct}% · Break-even: ${fmtP(p.breakEven)}\n\n`+
+    `Binance-এ যেই price-এ sell করেছেন সেটি দিন।`);
   session.conversation = {state:'askSellPrice', data:{}};
   persist();
-  chatBox.innerHTML='';
-  botSay('🎯 Sell Planning শুরু করছি…');
-  goToState('askSellPrice');
-};
-el('btnSellDone').onclick = ()=>{
-  const p = computePosition();
-  if(!D.gt(p.remainingQty,'0')){ toast('কোনো PEPE নেই'); return; }
-  openChat();
-  session.conversation = {state:'askSellPrice', data:{}};
-  persist();
-  chatBox.innerHTML='';
-  botSay('✅ Sell Record করতে যাচ্ছি…');
   goToState('askSellPrice');
 };
 
@@ -1331,12 +1256,11 @@ function closeChat(){
   chatwin.classList.remove('open');
 }
 fab.onclick = ()=>{
-  if(dragState && dragState.moved) return; // ignore drag-end click
+  if(dragState && dragState.moved) return;
   if(isOpen) closeChat(); else openChat();
 };
 el('chatClose').onclick = closeChat;
 
-/* drag logic for fab (mouse + touch) */
 function getFabPos(){
   const r = fab.getBoundingClientRect();
   return {x:r.left, y:r.top};
@@ -1352,13 +1276,11 @@ function setFabPos(x,y){
   fab.style.right = 'auto';
   fab.style.bottom = 'auto';
 }
-
 function initFabPosition(){
   if(fab.style.left) return;
   const w = fab.offsetWidth||58, h = fab.offsetHeight||58;
   setFabPos(window.innerWidth - w - 20, window.innerHeight - h - 20);
 }
-
 function dragStart(e){
   const p = e.touches ? e.touches[0] : e;
   const pos = getFabPos();
@@ -1384,7 +1306,6 @@ function dragEnd(){
   if(!dragState) return;
   setTimeout(()=>{ dragState=null; }, 50);
 }
-
 fab.addEventListener('mousedown', dragStart);
 window.addEventListener('mousemove', dragMove);
 window.addEventListener('mouseup', dragEnd);
@@ -1392,7 +1313,6 @@ fab.addEventListener('touchstart', dragStart, {passive:true});
 window.addEventListener('touchmove', dragMove, {passive:false});
 window.addEventListener('touchend', dragEnd);
 window.addEventListener('touchcancel', dragEnd);
-
 window.addEventListener('resize', ()=>{
   const p = getFabPos();
   setFabPos(p.x, p.y);
@@ -1445,7 +1365,7 @@ window.addEventListener('resize', ()=>{
 (function sw(){
   if(!('serviceWorker' in navigator)) return;
   if(location.protocol!=='http:' && location.protocol!=='https:') return;
-  const code=`const C='pepe-v3';
+  const code=`const C='pepe-v4';
   self.addEventListener('install',e=>self.skipWaiting());
   self.addEventListener('activate',e=>e.waitUntil(self.clients.claim()));
   self.addEventListener('fetch',e=>{
@@ -1479,13 +1399,11 @@ window.addEventListener('resize', ()=>{
   initFabPosition();
   startConversation();
 
-  // live price
   await fetchExchangeInfo();
   fetchLivePrice();
-  setInterval(fetchLivePrice, 15000); // 15s polling
-  setInterval(renderTicker, 1000);    // age refresh
+  setInterval(fetchLivePrice, 15000);
+  setInterval(renderTicker, 1000);
 
-  // auto-save on visibility change
   document.addEventListener('visibilitychange', ()=>{ if(document.hidden) persist(); });
   window.addEventListener('beforeunload', ()=>{ persist(); });
 })();
