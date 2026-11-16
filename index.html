@@ -307,8 +307,6 @@ body.kb-open .chatwin{
       </div>
       <div class="stat"><div class="l">Total Buy Cost</div><div class="v" id="sCost">0.00</div></div>
       <div class="stat"><div class="l">PEPE Holdings</div><div class="v" id="sQty">0</div></div>
-      <div class="stat"><div class="l">Weighted Avg Buy</div><div class="v" id="sWap">—</div></div>
-      <div class="stat"><div class="l">Break-even</div><div class="v" id="sBe">—</div></div>
       <div class="stat"><div class="l">Unrealized P/L</div><div class="v" id="sUpl">—</div></div>
       <div class="stat"><div class="l">Realized P/L (gross)</div><div class="v" id="sRpl">0.00</div></div>
       <div class="stat"><div class="l">Target Profit %</div><div class="v" id="sTargetPct">0%</div></div>
@@ -411,11 +409,11 @@ body.kb-open .chatwin{
 
 <script>
 /* =====================================================================
-   PEPE Smart Trader — v7 (ledger + partial-fill modal + UUID + PWA)
-   All prior v6 fixes retained. New in v7:
-     (ক) Dashboard fill -> modal for actual qty/USDT (partial-ready)
-     (খ) Session sequence auto-increment + short unique session code
-     (গ) Real sw.js (same-origin) - register 'sw.js'
+   PEPE Smart Trader — v7.1 (duplicate-message fix + WAP/BE removed)
+   Changes:
+     (ক) fillOrder/cancelOrder accept isFromChat -> skip syncConversation...
+     (খ) afterPending/afterSellPending pass isFromChat=true
+     (গ) WAP & Break-even removed from dashboard + chat messages
    ===================================================================== */
 (function(){
 'use strict';
@@ -608,7 +606,6 @@ let settings = { maxInv:0, maxBuys:0, feePct:0 };
 let orderSeq = 1;
 
 function shortCode(seq){
-  // deterministic-ish 6-char code from sequence + timestamp
   const base = (Number(seq)||1)*2654435761 + (Date.now()&0xffff);
   const hex = (base>>>0).toString(16).padStart(8,'0');
   return hex.slice(0,6);
@@ -624,7 +621,6 @@ async function loadAll(){
   dbReady = openDB();
   let s = await store.get('session', null);
   if(s && s.id && Array.isArray(s.orders)){
-    // backfill code for older sessions
     if(!s.code) s.code = shortCode(s.id);
     session = s;
   } else session = newSession(1);
@@ -737,7 +733,8 @@ function sellBlocked(){
 function nextOrderId(){ return 'O'+(orderSeq++); }
 function pushOrder(order){ session.orders.push(order); persist(); renderAll(); }
 
-function fillOrder(id, actualQty, actualUsdt){
+function fillOrder(id, actualQty, actualUsdt, isFromChat){
+  isFromChat = !!isFromChat;
   const o = session.orders.find(x=>x.id===id);
   if(!o || o.status==='filled' || o.status==='cancelled') return false;
   const fq = actualQty ? String(actualQty) : o.qty;
@@ -747,15 +744,16 @@ function fillOrder(id, actualQty, actualUsdt){
   o.fillPrice = (n(fq)>0) ? D.div(fu, fq, 18) : o.price;
   o.status = (n(fq) >= n(o.qty) - 1e-12) ? 'filled' : 'partial';
   persist(); renderAll();
-  syncConversationAfterOrderAction(id, 'filled');
+  if(!isFromChat) syncConversationAfterOrderAction(id, 'filled');
   toast(o.status==='partial'?'✅ Partial fill recorded':'✅ Order filled');
   return true;
 }
-function cancelOrder(id){
+function cancelOrder(id, isFromChat){
+  isFromChat = !!isFromChat;
   const o = session.orders.find(x=>x.id===id);
   if(!o || o.status==='filled') return false;
   o.status='cancelled'; persist(); renderAll();
-  syncConversationAfterOrderAction(id, 'cancelled');
+  if(!isFromChat) syncConversationAfterOrderAction(id, 'cancelled');
   toast('Order cancelled');
   return true;
 }
@@ -882,8 +880,6 @@ const STATES = {
         `<b>Fill হলে Position:</b>\n`+
         `Total Cost: ${fmtU(newTotalCost)} USDT\n`+
         `Total PEPE: ${fmtQ(newTotalQty)}\n`+
-        `WAP: ${fmtP(newAvg)}\n`+
-        `Break-even: ${fmtP(newBe)}\n`+
         (secured ? `Sell Target: <span class="pos">Target secured</span>\n`
                  : `Sell Target: <span class="hl">${fmtP(newSellTarget)}</span>\n`)+
         `\nBinance-এ Limit Buy set করুন। Fill হলে জানান।`;
@@ -927,9 +923,9 @@ const STATES = {
     next:(v,d)=>{
       const id = d.pendingOrderId || ([...session.orders].reverse().find(o=>o.status==='pending')||{}).id;
       if(id){
-        if(v.act==='fillPartial') fillOrder(id, v.qty, v.usdt);
-        else if(v.act==='fill') fillOrder(id);
-        else cancelOrder(id);
+        if(v.act==='fillPartial') fillOrder(id, v.qty, v.usdt, true);
+        else if(v.act==='fill') fillOrder(id, null, null, true);
+        else cancelOrder(id, true);
       }
       if(d.pendingOrderId) delete d.pendingOrderId;
       return v.act==='cancel' ? 'askBuyPrice' : 'afterBuyFilled';
@@ -942,7 +938,6 @@ const STATES = {
       return `✅ Order fill হয়েছে!\n\n`+
         `Total Cost: <b>${fmtU(p.totalBuyCost)} USDT</b>\n`+
         `PEPE: <b>${fmtQ(p.remainingQty)}</b>\n`+
-        `WAP: ${fmtP(p.avgBuy)} · BE: ${fmtP(p.breakEven)}\n`+
         (p.targetSecured ? `Target: <span class="pos">secured</span>\n`
                          : `Sell Target (${p.targetPct}%): <span class="hl">${fmtP(p.sellTarget)}</span>\n`)+
         `\nপরবর্তী পদক্ষেপ?`;
@@ -971,7 +966,6 @@ const STATES = {
       const p = computePosition();
       return `💱 <b>Sell / Record Sell</b>\n\n`+
         `Position: ${fmtQFull(p.remainingQty)} PEPE\n`+
-        `Break-even: ${fmtP(p.breakEven)}\n`+
         (p.targetSecured
           ? `Target: <span class="pos">already secured</span> — যেকোনো valid price দিতে পারেন।\n`
           : `Suggested Sell Target: <span class="hl">${fmtP(p.sellTarget)} USDT</span>\n`)+
@@ -1067,9 +1061,9 @@ const STATES = {
     next:(v,d)=>{
       const id = d.pendingOrderId || ([...session.orders].reverse().find(o=>o.status==='pending')||{}).id;
       if(id){
-        if(v.act==='fillPartial') fillOrder(id, v.qty, v.usdt);
-        else if(v.act==='fill') fillOrder(id);
-        else cancelOrder(id);
+        if(v.act==='fillPartial') fillOrder(id, v.qty, v.usdt, true);
+        else if(v.act==='fill') fillOrder(id, null, null, true);
+        else cancelOrder(id, true);
       }
       if(d.pendingOrderId) delete d.pendingOrderId;
       return v.act==='cancel' ? 'afterBuyFilled' : 'afterSellFilled';
@@ -1348,7 +1342,6 @@ function startConversation(){
     botSay(`👋 Welcome back! Session #${session.id} (${session.code||''}) active.\n\n`+
       `Cost: <b>${fmtU(p.totalBuyCost)} USDT</b>\n`+
       `PEPE: <b>${fmtQ(p.remainingQty)}</b>\n`+
-      `WAP: ${fmtP(p.avgBuy)} · BE: ${fmtP(p.breakEven)}\n`+
       `Session Return: ${fmtPct(p.sessionReturnPct)} · Target: ${p.targetPct}%\n`+
       (p.targetSecured?`Sell Target: <span class="pos">secured</span>`
                       :`Sell Target: <span class="hl">${fmtP(p.sellTarget)}</span>`)+
@@ -1385,8 +1378,6 @@ function renderDashboard(){
     : p.targetSecured ? 'Secured ✅' : fmtP(p.sellTarget)+' USDT';
   el('sCost').textContent=fmtU(p.totalBuyCost);
   el('sQty').textContent=fmtQFull(p.remainingQty);
-  el('sWap').textContent=D.gt(p.avgBuy,'0')?fmtP(p.avgBuy):'—';
-  el('sBe').textContent=D.gt(p.breakEven,'0')?fmtP(p.breakEven):'—';
 
   const upl=el('sUpl');
   if(p.hasPrice && D.gt(p.remainingQty,'0')){
@@ -1473,7 +1464,6 @@ function openFillModal(orderId){
   el('fmTitle').textContent = (o.status==='partial'?'Add fill — ':'Fill — ')+o.id;
   el('fmInfo').innerHTML = `${o.side==='buy'?'🟢 BUY':'🔴 SELL'} @ ${fmtP(o.price)}\nPlan: ${fmtU(o.usdt)} USDT · ${fmtQFull(o.qty)} PEPE`
     + (o.status==='partial'?`\nAlready filled: ${fmtU(o.filledUsdt)} USDT · ${fmtQFull(o.filledQty)} PEPE`:'');
-  // Compute suggested values
   let planQtyLeft, planUsdtLeft;
   if(o.status==='partial'){
     planQtyLeft = D.sub(o.qty||'0', o.filledQty||'0');
@@ -1541,7 +1531,6 @@ el('btnSell').addEventListener('click', ()=>{
   openChat(); userScrolledUp=false;
   botSay(`💱 <b>Sell / Record Sell</b>\n\n`+
     `Remaining: <b>${fmtQFull(p.remainingQty)} PEPE</b>\n`+
-    `Break-even: ${fmtP(p.breakEven)}\n`+
     (p.targetSecured?`Target: <span class="pos">secured</span> — যেকোনো valid price দিন।`
                     :`Suggested Sell Target: <span class="hl">${fmtP(p.sellTarget)} USDT</span>`) +
     `\nTarget: ${p.targetPct}% · Fee: ${settings.feePct||0}%\n\n`+
@@ -1748,12 +1737,11 @@ window.addEventListener('orientationchange', ()=>setTimeout(onResizeOrViewportCh
   })();
 })();
 
-/* ---------------- Service worker (গ): register same-origin sw.js ---------------- */
+/* ---------------- Service worker ---------------- */
 (function sw(){
   if(!('serviceWorker' in navigator)) return;
   if(location.protocol!=='http:' && location.protocol!=='https:') return;
   navigator.serviceWorker.register('sw.js', {scope:'./'}).catch(err=>{
-    // registration fails if sw.js missing or scope mismatch - inform once
     console.warn('SW registration failed (offline disabled):', err && err.message);
   });
 })();
