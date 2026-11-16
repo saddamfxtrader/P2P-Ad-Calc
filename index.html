@@ -198,7 +198,7 @@ body{background:linear-gradient(180deg,#080c17 0%,#0a0f1e 100%);color:var(--txt)
       <div class="stat"><div class="l">Break-even</div><div class="v" id="sBe">—</div></div>
       <div class="stat"><div class="l">Unrealized P/L</div><div class="v" id="sUpl">—</div></div>
       <div class="stat"><div class="l">Realized Net P/L</div><div class="v" id="sRpl">0.00</div></div>
-      <div class="stat"><div class="l">Blended Target %</div><div class="v" id="sTargetPct">0%</div></div>
+      <div class="stat"><div class="l">Target Profit %</div><div class="v" id="sTargetPct">0%</div></div>
       <div class="stat"><div class="l">Realized P/L %</div><div class="v" id="sRplPct">0%</div></div>
       <div class="stat wide">
         <div class="l">Recovery Progress</div>
@@ -281,14 +281,29 @@ body{background:linear-gradient(180deg,#080c17 0%,#0a0f1e 100%);color:var(--txt)
 
 <script>
 /* =====================================================================
-   PEPE Smart Trader — v4 (Blended Target per Buy)
-   
-   নতুন বৈশিষ্ট্য:
-   - প্রতিটি Buy-এর নিজস্ব Target % (buyTargets array)
-   - মোট Target Return = Σ (প্রতিটি Buy-এর invest × (1 + target%))
-   - Dashboard-এ Blended Target % দেখায়
-   - প্রতিবার Target % জিজ্ঞেস করা হয়, ব্যবহারকারী পরিবর্তন করতে পারেন
-   - পুরনো session автоматически migrate হয় (buyTargets এড়িয়ে)
+   PEPE Smart Trader — Complete Rebuild (v3 — Sincronization Fix)
+   Modules:
+     - BigInt decimal precision engine
+     - Binance live price (REST + polling)
+     - Persistent storage (IndexedDB w/ LS fallback)
+     - Financial calculation engine (WAP, break-even, realized P/L,
+       final sell target, recovery)
+     - Conversation state machine (with unified guards)
+     - Floating chat widget (drag + touch)
+     - Dashboard renderer
+
+   v3 fixes:
+     - getTradeState() / sellBlocked() = single-source-of-truth helpers
+     - startConversation() now respects Target Achieved and zero-qty
+     - goToState() global guard blocks sell states when appropriate
+     - handleSubmit() entry-level validation for sell states
+     - session.targetPct is sticky (first buy sets it, later buys don't
+       overwrite)
+     - btnSell.onclick guards for targetHit & zero-qty
+     - afterSellFilled → sessionComplete when target hit
+     - Dashboard warning unified via getTradeState()
+     - New terminal state: sessionComplete (input disabled)
+     - loadAll() sanitizes stale sell conversation state
    ===================================================================== */
 (function(){
 'use strict';
@@ -529,20 +544,13 @@ const store = {
   }
 };
 
-/* ---------- session model (v4) ---------- */
+/* ---------- session model ---------- */
 let session = null;
 let settings = { maxInv: 0, maxBuys: 0 };
 let orderSeq = 1;
 
 function newSession(id){
-  return {
-    id: id||1,
-    startTs: Date.now(),
-    targetPct: '0',        // backward-compat: blended average প্রদর্শনের জন্য
-    buyTargets: [],        // ✅ নতুন: প্রতিটি Buy-এর {invest, pct}
-    orders: [],
-    conversation:{state:'askBuyPrice', data:{}}
-  };
+  return { id: id||1, startTs: Date.now(), targetPct: '0', orders: [], conversation:{state:'askBuyPrice', data:{}} };
 }
 
 async function persist(){
@@ -552,28 +560,11 @@ async function persist(){
   }catch(e){}
 }
 
-/* পুরনো session-কে v4-এ migrate করা */
-function migrateSession(s){
-  if(!s || typeof s!=='object') return s;
-  if(!Array.isArray(s.buyTargets)) s.buyTargets = [];
-  // পুরনো session: targetPct ছিল, buyTargets ছিল না
-  // তখন প্রত্যেকটি filled buy-কে সমান targetPct দিয়ে ভাগ করে দিই
-  if(s.buyTargets.length===0 && Array.isArray(s.orders)){
-    const filledBuys = s.orders.filter(o=>o.side==='buy' && (o.status==='filled'||o.status==='partial'));
-    if(filledBuys.length>0 && n(s.targetPct) > 0){
-      for(const b of filledBuys){
-        s.buyTargets.push({ invest: b.filledUsdt||b.usdt||'0', pct: n(s.targetPct) });
-      }
-    }
-  }
-  return s;
-}
-
 async function loadAll(){
   dbReady = openDB();
   let s = await store.get('session', null);
   if(s && s.id && Array.isArray(s.orders)){
-    session = migrateSession(s);
+    session = s;
   }else{
     session = newSession(1);
   }
@@ -600,7 +591,7 @@ async function loadAll(){
   }
 }
 
-/* ---------- financial engine (v4 — Blended Target) ---------- */
+/* ---------- financial engine ---------- */
 function computePosition(){
   const buys = session.orders.filter(o=>o.side==='buy' && (o.status==='filled'||o.status==='partial'));
   const sells= session.orders.filter(o=>o.side==='sell'&& (o.status==='filled'||o.status==='partial'));
@@ -628,29 +619,8 @@ function computePosition(){
   const remainingBasis = D.sub(totalBuyCost, realizedCostOfSold);
   const breakEven = D.gt(remainingQty,'0') ? D.div(remainingBasis, remainingQty, 18) : '0';
 
-  /* ✅ Blended target:
-     প্রতিটি Buy-এর {invest, pct} → প্রয়োজনীয় return = invest × (1 + pct/100)
-     মোট target return = Σ প্রয়োজনীয় return */
-  let targetReturnTotal = '0';
-  const bt = Array.isArray(session.buyTargets) ? session.buyTargets : [];
-  if(bt.length > 0){
-    for(const item of bt){
-      const invest = D.add(item.invest||'0','0');
-      const pct = n(item.pct)||0;
-      const mult = D.add('1', D.div(String(pct),'100',18));
-      targetReturnTotal = D.add(targetReturnTotal, D.mul(invest, mult));
-    }
-  }else{
-    // Fallback: পুরনো session হলে targetPct দিয়ে
-    const fallbackPct = session.targetPct || '0';
-    targetReturnTotal = D.mul(totalBuyCost, D.add('1', D.div(fallbackPct,'100',18)));
-  }
-
-  // Blended % = (মোট target return − মোট cost) ÷ মোট cost × 100
-  const blendedPct = D.gt(totalBuyCost,'0')
-    ? D.mul(D.div(D.sub(targetReturnTotal, totalBuyCost), totalBuyCost, 18), '100')
-    : '0';
-
+  const targetPct = session.targetPct || '0';
+  const targetReturnTotal = D.mul(totalBuyCost, D.add('1', D.div(targetPct,'100',18)));
   const neededProceeds = D.sub(targetReturnTotal, totalSellProceeds);
   const sellTarget = D.gt(remainingQty,'0') ? D.div(neededProceeds, remainingQty, 18) : '0';
 
@@ -669,9 +639,7 @@ function computePosition(){
     totalBuyCost, totalBuyQty, totalSellProceeds, totalSellQty,
     remainingQty, avgBuy, breakEven,
     realizedNet, realizedPct, realizedCostOfSold, remainingBasis,
-    targetPct: blendedPct,         // ← এখন blended % (backward-compat)
-    targetPctStored: session.targetPct || '0',
-    targetReturnTotal, neededProceeds, sellTarget,
+    targetPct, targetReturnTotal, neededProceeds, sellTarget,
     progress, unrealized, hasPrice
   };
 }
@@ -679,13 +647,18 @@ function computePosition(){
 function sessionTargetHit(){
   const p = computePosition();
   if(D.lt(p.totalBuyCost,'0.00000001')) return false;
-  // Target hit যদি realized proceeds ≥ মোট target return, এবং কোনো qty বাকি না থাকে
-  return D.gt(p.totalBuyCost,'0')
-    && !D.gt(p.remainingQty,'0')
-    && !D.lt(p.totalSellProceeds, p.targetReturnTotal);
+  return n(p.realizedPct) >= n(p.targetPct) - 0.001 && !D.gt(p.remainingQty,'0');
 }
 
-/* ---------- unified trade-state resolver ---------- */
+/* ---------- unified trade-state resolver (SINGLE SOURCE OF TRUTH) ---------- */
+/**
+ * Returns one of:
+ *   'empty'        — no orders yet
+ *   'pending'      — has pending orders (buy or sell)
+ *   'targetHit'    — Target Achieved AND no remaining qty
+ *   'zeroNoTarget' — remainingQty === 0, sells filled, but realizedPct < targetPct
+ *   'inPosition'   — remainingQty > 0
+ */
 function getTradeState(){
   const p = computePosition();
   const hasPending = session.orders.some(o=>o.status==='pending');
@@ -696,13 +669,14 @@ function getTradeState(){
   if(!hasBuyCost && !hasPending) return {kind:'empty', p};
   if(hasPending) return {kind:'pending', p};
   if(sessionTargetHit()) return {kind:'targetHit', p};
-  if(!hasRemaining && hasBuyCost && hasFilledSell && D.lt(p.totalSellProceeds, p.targetReturnTotal)){
+  if(!hasRemaining && hasBuyCost && hasFilledSell && n(p.realizedPct) < n(p.targetPct)){
     return {kind:'zeroNoTarget', p};
   }
   if(hasRemaining) return {kind:'inPosition', p};
   return {kind:'inPosition', p};
 }
 
+/** True if a new Sell flow must be blocked. */
 function sellBlocked(){
   const p = computePosition();
   if(!D.gt(p.remainingQty,'0')) return {blocked:true, reason:'zeroQty'};
@@ -747,7 +721,7 @@ const input = el('chatInput');
 const sendBtn = el('sendBtn');
 const quickBox = el('quickBtns');
 
-/* ---------- conversation states (v4) ---------- */
+/* ---------- conversation states ---------- */
 const STATES = {
   askBuyPrice: {
     field:'buyPrice',
@@ -773,22 +747,12 @@ const STATES = {
       if(x===null || n(x)<=0) return {ok:false,msg:'0-এর বেশি USDT দিন'};
       return {ok:true,value:x};
     },
-    // ✅ প্রতিবার askTargetPct-এ যাবে (আগের target থাকলেও)
     next:'askTargetPct'
   },
 
   askTargetPct: {
     field:'targetPct',
-    say:(d)=>{
-      const bt = Array.isArray(session.buyTargets) ? session.buyTargets : [];
-      const existingTotal = bt.reduce((s,x)=>s+n(x.pct),0);
-      const existingCount = bt.length;
-      const hint = existingCount > 0
-        ? `\n\n📌 আপনার আগের ${existingCount}টি Buy-এর Target: মোট ${existingTotal.toFixed(2)}% (যোগফল)\n`+
-          `এই Buy-এর জন্য নতুন Target দিন — আগের Buy-গুলোর Target অপরিবর্তিত থাকবে।`
-        : '';
-      return `Investment: <b>${fmtU(d.invest)} USDT</b>\n\nএই Buy-এর জন্য কত % <b>Net Profit Target</b> চান?${hint}`;
-    },
+    say:(d)=>`Investment: <b>${fmtU(d.invest)} USDT</b>\n\nসম্পূর্ণ Active Session-এর জন্য কত % <b>Net Profit Target</b> চান?`,
     placeholder:'Profit % (যেমন 2)',
     validate:(v)=>{
       const x=parseUSDT(v);
@@ -804,39 +768,25 @@ const STATES = {
     say:(d)=>{
       const qty = D.div(d.invest, d.buyPrice, 12);
       const p = computePosition();
-
-      // নতুন Buy সহ blended target হিসাব
+      const existingTarget = n(session.targetPct);
       const newTotalCost = D.add(p.totalBuyCost, d.invest);
       const newTotalQty  = D.add(p.remainingQty, qty);
-
-      // ✅ Blended target return (নতুন Buy সহ)
-      let newTargetReturn = '0';
-      for(const item of (session.buyTargets||[])){
-        newTargetReturn = D.add(newTargetReturn, D.mul(item.invest||'0', D.add('1', D.div(String(n(item.pct)||0),'100',18))));
-      }
-      newTargetReturn = D.add(newTargetReturn, D.mul(d.invest, D.add('1', D.div(String(d.targetPct),'100',18))));
-
       const newWap = D.gt(newTotalQty,'0') ? D.div(newTotalCost, newTotalQty, 18) : '0';
+      const effectiveTarget = existingTarget > 0 ? existingTarget : n(d.targetPct);
+      const newTargetReturn = D.mul(newTotalCost, D.add('1', D.div(String(effectiveTarget),'100',18)));
       const newSellTarget = D.gt(newTotalQty,'0') ? D.div(D.sub(newTargetReturn, p.totalSellProceeds), newTotalQty, 18) : '0';
-      const newBlendedPct = D.gt(newTotalCost,'0') ? D.mul(D.div(D.sub(newTargetReturn, newTotalCost), newTotalCost, 18), '100') : '0';
-
-      // আগের Buy-গুলোর তথ্য
-      const prevBt = session.buyTargets||[];
-      const prevLines = prevBt.length > 0
-        ? `\n\n📌 <b>আগের Buy-গুলো (অপরিবর্তিত):</b>\n` +
-          prevBt.map((b,i)=>`  ${i+1}. ${fmtU(b.invest)} USDT → ${n(b.pct).toFixed(2)}%`).join('\n')
+      const targetNote = existingTarget > 0 && Math.abs(existingTarget - n(d.targetPct)) > 0.001
+        ? `\n⚠️ Note: Session Target আগেই <b>${existingTarget}%</b> সেট হয়েছে — এই Target-ই প্রযোজ্য হবে (নতুন ${d.targetPct}% overwrite হবে না)।`
         : '';
-
       return `📋 <b>Buy Plan</b>\n\n`+
         `Buy Limit: <span class="hl">${fmtP(d.buyPrice)}</span>\n`+
         `Investment: <span class="hl">${fmtU(d.invest)} USDT</span>\n`+
         `Est. PEPE: <b>${fmtQ(qty)}</b>\n`+
-        `এই Buy-এর Target: <b>${n(d.targetPct).toFixed(2)}%</b>${prevLines}\n\n`+
+        `Effective Target: <b>${effectiveTarget}%</b>${targetNote}\n\n`+
         `<b>Fill হলে Position:</b>\n`+
         `Total Cost: ${fmtU(newTotalCost)} USDT\n`+
         `Total PEPE: ${fmtQ(newTotalQty)}\n`+
         `WAP: ${fmtP(newWap)}\n`+
-        `Blended Target: <b>${n(newBlendedPct).toFixed(2)}%</b>\n`+
         `Sell Target: <span class="hl">${fmtP(newSellTarget)}</span>\n\n`+
         `Binance-এ Limit Buy set করুন। Fill হলে জানান।`;
     },
@@ -850,18 +800,10 @@ const STATES = {
     },
     next:(v,d)=>{
       const qty = D.div(d.invest, d.buyPrice, 12);
-
-      // ✅ Blended Target: প্রতিটি Buy-এর target আলাদাভাবে সংরক্ষণ
-      if(!Array.isArray(session.buyTargets)) session.buyTargets = [];
-      session.buyTargets.push({
-        invest: String(d.invest),
-        pct: n(d.targetPct)
-      });
-
-      // targetPct (legacy) = blended % আপডেট করে রাখি (কিছু জায়গায় ব্যবহার হয়)
-      const p = computePosition();
-      session.targetPct = String(n(p.targetPct).toFixed(4));
-
+      // ✅ Sticky Session Target: প্রথম Buy-এই Target সেট হবে, পরবর্তী Buy-তে overwrite হবে না
+      if(!session.targetPct || n(session.targetPct) <= 0){
+        session.targetPct = String(d.targetPct);
+      }
       const order = {
         id: nextOrderId(),
         side:'buy', type:'limit',
@@ -870,8 +812,7 @@ const STATES = {
         filledUsdt: v==='filled'?d.invest:'0',
         filledQty:  v==='filled'?qty:'0',
         fillPrice:  v==='filled'?d.buyPrice:null,
-        ts: Date.now(), note:'',
-        targetPct: n(d.targetPct)   // ✅ order-এও রাখি (রেফারেন্স)
+        ts: Date.now(), note:''
       };
       pushOrder(order);
       return v==='filled' ? 'afterBuyFilled' : 'afterPending';
@@ -893,18 +834,7 @@ const STATES = {
       const last = [...session.orders].reverse().find(o=>o.status==='pending');
       if(last){
         if(v==='filled') fillOrder(last.id);
-        else {
-          cancelOrder(last.id);
-          // ✅ Cancel হলে buyTargets থেকেও সেই entry সরিয়ে দিই
-          if(Array.isArray(session.buyTargets) && session.buyTargets.length > 0){
-            // last buy order-এর invest ও pct বের করে সরাই
-            if(last.side==='buy'){
-              const idx = session.buyTargets.findIndex(x=>String(x.invest)===String(last.usdt) && n(x.pct)===n(last.targetPct||0));
-              if(idx>=0) session.buyTargets.splice(idx,1);
-              persist();
-            }
-          }
-        }
+        else cancelOrder(last.id);
       }
       return v==='filled' ? 'afterBuyFilled' : 'askBuyPrice';
     }
@@ -918,8 +848,7 @@ const STATES = {
         `Total Cost: <b>${fmtU(p.totalBuyCost)} USDT</b>\n`+
         `PEPE: <b>${fmtQ(p.remainingQty)}</b>\n`+
         `WAP: ${fmtP(p.avgBuy)}\n`+
-        `Blended Target: ${n(p.targetPct).toFixed(2)}%\n`+
-        `Sell Target: <span class="hl">${fmtP(p.sellTarget)}</span>\n\n`+
+        `Sell Target (${p.targetPct}%): <span class="hl">${fmtP(p.sellTarget)}</span>\n\n`+
         `পরবর্তী পদক্ষেপ?`;
     },
     placeholder:'buy / sell / done',
@@ -934,6 +863,7 @@ const STATES = {
     next:(v)=>{
       if(v==='buy') return 'askBuyPrice';
       if(v==='sell'){
+        // 🛡 Guard: no remaining qty → block sell
         return sellBlocked().blocked ? 'afterBuyFilled' : 'askSellPrice';
       }
       return 'done';
@@ -947,7 +877,7 @@ const STATES = {
       return `💱 <b>Sell / Record Sell</b>\n\n`+
         `Position: ${fmtQFull(p.remainingQty)} PEPE\n`+
         `Suggested Sell Target: <span class="hl">${fmtP(p.sellTarget)} USDT</span>\n`+
-        `Blended Target: ${n(p.targetPct).toFixed(2)}%\n\n`+
+        `Target: ${p.targetPct}%\n\n`+
         `Binance-এ যেই price-এ sell করেছেন সেটি দিন।`;
     },
     placeholder:'Sell price (USDT)',
@@ -1045,18 +975,17 @@ const STATES = {
           `Total Cost: ${fmtU(p.totalBuyCost)} USDT\n`+
           `Total Sell Proceeds: ${fmtU(p.totalSellProceeds)} USDT\n`+
           `Realized Net Profit: <span class="pos">${fmtU(p.realizedNet)} USDT</span>\n`+
-          `Realized P/L: <span class="pos">${fmtPct(p.realizedPct)}</span>\n`+
-          `Blended Target: ${n(p.targetPct).toFixed(2)}%\n\n`+
+          `Realized P/L: <span class="pos">${fmtPct(p.realizedPct)}</span> (Target ${p.targetPct}%)\n\n`+
           `আপনার Trading Session সফলভাবে সম্পন্ন হয়েছে। ✅\n`+
           `নতুন Session শুরু করতে Reset ব্যবহার করুন।`;
       }
-      const warn = !D.gt(p.remainingQty,'0') && D.lt(p.totalSellProceeds, p.targetReturnTotal)
+      const warn = !D.gt(p.remainingQty,'0') && n(p.realizedPct)<n(p.targetPct)
         ? `\n\n⚠️ সব PEPE বিক্রি হয়েছে কিন্তু Target পূরণ হয়নি — Loss Recovery Mode active.`
         : '';
       return `✅ Sell fill হয়েছে।\n\n`+
         `Remaining PEPE: <b>${fmtQ(p.remainingQty)}</b>\n`+
         `Realized P/L: <span class="${n(p.realizedNet)>=0?'pos':'neg'}">${fmtU(p.realizedNet)} USDT</span> (${fmtPct(p.realizedPct)})\n`+
-        `Blended Target: ${n(p.targetPct).toFixed(2)}%\n`+
+        `Target: ${p.targetPct}%\n`+
         `Next Sell Target: <span class="hl">${fmtP(p.sellTarget)}</span>`+
         warn+
         `\n\nপরবর্তী পদক্ষেপ?`;
@@ -1071,6 +1000,7 @@ const STATES = {
       return {ok:false,msg:'"buy", "sell", বা "done" দিন'};
     },
     next:(v)=>{
+      // After sell filled, check trade state first
       if(sessionTargetHit()) return 'sessionComplete';
       if(v==='buy') return 'askBuyPrice';
       if(v==='sell'){
@@ -1087,8 +1017,7 @@ const STATES = {
         `Total Cost: ${fmtU(p.totalBuyCost)} USDT\n`+
         `Total Sell Proceeds: ${fmtU(p.totalSellProceeds)} USDT\n`+
         `Realized Net Profit: <span class="pos">${fmtU(p.realizedNet)} USDT</span>\n`+
-        `Realized P/L: <span class="pos">${fmtPct(p.realizedPct)}</span>\n`+
-        `Blended Target: ${n(p.targetPct).toFixed(2)}%\n\n`+
+        `Realized P/L: <span class="pos">${fmtPct(p.realizedPct)}</span> (Target ${p.targetPct}%)\n\n`+
         `আপনার Trading Session সফলভাবে সম্পন্ন হয়েছে। ✅\n`+
         `নতুন Session শুরু করতে <b>Reset</b> ব্যবহার করুন।`;
     },
@@ -1155,6 +1084,7 @@ function setInputEnabled(on, placeholder, quick){
 }
 
 function goToState(name){
+  // 🛡 GLOBAL GUARD: Target Achieved হলে Sell flow-এ যাওয়া নিষিদ্ধ
   const sellStates = ['askSellPrice','askSellQty','confirmSell','afterSellPending'];
   if(sellStates.includes(name)){
     const p = computePosition();
@@ -1183,6 +1113,7 @@ function goToState(name){
   session.conversation.state = name;
   persist();
 
+  // sessionComplete = terminal: no input
   if(name==='sessionComplete'){
     const say = typeof st.say==='function' ? st.say() : st.say;
     setTimeout(()=>{
@@ -1206,11 +1137,13 @@ function handleSubmit(){
   if(!raw) return;
   const stateName = session.conversation.state;
 
+  // 🛡 GUARD: sessionComplete = terminal
   if(stateName==='sessionComplete'){
     input.value='';
     return;
   }
 
+  // 🛡 GUARD: sell-related states — zero qty / target hit check
   if(['askSellPrice','askSellQty','confirmSell','afterSellPending'].includes(stateName)){
     const p = computePosition();
     if(!D.gt(p.remainingQty,'0') || sessionTargetHit()){
@@ -1251,6 +1184,7 @@ function startConversation(){
   chatBox.innerHTML='';
   const {kind, p} = getTradeState();
 
+  // 🎉 TARGET ACHIEVED → Session Complete screen
   if(kind==='targetHit'){
     session.conversation = {state:'sessionComplete', data:{}};
     persist();
@@ -1259,8 +1193,7 @@ function startConversation(){
       `Total Cost: ${fmtU(p.totalBuyCost)} USDT\n`+
       `Total Sell Proceeds: ${fmtU(p.totalSellProceeds)} USDT\n`+
       `Realized Net Profit: <span class="pos">${fmtU(p.realizedNet)} USDT</span>\n`+
-      `Realized P/L: <span class="pos">${fmtPct(p.realizedPct)}</span>\n`+
-      `Blended Target: ${n(p.targetPct).toFixed(2)}%\n\n`+
+      `Realized P/L: <span class="pos">${fmtPct(p.realizedPct)}</span> (Target ${p.targetPct}%)\n\n`+
       `আপনার Trading Session সফলভাবে সম্পন্ন হয়েছে। ✅\n`+
       `নতুন Session শুরু করতে <b>Reset</b> ব্যবহার করুন।`
     );
@@ -1268,6 +1201,7 @@ function startConversation(){
     return;
   }
 
+  // Zero qty but target not hit → Loss Recovery
   if(kind==='zeroNoTarget'){
     session.conversation = {state:'afterBuyFilled', data:{}};
     persist();
@@ -1276,7 +1210,7 @@ function startConversation(){
       `Total Cost: <b>${fmtU(p.totalBuyCost)} USDT</b>\n`+
       `PEPE: <b>0</b>\n`+
       `Realized P/L: <span class="${n(p.realizedNet)>=0?'pos':'neg'}">${fmtU(p.realizedNet)} USDT</span> (${fmtPct(p.realizedPct)})\n`+
-      `Blended Target: ${n(p.targetPct).toFixed(2)}%\n\n`+
+      `Target: ${p.targetPct}%\n\n`+
       `⚠️ সব PEPE বিক্রি হয়েছে কিন্তু Target পূরণ হয়নি।\n`+
       `নতুন Buy দিয়ে Recovery শুরু করুন।`
     );
@@ -1287,6 +1221,7 @@ function startConversation(){
     return;
   }
 
+  // Pending orders
   if(kind==='pending'){
     session.conversation = {state:'afterPending', data:{}};
     persist();
@@ -1300,6 +1235,7 @@ function startConversation(){
     return;
   }
 
+  // In position
   if(kind==='inPosition'){
     session.conversation = {state:'afterBuyFilled', data:{}};
     persist();
@@ -1308,7 +1244,7 @@ function startConversation(){
       `Cost: <b>${fmtU(p.totalBuyCost)} USDT</b>\n`+
       `PEPE: <b>${fmtQ(p.remainingQty)}</b>\n`+
       `WAP: ${fmtP(p.avgBuy)}\n`+
-      `Blended Target: ${n(p.targetPct).toFixed(2)}%\n`+
+      `Target: ${p.targetPct}%\n`+
       `Sell Target: <span class="hl">${fmtP(p.sellTarget)}</span>\n\n`+
       `পরবর্তী পদক্ষেপ?`
     );
@@ -1317,6 +1253,7 @@ function startConversation(){
     return;
   }
 
+  // Empty — fresh start
   session.conversation = {state:'askBuyPrice', data:{}};
   goToState('askBuyPrice');
   persist();
@@ -1362,9 +1299,7 @@ function renderDashboard(){
   rpl.textContent = fmtU(p.realizedNet);
   rpl.className = 'v '+(n(p.realizedNet)>=0?'pos':'neg');
 
-  // ✅ Blended Target % প্রদর্শন
-  el('sTargetPct').textContent = n(p.targetPct).toFixed(2)+'%';
-
+  el('sTargetPct').textContent = p.targetPct+'%';
   const rpp = el('sRplPct');
   rpp.textContent = fmtPct(p.realizedPct);
   rpp.className = 'v '+(n(p.realizedPct)>=0?'pos':'neg');
@@ -1377,10 +1312,12 @@ function renderDashboard(){
   const wa = el('warnArea');
   let html='';
 
+  // ✅ Single consistent warning: zero position but target not hit (after filled sell)
   if(tState.kind === 'zeroNoTarget'){
     html += '<div class="danger-msg">⚠️ Position শূন্য কিন্তু Target পূরণ হয়নি। নতুন Buy plan করুন।</div>';
   }
 
+  // ✅ Target achieved — informational (no warning)
   if(tState.kind === 'targetHit'){
     html += '<div class="warn" style="background:#123a24;border-left-color:#22c55e;color:#4ade80">🎉 Target Achieved! Session সম্পন্ন হয়েছে। Reset করে নতুন Session শুরু করুন।</div>';
   }
@@ -1416,12 +1353,9 @@ function renderOrders(){
     }
     const filledRow = (o.status==='filled'||o.status==='partial')
       ? `<div class="t">Filled: ${fmtU(o.filledUsdt)} USDT · ${fmtQFull(o.filledQty)} PEPE</div>` : '';
-    const targetRow = (o.side==='buy' && o.targetPct!=null)
-      ? `<div class="t">Target: ${n(o.targetPct).toFixed(2)}%</div>` : '';
     d.innerHTML = `<div style="flex:1;min-width:0">
       <div><b>${side}</b> @ ${fmtP(o.price)} <span class="badge ${badgeCls}">${st}</span></div>
       <div class="t">Plan: ${fmtU(o.usdt)} USDT · ${fmtQFull(o.qty)} PEPE</div>
-      ${targetRow}
       ${filledRow}
     </div>
     <div style="display:flex;flex-direction:column;gap:4px;align-items:flex-end;flex-shrink:0">
@@ -1462,10 +1396,12 @@ function confirmDialog(title,msg,onOk){
 sendBtn.onclick = handleSubmit;
 input.addEventListener('keydown', e=>{ if(e.key==='Enter'){ e.preventDefault(); handleSubmit(); } });
 
+/* ✅ SINGLE "Sell / Record" button */
 el('btnSell').onclick = ()=>{
   const p = computePosition();
   const tState = getTradeState();
 
+  // 🛡 Target Achieved → hard block
   if(tState.kind === 'targetHit'){
     openChat();
     chatBox.innerHTML='';
@@ -1474,8 +1410,7 @@ el('btnSell').onclick = ()=>{
       `Total Cost: ${fmtU(p.totalBuyCost)} USDT\n`+
       `Total Sell Proceeds: ${fmtU(p.totalSellProceeds)} USDT\n`+
       `Realized Net Profit: <span class="pos">${fmtU(p.realizedNet)} USDT</span>\n`+
-      `Realized P/L: <span class="pos">${fmtPct(p.realizedPct)}</span>\n`+
-      `Blended Target: ${n(p.targetPct).toFixed(2)}%\n\n`+
+      `Realized P/L: <span class="pos">${fmtPct(p.realizedPct)}</span> (Target ${p.targetPct}%)\n\n`+
       `Session সম্পন্ন — নতুন Sell শুরু করা যাবে না।\n`+
       `নতুন Session শুরু করতে <b>Reset</b> ব্যবহার করুন।`
     );
@@ -1485,6 +1420,7 @@ el('btnSell').onclick = ()=>{
     return;
   }
 
+  // 🛡 Zero position
   if(!D.gt(p.remainingQty,'0')){
     toast('⚠️ কোনো PEPE নেই — Sell করা সম্ভব নয়');
     openChat();
@@ -1493,7 +1429,7 @@ el('btnSell').onclick = ()=>{
       `⚠️ বর্তমানে কোনো PEPE নেই।\n\n`+
       `Total Cost: ${fmtU(p.totalBuyCost)} USDT\n`+
       `Realized P/L: ${fmtU(p.realizedNet)} USDT (${fmtPct(p.realizedPct)})\n`+
-      `Blended Target: ${n(p.targetPct).toFixed(2)}%\n\n`+
+      `Target: ${p.targetPct}%\n\n`+
       `নতুন Sell করতে হলে প্রথমে Buy করুন।`
     );
     session.conversation = {state:'afterBuyFilled', data:{}};
@@ -1505,12 +1441,13 @@ el('btnSell').onclick = ()=>{
     return;
   }
 
+  // Normal Sell flow
   openChat();
   chatBox.innerHTML='';
   botSay(`💱 <b>Sell / Record Sell</b>\n\n`+
     `Remaining: <b>${fmtQFull(p.remainingQty)} PEPE</b>\n`+
     `Suggested Sell Target: <span class="hl">${fmtP(p.sellTarget)} USDT</span>\n`+
-    `Blended Target: ${n(p.targetPct).toFixed(2)}% · Break-even: ${fmtP(p.breakEven)}\n\n`+
+    `Target: ${p.targetPct}% · Break-even: ${fmtP(p.breakEven)}\n\n`+
     `Binance-এ যেই price-এ sell করেছেন সেটি দিন।`);
   session.conversation = {state:'askSellPrice', data:{}};
   persist();
@@ -1675,7 +1612,7 @@ window.addEventListener('resize', ()=>{
 (function sw(){
   if(!('serviceWorker' in navigator)) return;
   if(location.protocol!=='http:' && location.protocol!=='https:') return;
-  const code=`const C='pepe-v6';
+  const code=`const C='pepe-v5';
   self.addEventListener('install',e=>self.skipWaiting());
   self.addEventListener('activate',e=>e.waitUntil(self.clients.claim()));
   self.addEventListener('fetch',e=>{
