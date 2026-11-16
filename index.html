@@ -164,12 +164,7 @@ body{background:linear-gradient(180deg,#080c17 0%,#0a0f1e 100%);color:var(--txt)
 }
 .chatwin header .title .nm{font-size:13px;font-weight:700;color:#fff;line-height:1.2}
 .chatwin header .title .st{font-size:10px;color:#7dd3fc;margin-top:1px;line-height:1.2}
-.chatwin header .cls{
-  background:transparent;border:none;color:#93b4e0;
-  font-size:17px;cursor:pointer;padding:6px 9px;border-radius:8px;
-  line-height:1;flex-shrink:0;touch-action:manipulation;
-}
-.chatwin header .cls:hover{background:#1a2c47;color:#fff}
+
 
 /* chat area */
 .chatwin .chat{
@@ -367,16 +362,15 @@ body.kb-open .chatwin{
 </button>
 
 <div class="chatwin" id="chatwin" role="dialog" aria-label="Trading Assistant Chat">
-  <header>
-    <div class="title">
-      <div class="av">🐸</div>
-      <div>
-        <div class="nm">Trading Assistant</div>
-        <div class="st" id="sessionTag">Session #1</div>
-      </div>
+<header>
+  <div class="title">
+    <div class="av">🐸</div>
+    <div>
+      <div class="nm">Trading Assistant</div>
+      <div class="st" id="sessionTag">Session #1</div>
     </div>
-    <button class="cls" id="chatClose" aria-label="Close chat">✕</button>
-  </header>
+  </div>
+</header>
   <div class="chat" id="chat"></div>
   <div class="dock-chat">
     <div class="quick" id="quickBtns"></div>
@@ -1628,7 +1622,47 @@ fab.addEventListener('click', (e)=>{
   if(Date.now() < suppressClickUntil){ e.preventDefault(); e.stopPropagation(); return; }
   if(isOpen) closeChat(); else openChat();
 });
-el('chatClose').addEventListener('click', (e)=>{ e.preventDefault(); e.stopPropagation(); closeChat(); });
+ /* ------------------------------------------------------------
+   Double-click / double-tap anywhere inside chat window → close
+   ------------------------------------------------------------ */
+(function enableDoubleTapClose(){
+  const DOUBLE_MS = 320;   // max gap between two taps/clicks
+  let lastTap = 0;
+
+  function handleDouble(ev){
+    const t = ev.target;
+    // Interactive controls-এ ডাবল-ট্যাপ উপেক্ষা করুন
+    if(t.closest && t.closest('input, button, a, textarea, select')) return;
+
+    const now = Date.now();
+    if(now - lastTap < DOUBLE_MS){
+      lastTap = 0;
+      ev.preventDefault();
+      ev.stopPropagation();
+      closeChat();
+      return;
+    }
+    lastTap = now;
+  }
+
+  // Desktop double click
+  chatwin.addEventListener('dblclick', (e)=>{
+    if(!isOpen) return;
+    const t = e.target;
+    if(t.closest && t.closest('input, button, a')) return;
+    e.preventDefault();
+    e.stopPropagation();
+    closeChat();
+  });
+
+  // Mobile double tap (touch devices don't reliably fire dblclick)
+  chatwin.addEventListener('touchend', (e)=>{
+    if(!isOpen) return;
+    const t = e.target;
+    if(t.closest && t.closest('input, button, a')) return;
+    handleDouble(e);
+  }, {passive:false});
+})();
 
 /* tap outside chat → close (never close for FAB or chat-internal taps) */
 document.addEventListener('pointerdown', (e)=>{
