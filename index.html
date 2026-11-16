@@ -747,7 +747,14 @@ const STATES = {
       if(x===null || n(x)<=0) return {ok:false,msg:'0-এর বেশি USDT দিন'};
       return {ok:true,value:x};
     },
-    next:'askTargetPct'
+    /* ✅ NEW: skip askTargetPct when session target already set */
+    next:(v,d)=>{
+      if(session.targetPct && n(session.targetPct) > 0){
+        d.targetPct = session.targetPct;
+        return 'confirmBuy';
+      }
+      return 'askTargetPct';
+    }
   },
 
   askTargetPct: {
@@ -765,24 +772,21 @@ const STATES = {
 
   confirmBuy: {
     field:'_fill',
+    /* ✅ UPDATED: simplified say — no old/new target comparison note */
     say:(d)=>{
       const qty = D.div(d.invest, d.buyPrice, 12);
       const p = computePosition();
-      const existingTarget = n(session.targetPct);
+      const effectiveTarget = n(session.targetPct) > 0 ? n(session.targetPct) : n(d.targetPct);
       const newTotalCost = D.add(p.totalBuyCost, d.invest);
       const newTotalQty  = D.add(p.remainingQty, qty);
       const newWap = D.gt(newTotalQty,'0') ? D.div(newTotalCost, newTotalQty, 18) : '0';
-      const effectiveTarget = existingTarget > 0 ? existingTarget : n(d.targetPct);
       const newTargetReturn = D.mul(newTotalCost, D.add('1', D.div(String(effectiveTarget),'100',18)));
       const newSellTarget = D.gt(newTotalQty,'0') ? D.div(D.sub(newTargetReturn, p.totalSellProceeds), newTotalQty, 18) : '0';
-      const targetNote = existingTarget > 0 && Math.abs(existingTarget - n(d.targetPct)) > 0.001
-        ? `\n⚠️ Note: Session Target আগেই <b>${existingTarget}%</b> সেট হয়েছে — এই Target-ই প্রযোজ্য হবে (নতুন ${d.targetPct}% overwrite হবে না)।`
-        : '';
       return `📋 <b>Buy Plan</b>\n\n`+
         `Buy Limit: <span class="hl">${fmtP(d.buyPrice)}</span>\n`+
         `Investment: <span class="hl">${fmtU(d.invest)} USDT</span>\n`+
         `Est. PEPE: <b>${fmtQ(qty)}</b>\n`+
-        `Effective Target: <b>${effectiveTarget}%</b>${targetNote}\n\n`+
+        `Effective Target: <b>${effectiveTarget}%</b>\n\n`+
         `<b>Fill হলে Position:</b>\n`+
         `Total Cost: ${fmtU(newTotalCost)} USDT\n`+
         `Total PEPE: ${fmtQ(newTotalQty)}\n`+
