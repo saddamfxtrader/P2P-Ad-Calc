@@ -108,9 +108,9 @@ body{background:linear-gradient(180deg,#080c17 0%,#0a0f1e 100%);color:var(--txt)
   border:none;color:#fff;font-size:23px;
   cursor:grab;box-shadow:0 8px 24px rgba(37,99,235,.5);
   display:flex;align-items:center;justify-content:center;
-  transition:transform .15s ease, box-shadow .2s ease;
+  transition:transform .18s ease, box-shadow .2s ease, opacity .18s ease;
   touch-action:none;user-select:none;
-  will-change:left,top;
+  will-change:left,top,opacity;
   -webkit-touch-callout:none;
 }
 .fab:active{cursor:grabbing;transform:scale(.94)}
@@ -118,14 +118,21 @@ body{background:linear-gradient(180deg,#080c17 0%,#0a0f1e 100%);color:var(--txt)
 .fab.has-msg .badge-dot{display:block}
 .fab::after{content:'';position:absolute;inset:-4px;border-radius:50%;background:radial-gradient(circle,rgba(37,99,235,.25),transparent 70%);z-index:-1;pointer-events:none}
 
+/* Hide FAB completely when chat is open */
+.fab.hidden{
+  opacity:0;
+  pointer-events:none;
+  transform:scale(.6);
+}
+
 /* ---- chat window ---- */
 .chatwin{
   position:fixed;z-index:399;
   right:12px;
-  bottom:calc(80px + var(--safe-bottom));
+  bottom:calc(20px + var(--safe-bottom));
   width:min(380px,calc(100vw - 24px));
-  height:min(520px,calc(100vh - 160px - var(--safe-bottom)));
-  max-height:calc(100dvh - 160px - var(--safe-bottom));
+  height:min(560px,calc(100dvh - 40px - var(--safe-bottom)));
+  max-height:calc(100dvh - 40px - var(--safe-bottom));
   background:var(--panel);
   border:1px solid #22304e;
   border-radius:20px;
@@ -228,7 +235,6 @@ body{background:linear-gradient(180deg,#080c17 0%,#0a0f1e 100%);color:var(--txt)
   border:1.5px solid #26344f;background:#0a1220;color:#fff;
   font-size:14px;font-weight:600;outline:none;
   transition:border .2s;
-  /* prevent iOS zoom on focus */
   -webkit-text-size-adjust:100%;
 }
 @media screen and (max-width:480px){
@@ -248,7 +254,7 @@ body{background:linear-gradient(180deg,#080c17 0%,#0a0f1e 100%);color:var(--txt)
 .chatwin .dock-inner button:active{transform:scale(.9)}
 .chatwin .dock-inner button:disabled{opacity:.4;cursor:not-allowed}
 
-/* keyboard-open state (applied via JS when visualViewport shrinks) */
+/* keyboard-open state */
 body.kb-open .chatwin{
   bottom:calc(8px + var(--safe-bottom));
   height:calc(var(--kb-height,60vh) - 16px);
@@ -276,22 +282,23 @@ body.kb-open .chatwin{
   .chatwin{
     right:8px;left:8px;
     width:auto;
-    bottom:calc(76px + var(--safe-bottom));
-    height:calc(100dvh - 150px - var(--safe-bottom));
-    max-height:calc(100dvh - 150px - var(--safe-bottom));
+    bottom:calc(8px + var(--safe-bottom));
+    height:calc(100dvh - 16px - var(--safe-bottom));
+    max-height:calc(100dvh - 16px - var(--safe-bottom));
+    border-radius:16px;
   }
   .row button{font-size:12px;padding:10px 8px}
   .msg .bubble{font-size:12.5px;padding:8px 11px}
 }
 
-/* landscape phones — keep chat compact */
+/* landscape phones */
 @media (max-height:500px) and (orientation:landscape){
   .chatwin{
     right:8px;left:auto;
-    width:min(340px,calc(100vw - 16px));
-    bottom:calc(10px + var(--safe-bottom));
-    height:calc(100dvh - 20px - var(--safe-bottom));
-    max-height:calc(100dvh - 20px - var(--safe-bottom));
+    width:min(360px,calc(100vw - 16px));
+    bottom:calc(8px + var(--safe-bottom));
+    height:calc(100dvh - 16px - var(--safe-bottom));
+    max-height:calc(100dvh - 16px - var(--safe-bottom));
     border-radius:16px;
   }
   .chatwin header{padding:8px 12px;min-height:44px}
@@ -410,10 +417,12 @@ body.kb-open .chatwin{
 
 <script>
 /* =====================================================================
-   PEPE Smart Trader — v4
-   Trading engine unchanged. Floating widget professionally optimized
-   for mobile: robust positioning, keyboard handling, dedupe guards,
-   smart auto-scroll, single-source event wiring.
+   PEPE Smart Trader — v5
+   Changes in this version:
+     - Chat messages persist across reload / page close (IndexedDB + LS)
+     - Reset clears chat history too
+     - Floating FAB hides while chat window is open (returns on close)
+     - All trading logic unchanged
    ===================================================================== */
 (function(){
 'use strict';
@@ -625,6 +634,27 @@ const store = {
   }
 };
 
+/* ---------- chat message history (persisted) ----------
+   Stored separately from `session` so the trading state machine is
+   untouched. Reset clears this key. Each entry: {who:'bot'|'user', html, ts}
+   Note: for user messages we store the escaped text so reload reproduces
+   exactly the same rendering.
+------------------------------------------------------------- */
+let chatHistory = [];         // in-memory mirror
+const CHAT_KEY = 'chatHistory';
+
+async function persistChat(){
+  try{ await store.set(CHAT_KEY, chatHistory); }catch(e){}
+}
+async function loadChat(){
+  const arr = await store.get(CHAT_KEY, []);
+  chatHistory = Array.isArray(arr) ? arr : [];
+}
+async function clearChat(){
+  chatHistory = [];
+  await store.del(CHAT_KEY);
+}
+
 /* ---------- session model ---------- */
 let session = null;
 let settings = { maxInv: 0, maxBuys: 0 };
@@ -654,6 +684,7 @@ async function loadAll(){
   if(session.conversation && session.conversation.state==='sessionComplete' && !sessionTargetHit()){
     session.conversation = {state:'afterBuyFilled', data:{}};
   }
+  await loadChat();
 }
 
 /* ---------- financial engine ---------- */
@@ -1019,7 +1050,7 @@ function parseUSDT(v){
 }
 
 /* ============================================================
-   CHAT RENDERING & SMART AUTO-SCROLL
+   CHAT RENDERING (persisted) + SMART AUTO-SCROLL
    ============================================================ */
 let userScrolledUp = false;
 const SCROLL_THRESHOLD = 60;
@@ -1028,33 +1059,57 @@ function isNearBottom(){
   return (chatBox.scrollHeight - chatBox.scrollTop - chatBox.clientHeight) < SCROLL_THRESHOLD;
 }
 function scrollChatSmart(){
-  // Only auto-scroll if user is already at/near bottom (avoids yanking them away)
   if(!userScrolledUp || isNearBottom()){
-    requestAnimationFrame(()=>{
-      chatBox.scrollTop = chatBox.scrollHeight;
-    });
+    requestAnimationFrame(()=>{ chatBox.scrollTop = chatBox.scrollHeight; });
   }
 }
-chatBox.addEventListener('scroll', ()=>{
-  userScrolledUp = !isNearBottom();
-}, {passive:true});
+chatBox.addEventListener('scroll', ()=>{ userScrolledUp = !isNearBottom(); }, {passive:true});
 
+/* Low-level renderer — appends a DOM node */
+function appendMsgNode(who, htmlOrText, isHtml){
+  const d=document.createElement('div');
+  d.className='msg '+(who==='user'?'user':'bot');
+  const bubble = document.createElement('div');
+  bubble.className='bubble';
+  if(isHtml) bubble.innerHTML = htmlOrText;
+  else bubble.textContent = htmlOrText;
+  d.innerHTML = who==='user'
+    ? '<div class="avatar">👤</div>'
+    : '<div class="avatar">🐸</div>';
+  d.appendChild(bubble);
+  chatBox.appendChild(d);
+  scrollChatSmart();
+}
+
+/* Public: bot message (HTML), persisted */
 function botSay(html){
-  const d=document.createElement('div');
-  d.className='msg bot';
-  d.innerHTML='<div class="avatar">🐸</div><div class="bubble">'+html+'</div>';
-  chatBox.appendChild(d);
-  scrollChatSmart();
+  appendMsgNode('bot', html, true);
+  chatHistory.push({who:'bot', html, ts:Date.now()});
+  persistChat();
 }
+
+/* Public: user message (plain text), persisted */
 function userSay(text){
-  const d=document.createElement('div');
-  d.className='msg user';
-  d.innerHTML='<div class="avatar">👤</div><div class="bubble">'+escapeHtml(text)+'</div>';
-  chatBox.appendChild(d);
-  scrollChatSmart();
+  appendMsgNode('user', String(text), false);
+  chatHistory.push({who:'user', text:String(text), ts:Date.now()});
+  persistChat();
 }
-function escapeHtml(s){
-  return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+/* Rebuild the entire chat DOM from chatHistory (no persistence side-effects) */
+function replayChat(){
+  chatBox.innerHTML='';
+  for(const m of chatHistory){
+    if(m.who==='user') appendMsgNode('user', m.text || '', false);
+    else appendMsgNode('bot', m.html || '', true);
+  }
+  // Always scroll to bottom after restore
+  requestAnimationFrame(()=>{ chatBox.scrollTop = chatBox.scrollHeight; });
+}
+
+/* Wipe the visible chat AND persisted history (used by Reset) */
+async function wipeChat(){
+  chatBox.innerHTML='';
+  await clearChat();
 }
 
 /* ---------- input/quick controls ---------- */
@@ -1116,7 +1171,7 @@ function goToState(name){
   }, 120);
 }
 
-/* ---------- submit (with guard against double-submit) ---------- */
+/* ---------- submit ---------- */
 let submitLock = false;
 
 function handleSubmit(){
@@ -1165,8 +1220,27 @@ function handleSubmit(){
   }
 }
 
-/* ---------- boot conversation ---------- */
+/* ---------- boot conversation ----------
+   IMPORTANT: If chatHistory already has messages (reload), we replay them
+   instead of regenerating a fresh greeting. Only when history is empty do
+   we start a new conversation.
+--------------------------------------------------------- */
 function startConversation(){
+  if(chatHistory.length > 0){
+    replayChat();
+    // Restore input state from saved conversation
+    const stateName = session.conversation.state;
+    const st = STATES[stateName];
+    if(!st || st.end || stateName==='sessionComplete' || stateName==='done'){
+      setInputEnabled(false, st && st.placeholder ? st.placeholder : 'অপেক্ষা করুন...', null);
+    } else {
+      const q = typeof st.quick==='function' ? st.quick(session.conversation.data) : st.quick;
+      setInputEnabled(true, st.placeholder, q);
+    }
+    return;
+  }
+
+  // Fresh start — empty history, generate the opening greeting
   chatBox.innerHTML='';
   userScrolledUp = false;
   const {kind, p} = getTradeState();
@@ -1342,7 +1416,7 @@ function confirmDialog(title,msg,onOk){
   cancel.onclick=cleanup;
 }
 
-/* ---------- wire send controls (single source) ---------- */
+/* ---------- wire send controls ---------- */
 sendBtn.addEventListener('click', handleSubmit);
 input.addEventListener('keydown', e=>{
   if(e.key==='Enter' && !e.isComposing){ e.preventDefault(); handleSubmit(); }
@@ -1355,7 +1429,7 @@ el('btnSell').addEventListener('click', ()=>{
 
   if(tState.kind === 'targetHit'){
     openChat();
-    chatBox.innerHTML='';
+    chatBox.innerHTML='';        // clear for fresh context
     userScrolledUp = false;
     botSay(
       `🎉 <b>TARGET ACHIEVED!</b>\n\n`+
@@ -1406,9 +1480,10 @@ el('btnSell').addEventListener('click', ()=>{
 
 el('btnReset').addEventListener('click', ()=>{
   confirmDialog('সব ডেটা রিসেট করবেন?',
-    'বর্তমান Session-এর সব order, holdings, P/L, target এবং conversation মুছে যাবে। এটি আর ফিরিয়ে আনা যাবে না।',
+    'বর্তমান Session-এর সব order, holdings, P/L, target এবং সম্পূর্ণ চ্যাট হিস্ট্রি মুছে যাবে। এটি আর ফিরিয়ে আনা যাবে না।',
     async ()=>{
       await store.del('session');
+      await clearChat();
       session = newSession(1);
       orderSeq = 1;
       await persist();
@@ -1439,6 +1514,7 @@ el('setSave').addEventListener('click', async ()=>{
 
 /* ============================================================
    FLOATING WIDGET — position, drag, keyboard, open/close
+   FAB is hidden while chat is open.
    ============================================================ */
 const fab = el('fab');
 const chatwin = el('chatwin');
@@ -1446,9 +1522,7 @@ let isOpen = false;
 let dragState = null;
 let suppressClickUntil = 0;
 
-/* ----- persistent FAB position (bottom-right anchored by default) ----- */
 function getViewport(){
-  // Use visualViewport when available (handles mobile browser chrome)
   const vv = window.visualViewport;
   return {
     w: vv ? vv.width  : window.innerWidth,
@@ -1478,16 +1552,11 @@ function resetFabToDefault(){
   fab.style.bottom='calc(20px + var(--safe-bottom))';
 }
 
-function initFabPosition(){
-  // Always anchor bottom-right on load — never restore weird drag position
-  // (requirement: never appear at top / abnormal place after reload)
-  resetFabToDefault();
-}
-
-function saveFabPos(){ /* intentionally no persistence — always bottom-right */ }
+function initFabPosition(){ resetFabToDefault(); }
 
 /* ----- drag handling ----- */
 function dragStart(e){
+  if(isOpen) return;                 // no drag while chat is open
   if(e.button !== undefined && e.button !== 0) return;
   const p = e.touches ? e.touches[0] : e;
   const rect = fab.getBoundingClientRect();
@@ -1517,10 +1586,8 @@ function dragEnd(){
   if(!dragState) return;
   if(dragState.moved){
     suppressClickUntil = Date.now() + 350;
-    // Snap back to bottom-right if too close to edge, so it never disappears
     const rect = fab.getBoundingClientRect();
     const vp = getViewport();
-    const w = fab.offsetWidth || 56, h = fab.offsetHeight || 56;
     const margin = 12;
     if(rect.left < margin || rect.top < margin ||
        rect.right > vp.w - margin || rect.bottom > vp.h - margin){
@@ -1538,13 +1605,13 @@ window.addEventListener('touchmove', dragMove, {passive:false});
 window.addEventListener('touchend', dragEnd);
 window.addEventListener('touchcancel', dragEnd);
 
-/* ----- open / close (single click handler, deduped) ----- */
+/* ----- open / close ----- */
 function openChat(){
   if(isOpen) return;
   isOpen = true;
   chatwin.classList.add('open');
+  fab.classList.add('hidden');        // hide FAB while open
   fab.classList.remove('has-msg');
-  // Focus input only after animation
   setTimeout(()=>{
     if(input.disabled) return;
     try{ input.focus({preventScroll:true}); }catch(e){}
@@ -1554,7 +1621,7 @@ function closeChat(){
   if(!isOpen) return;
   isOpen = false;
   chatwin.classList.remove('open');
-  // Blur to dismiss keyboard on mobile
+  fab.classList.remove('hidden');     // restore FAB
   try{ if(document.activeElement && chatwin.contains(document.activeElement)) document.activeElement.blur(); }catch(e){}
 }
 fab.addEventListener('click', (e)=>{
@@ -1563,12 +1630,11 @@ fab.addEventListener('click', (e)=>{
 });
 el('chatClose').addEventListener('click', (e)=>{ e.preventDefault(); e.stopPropagation(); closeChat(); });
 
-/* tap outside chat → close (but never swallow FAB or chat taps) */
+/* tap outside chat → close (never close for FAB or chat-internal taps) */
 document.addEventListener('pointerdown', (e)=>{
   if(!isOpen) return;
   const t = e.target;
   if(chatwin.contains(t) || fab.contains(t)) return;
-  // don't close when clicking inside a modal
   if(t.closest && t.closest('.modal.show')) return;
   closeChat();
 }, {passive:true});
@@ -1578,14 +1644,12 @@ document.addEventListener('keydown', (e)=>{
   if(e.key === 'Escape' && isOpen) closeChat();
 });
 
-/* ----- resize / orientation / visualViewport handling ----- */
+/* ----- resize / orientation ----- */
 function onResizeOrViewportChange(){
-  // Keep FAB anchored bottom-right if it has not been manually dragged
   if(!fab.style.left){ resetFabToDefault(); }
   else {
     const rect = fab.getBoundingClientRect();
     const vp = getViewport();
-    // Clamp if now off-screen
     if(rect.left < 0 || rect.top < 0 || rect.right > vp.w || rect.bottom > vp.h){
       resetFabToDefault();
     }
@@ -1594,32 +1658,23 @@ function onResizeOrViewportChange(){
 window.addEventListener('resize', onResizeOrViewportChange);
 window.addEventListener('orientationchange', ()=>setTimeout(onResizeOrViewportChange, 120));
 
-/* ----- keyboard handling via visualViewport ----- */
+/* ----- keyboard handling ----- */
 (function keyboardHandler(){
   const vv = window.visualViewport;
   if(!vv) return;
   let kbOpen = false;
-
   function apply(){
-    // Detect keyboard open: viewport height significantly less than layout height
     const layoutH = window.innerHeight;
     const visualH = vv.height;
     const diff = layoutH - visualH;
-
     if(diff > 140){
-      // keyboard is open
       if(!kbOpen){
         kbOpen = true;
         document.body.classList.add('kb-open');
-        document.documentElement.style.setProperty('--kb-height', visualH+'px');
-      } else {
-        document.documentElement.style.setProperty('--kb-height', visualH+'px');
       }
-      // Ensure input visible
+      document.documentElement.style.setProperty('--kb-height', visualH+'px');
       if(document.activeElement === input){
-        requestAnimationFrame(()=>{
-          chatBox.scrollTop = chatBox.scrollHeight;
-        });
+        requestAnimationFrame(()=>{ chatBox.scrollTop = chatBox.scrollHeight; });
       }
     } else {
       if(kbOpen){
@@ -1631,23 +1686,15 @@ window.addEventListener('orientationchange', ()=>setTimeout(onResizeOrViewportCh
   }
   vv.addEventListener('resize', apply);
   vv.addEventListener('scroll', apply);
-  // Also fall back on window resize for browsers without visualViewport events
-  if(!window.visualViewport){
-    window.addEventListener('resize', apply);
-  }
-
-  // When input is focused, make sure it's visible
   input.addEventListener('focus', ()=>{
     setTimeout(()=>{
-      if(isOpen){
-        requestAnimationFrame(()=>{ chatBox.scrollTop = chatBox.scrollHeight; });
-      }
+      if(isOpen){ requestAnimationFrame(()=>{ chatBox.scrollTop = chatBox.scrollHeight; }); }
     }, 300);
   });
 })();
 
 /* ============================================================
-   PWA icons + manifest (unchanged logic)
+   PWA icons + manifest
    ============================================================ */
 (function buildPWA(){
   const svg=`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
@@ -1660,7 +1707,6 @@ window.addEventListener('orientationchange', ()=>setTimeout(onResizeOrViewportCh
   </svg>`;
   const uri='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(svg);
   try{ el('favIcon').href=uri; el('appleIcon').href=uri; }catch(e){}
-
   function toPng(size){
     return new Promise(res=>{
       const img=new Image();
@@ -1690,11 +1736,11 @@ window.addEventListener('orientationchange', ()=>setTimeout(onResizeOrViewportCh
   })();
 })();
 
-/* ---------- service worker (inline) ---------- */
+/* ---------- service worker ---------- */
 (function sw(){
   if(!('serviceWorker' in navigator)) return;
   if(location.protocol!=='http:' && location.protocol!=='https:') return;
-  const code=`const C='pepe-v5';
+  const code=`const C='pepe-v6';
   self.addEventListener('install',e=>self.skipWaiting());
   self.addEventListener('activate',e=>e.waitUntil(self.clients.claim()));
   self.addEventListener('fetch',e=>{
@@ -1733,8 +1779,8 @@ window.addEventListener('orientationchange', ()=>setTimeout(onResizeOrViewportCh
   setInterval(fetchLivePrice, 15000);
   setInterval(renderTicker, 1000);
 
-  document.addEventListener('visibilitychange', ()=>{ if(document.hidden) persist(); });
-  window.addEventListener('beforeunload', ()=>{ persist(); });
+  document.addEventListener('visibilitychange', ()=>{ if(document.hidden){ persist(); persistChat(); } });
+  window.addEventListener('beforeunload', ()=>{ persist(); persistChat(); });
 })();
 
 })();
