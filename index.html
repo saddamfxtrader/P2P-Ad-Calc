@@ -1415,9 +1415,7 @@ function renderDashboard(){
     const cnt=session.orders.filter(o=>o.side==='buy'&&(o.status==='filled'||o.status==='partial')).length;
     if(cnt>=settings.maxBuys) html+='<div class="warn">⚠️ Max Buy Orders সীমায় পৌঁছেছেন ('+settings.maxBuys+')।</div>';
   }
-  if(market.tickSize||market.stepSize){
-    html+='<div class="warn" style="background:#0d1a2e;border-left-color:#3b82f6;color:#93c5fd">ℹ️ Binance tick='+(market.tickSize||'—')+' · step='+(market.stepSize||'—')+' প্রয়োগ করা হচ্ছে।</div>';
-  }
+
   wa.innerHTML=html;
 }
 
