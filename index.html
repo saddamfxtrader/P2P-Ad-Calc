@@ -1364,7 +1364,7 @@ function startConversation(){
 /* ---------------- dashboard / orders render ---------------- */
 function renderAll(){
   renderDashboard(); renderOrders();
-  el('sessionTag').textContent = 'Session #'+session.id+(session.code?' · '+session.code:'');
+el('sessionTag').textContent = 'Session #'+session.id;
 }
 
 function renderDashboard(){
