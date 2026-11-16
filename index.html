@@ -2,7 +2,7 @@
 <html lang="bn" translate="no" class="notranslate">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, interactive-widget=resizes-content">
 <title>PEPE Smart Trader — Binance Convert</title>
 <meta name="google" content="notranslate">
 <meta name="theme-color" content="#0a0f1e">
@@ -22,6 +22,9 @@
   --txt:#e6ecf7;--mut:#8ba0c2;--acc:#3b82f6;--acc2:#22d3ee;
   --pos:#22c55e;--neg:#ef4444;--warn:#f59e0b;--gold:#fbbf24;
   --r:18px;
+  --chat-header-h:54px;
+  --chat-dock-min:56px;
+  --safe-bottom:env(safe-area-inset-bottom,0px);
 }
 body{background:linear-gradient(180deg,#080c17 0%,#0a0f1e 100%);color:var(--txt);min-height:100vh;padding:14px 12px 120px;display:flex;justify-content:center;align-items:flex-start}
 .app{max-width:600px;width:100%;margin:0 auto}
@@ -93,33 +96,99 @@ body{background:linear-gradient(180deg,#080c17 0%,#0a0f1e 100%);color:var(--txt)
 .toast{position:fixed;left:50%;bottom:120px;transform:translateX(-50%) translateY(30px);background:#0b1a33;color:#fff;border:1px solid #1e3a5f;padding:11px 20px;border-radius:30px;font-size:13px;font-weight:600;box-shadow:0 10px 30px rgba(0,0,0,.5);opacity:0;transition:.3s;z-index:999;pointer-events:none;max-width:88%;text-align:center}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 
-/* ---- floating chat widget ---- */
-.fab{position:fixed;z-index:400;width:58px;height:58px;border-radius:50%;background:linear-gradient(135deg,#2563eb,#0891b2);border:none;color:#fff;font-size:24px;cursor:grab;box-shadow:0 8px 24px rgba(37,99,235,.5);display:flex;align-items:center;justify-content:center;transition:transform .15s;touch-action:none;user-select:none}
-.fab:active{cursor:grabbing;transform:scale(.94)}
-.fab .badge-dot{position:absolute;top:0;right:0;width:14px;height:14px;border-radius:50%;background:var(--neg);border:2px solid var(--panel);display:none}
-.fab.has-msg .badge-dot{display:block}
+/* ============================================================
+   FLOATING CHAT WIDGET — MOBILE-OPTIMIZED
+   ============================================================ */
 
-.chatwin{position:fixed;z-index:399;right:12px;bottom:80px;width:min(380px,calc(100vw - 24px));height:min(520px,calc(100vh - 160px));background:var(--panel);border:1px solid #22304e;border-radius:20px;box-shadow:0 20px 60px rgba(0,0,0,.6);display:flex;flex-direction:column;overflow:hidden;opacity:0;pointer-events:none;transform:translateY(20px) scale(.96);transition:.25s cubic-bezier(.2,.9,.3,1)}
+/* ---- floating action button ---- */
+.fab{
+  position:fixed;z-index:400;
+  width:56px;height:56px;border-radius:50%;
+  background:linear-gradient(135deg,#2563eb,#0891b2);
+  border:none;color:#fff;font-size:23px;
+  cursor:grab;box-shadow:0 8px 24px rgba(37,99,235,.5);
+  display:flex;align-items:center;justify-content:center;
+  transition:transform .15s ease, box-shadow .2s ease;
+  touch-action:none;user-select:none;
+  will-change:left,top;
+  -webkit-touch-callout:none;
+}
+.fab:active{cursor:grabbing;transform:scale(.94)}
+.fab .badge-dot{position:absolute;top:1px;right:1px;width:13px;height:13px;border-radius:50%;background:var(--neg);border:2px solid var(--panel);display:none}
+.fab.has-msg .badge-dot{display:block}
+.fab::after{content:'';position:absolute;inset:-4px;border-radius:50%;background:radial-gradient(circle,rgba(37,99,235,.25),transparent 70%);z-index:-1;pointer-events:none}
+
+/* ---- chat window ---- */
+.chatwin{
+  position:fixed;z-index:399;
+  right:12px;
+  bottom:calc(80px + var(--safe-bottom));
+  width:min(380px,calc(100vw - 24px));
+  height:min(520px,calc(100vh - 160px - var(--safe-bottom)));
+  max-height:calc(100dvh - 160px - var(--safe-bottom));
+  background:var(--panel);
+  border:1px solid #22304e;
+  border-radius:20px;
+  box-shadow:0 20px 60px rgba(0,0,0,.6);
+  display:flex;flex-direction:column;
+  overflow:hidden;
+  opacity:0;pointer-events:none;
+  transform:translateY(16px) scale(.96);
+  transform-origin:bottom right;
+  transition:opacity .22s ease, transform .22s cubic-bezier(.2,.9,.3,1);
+  will-change:opacity,transform;
+}
 .chatwin.open{opacity:1;pointer-events:auto;transform:none}
-.chatwin header{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:linear-gradient(135deg,#0c1e3a,#0a2a3a);border-bottom:1px solid #1e3a5f}
-.chatwin header .title{display:flex;align-items:center;gap:9px}
-.chatwin header .title .av{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#1d4ed8,#22d3ee);display:flex;align-items:center;justify-content:center;font-size:16px}
-.chatwin header .title .nm{font-size:13px;font-weight:700;color:#fff}
-.chatwin header .title .st{font-size:10px;color:#7dd3fc;margin-top:1px}
-.chatwin header .cls{background:transparent;border:none;color:#93b4e0;font-size:18px;cursor:pointer;padding:4px 8px;border-radius:8px}
+
+/* header */
+.chatwin header{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:11px 14px;
+  background:linear-gradient(135deg,#0c1e3a,#0a2a3a);
+  border-bottom:1px solid #1e3a5f;
+  flex-shrink:0;
+  min-height:var(--chat-header-h);
+}
+.chatwin header .title{display:flex;align-items:center;gap:9px;min-width:0}
+.chatwin header .title .av{
+  width:32px;height:32px;border-radius:50%;
+  background:linear-gradient(135deg,#1d4ed8,#22d3ee);
+  display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0;
+}
+.chatwin header .title .nm{font-size:13px;font-weight:700;color:#fff;line-height:1.2}
+.chatwin header .title .st{font-size:10px;color:#7dd3fc;margin-top:1px;line-height:1.2}
+.chatwin header .cls{
+  background:transparent;border:none;color:#93b4e0;
+  font-size:17px;cursor:pointer;padding:6px 9px;border-radius:8px;
+  line-height:1;flex-shrink:0;touch-action:manipulation;
+}
 .chatwin header .cls:hover{background:#1a2c47;color:#fff}
-.chatwin .chat{flex:1;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:10px;max-height:none}
-.chatwin .chat::-webkit-scrollbar{width:6px}
+
+/* chat area */
+.chatwin .chat{
+  flex:1 1 auto;overflow-y:auto;overflow-x:hidden;
+  padding:12px;
+  display:flex;flex-direction:column;gap:9px;
+  overscroll-behavior:contain;
+  -webkit-overflow-scrolling:touch;
+  scroll-behavior:smooth;
+}
+.chatwin .chat::-webkit-scrollbar{width:5px}
 .chatwin .chat::-webkit-scrollbar-thumb{background:#22304e;border-radius:6px}
 
-.msg{display:flex;gap:8px;max-width:92%;animation:fadein .25s ease}
+.msg{display:flex;gap:7px;max-width:92%;animation:fadein .22s ease}
 @keyframes fadein{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
-.msg .avatar{width:26px;height:26px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800}
+.msg .avatar{width:24px;height:24px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800}
 .msg.bot{align-self:flex-start}
 .msg.bot .avatar{background:linear-gradient(135deg,#1d4ed8,#22d3ee);color:#fff}
 .msg.user{align-self:flex-end;flex-direction:row-reverse}
 .msg.user .avatar{background:#243149;color:#93b4e0}
-.msg .bubble{padding:10px 13px;border-radius:14px;font-size:13px;line-height:1.5;white-space:pre-wrap;word-break:break-word}
+.msg .bubble{
+  padding:9px 12px;border-radius:14px;
+  font-size:13px;line-height:1.48;
+  white-space:pre-wrap;word-break:break-word;overflow-wrap:anywhere;
+  min-width:0;
+}
 .msg.bot .bubble{background:#16213a;border:1px solid #1e2c47;border-top-left-radius:4px;color:#dbe7fa}
 .msg.user .bubble{background:linear-gradient(135deg,#1e3a8a,#0e7490);border-top-right-radius:4px;color:#fff}
 .msg .bubble b{color:#7dd3fc}
@@ -128,19 +197,63 @@ body{background:linear-gradient(180deg,#080c17 0%,#0a0f1e 100%);color:var(--txt)
 .msg .bubble .neg{color:var(--neg);font-weight:700}
 .msg .bubble code{background:#0a1424;padding:1px 5px;border-radius:5px;font-size:12px;color:#7dd3fc}
 
-.chatwin .dock-chat{border-top:1px solid var(--line);padding:8px 10px calc(8px + env(safe-area-inset-bottom));background:#0d1626}
-.chatwin .quick{display:flex;gap:6px;margin-bottom:7px;overflow-x:auto;scrollbar-width:none;padding-bottom:2px}
+/* dock / input area */
+.chatwin .dock-chat{
+  border-top:1px solid var(--line);
+  padding:7px 10px calc(8px + var(--safe-bottom));
+  background:#0d1626;
+  flex-shrink:0;
+}
+.chatwin .quick{
+  display:flex;gap:6px;margin-bottom:7px;
+  overflow-x:auto;overflow-y:hidden;
+  scrollbar-width:none;
+  padding-bottom:2px;
+  -webkit-overflow-scrolling:touch;
+}
 .chatwin .quick::-webkit-scrollbar{display:none}
-.chatwin .quick button{width:auto;height:auto;padding:6px 12px;border-radius:20px;background:#132238;border:1px solid #22304e;color:#93b4e0;font-size:11px;font-weight:600;white-space:nowrap;cursor:pointer;flex-shrink:0}
+.chatwin .quick button{
+  width:auto;height:auto;padding:6px 12px;border-radius:20px;
+  background:#132238;border:1px solid #22304e;color:#93b4e0;
+  font-size:11px;font-weight:600;white-space:nowrap;
+  cursor:pointer;flex-shrink:0;touch-action:manipulation;
+  transition:background .15s;
+}
 .chatwin .quick button:hover{background:#1a2c47;color:#fff}
-.chatwin .dock-inner{display:flex;gap:8px;align-items:center}
-.chatwin .dock-inner input{flex:1;padding:11px 14px;border-radius:24px;border:1.5px solid #26344f;background:#0a1220;color:#fff;font-size:14px;font-weight:600;outline:none;transition:border .2s}
+.chatwin .quick button:active{transform:scale(.96)}
+.chatwin .dock-inner{display:flex;gap:7px;align-items:center}
+.chatwin .dock-inner input{
+  flex:1;min-width:0;
+  padding:10px 14px;border-radius:22px;
+  border:1.5px solid #26344f;background:#0a1220;color:#fff;
+  font-size:14px;font-weight:600;outline:none;
+  transition:border .2s;
+  /* prevent iOS zoom on focus */
+  -webkit-text-size-adjust:100%;
+}
+@media screen and (max-width:480px){
+  .chatwin .dock-inner input{font-size:16px;font-weight:500}
+}
 .chatwin .dock-inner input:focus{border-color:var(--acc)}
 .chatwin .dock-inner input::placeholder{color:#5c7299;font-weight:400}
 .chatwin .dock-inner input:disabled{opacity:.55;cursor:not-allowed}
-.chatwin .dock-inner button{width:42px;height:42px;border-radius:50%;border:none;background:linear-gradient(135deg,#2563eb,#0891b2);color:#fff;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:transform .15s}
+.chatwin .dock-inner button{
+  width:40px;height:40px;border-radius:50%;border:none;
+  background:linear-gradient(135deg,#2563eb,#0891b2);
+  color:#fff;font-size:17px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;transition:transform .15s;
+  touch-action:manipulation;
+}
 .chatwin .dock-inner button:active{transform:scale(.9)}
 .chatwin .dock-inner button:disabled{opacity:.4;cursor:not-allowed}
+
+/* keyboard-open state (applied via JS when visualViewport shrinks) */
+body.kb-open .chatwin{
+  bottom:calc(8px + var(--safe-bottom));
+  height:calc(var(--kb-height,60vh) - 16px);
+  max-height:calc(var(--kb-height,60vh) - 16px);
+}
 
 /* modal */
 .modal{position:fixed;inset:0;background:rgba(3,6,14,.82);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;padding:20px;z-index:600;opacity:0;pointer-events:none;transition:.25s}
@@ -150,7 +263,7 @@ body{background:linear-gradient(180deg,#080c17 0%,#0a0f1e 100%);color:var(--txt)
 .modal-box h3{font-size:17px;margin-bottom:6px;color:#fff}
 .modal-box p{font-size:13px;color:var(--mut);line-height:1.5;margin-bottom:14px}
 .modal-box label{display:block;font-size:12px;color:#93b4e0;margin-bottom:4px}
-.modal-box input{width:100%;padding:11px;border-radius:11px;border:1px solid #26344f;background:#0d1626;color:#fff;font-size:14px;margin-bottom:12px}
+.modal-box input{width:100%;padding:11px;border-radius:11px;border:1px solid #26344f;background:#0d1626;color:#fff;font-size:16px;margin-bottom:12px}
 .modal-box .actions{display:flex;gap:8px}
 .modal-box .actions button{flex:1;padding:11px;border-radius:12px;border:none;font-weight:700;font-size:13px;cursor:pointer}
 .modal-box .actions .cancel{background:#1a2438;color:#93b4e0}
@@ -160,8 +273,29 @@ body{background:linear-gradient(180deg,#080c17 0%,#0a0f1e 100%);color:var(--txt)
   .grid{grid-template-columns:1fr}
   .stat.wide,.stat.hero{grid-column:span 1}
   .brand h1{font-size:18px}
-  .chatwin{right:8px;bottom:76px;width:calc(100vw - 16px);height:calc(100vh - 140px)}
+  .chatwin{
+    right:8px;left:8px;
+    width:auto;
+    bottom:calc(76px + var(--safe-bottom));
+    height:calc(100dvh - 150px - var(--safe-bottom));
+    max-height:calc(100dvh - 150px - var(--safe-bottom));
+  }
   .row button{font-size:12px;padding:10px 8px}
+  .msg .bubble{font-size:12.5px;padding:8px 11px}
+}
+
+/* landscape phones — keep chat compact */
+@media (max-height:500px) and (orientation:landscape){
+  .chatwin{
+    right:8px;left:auto;
+    width:min(340px,calc(100vw - 16px));
+    bottom:calc(10px + var(--safe-bottom));
+    height:calc(100dvh - 20px - var(--safe-bottom));
+    max-height:calc(100dvh - 20px - var(--safe-bottom));
+    border-radius:16px;
+  }
+  .chatwin header{padding:8px 12px;min-height:44px}
+  .chatwin header .title .av{width:28px;height:28px;font-size:13px}
 }
 </style>
 </head>
@@ -174,7 +308,6 @@ body{background:linear-gradient(180deg,#080c17 0%,#0a0f1e 100%);color:var(--txt)
     <div class="pair">PEPE / USDT</div>
   </div>
 
-  <!-- Live price ticker -->
   <div class="ticker">
     <div>
       <div class="lbl">Binance Live Market</div>
@@ -184,7 +317,6 @@ body{background:linear-gradient(180deg,#080c17 0%,#0a0f1e 100%);color:var(--txt)
     <div class="live" id="liveStatus"><span class="dot"></span><span id="liveTxt">LIVE</span></div>
   </div>
 
-  <!-- Dashboard -->
   <div class="card" id="dashCard">
     <h2>📊 Live Position <span class="badge b-ready" id="statusBadge">Ready to Start</span></h2>
     <div class="grid" id="dashGrid">
@@ -216,7 +348,6 @@ body{background:linear-gradient(180deg,#080c17 0%,#0a0f1e 100%);color:var(--txt)
     </div>
   </div>
 
-  <!-- Active orders -->
   <div class="card">
     <h2>📋 Active Session Orders <span class="tag" id="orderCount">0</span></h2>
     <div id="ordersList"><div class="empty">এখনো কোনো order নেই</div></div>
@@ -228,7 +359,7 @@ body{background:linear-gradient(180deg,#080c17 0%,#0a0f1e 100%);color:var(--txt)
   💬<span class="badge-dot"></span>
 </button>
 
-<div class="chatwin" id="chatwin">
+<div class="chatwin" id="chatwin" role="dialog" aria-label="Trading Assistant Chat">
   <header>
     <div class="title">
       <div class="av">🐸</div>
@@ -237,21 +368,20 @@ body{background:linear-gradient(180deg,#080c17 0%,#0a0f1e 100%);color:var(--txt)
         <div class="st" id="sessionTag">Session #1</div>
       </div>
     </div>
-    <button class="cls" id="chatClose">✕</button>
+    <button class="cls" id="chatClose" aria-label="Close chat">✕</button>
   </header>
   <div class="chat" id="chat"></div>
   <div class="dock-chat">
     <div class="quick" id="quickBtns"></div>
     <div class="dock-inner">
-      <input id="chatInput" type="text" inputmode="decimal" autocomplete="off" placeholder="উত্তর লিখুন..." disabled>
-      <button id="sendBtn" disabled>➤</button>
+      <input id="chatInput" type="text" inputmode="decimal" autocomplete="off" enterkeyhint="send" placeholder="উত্তর লিখুন..." disabled>
+      <button id="sendBtn" aria-label="Send message" disabled>➤</button>
     </div>
   </div>
 </div>
 
 <div class="toast" id="toast"></div>
 
-<!-- Settings modal -->
 <div class="modal" id="settingsModal">
   <div class="modal-box">
     <h3>⚙ Risk & Settings</h3>
@@ -267,7 +397,6 @@ body{background:linear-gradient(180deg,#080c17 0%,#0a0f1e 100%);color:var(--txt)
   </div>
 </div>
 
-<!-- Confirm modal -->
 <div class="modal" id="confirmModal">
   <div class="modal-box">
     <h3 id="cfTitle">নিশ্চিত করুন</h3>
@@ -281,29 +410,10 @@ body{background:linear-gradient(180deg,#080c17 0%,#0a0f1e 100%);color:var(--txt)
 
 <script>
 /* =====================================================================
-   PEPE Smart Trader — Complete Rebuild (v3 — Sincronization Fix)
-   Modules:
-     - BigInt decimal precision engine
-     - Binance live price (REST + polling)
-     - Persistent storage (IndexedDB w/ LS fallback)
-     - Financial calculation engine (WAP, break-even, realized P/L,
-       final sell target, recovery)
-     - Conversation state machine (with unified guards)
-     - Floating chat widget (drag + touch)
-     - Dashboard renderer
-
-   v3 fixes:
-     - getTradeState() / sellBlocked() = single-source-of-truth helpers
-     - startConversation() now respects Target Achieved and zero-qty
-     - goToState() global guard blocks sell states when appropriate
-     - handleSubmit() entry-level validation for sell states
-     - session.targetPct is sticky (first buy sets it, later buys don't
-       overwrite)
-     - btnSell.onclick guards for targetHit & zero-qty
-     - afterSellFilled → sessionComplete when target hit
-     - Dashboard warning unified via getTradeState()
-     - New terminal state: sessionComplete (input disabled)
-     - loadAll() sanitizes stale sell conversation state
+   PEPE Smart Trader — v4
+   Trading engine unchanged. Floating widget professionally optimized
+   for mobile: robust positioning, keyboard handling, dedupe guards,
+   smart auto-scroll, single-source event wiring.
    ===================================================================== */
 (function(){
 'use strict';
@@ -347,9 +457,7 @@ function dp(s){
   if(s===''||s==='.') s='0';
   let neg=false;
   if(s.startsWith('-')){neg=true;s=s.slice(1);}
-  if(!/^\d*\.?\d*$/.test(s)){
-    s=Number(s).toFixed(18);
-  }
+  if(!/^\d*\.?\d*$/.test(s)){ s=Number(s).toFixed(18); }
   let [i,f='']=s.split('.');
   i=i||'0'; f=f.replace(/0+$/,'');
   return {i:(neg?'-':'')+i, f, d:f.length};
@@ -395,10 +503,7 @@ function fmtPct(x){ const v=n(x); return (v>=0?'+':'')+v.toFixed(2)+'%'; }
 /* ---------- Binance live market ---------- */
 const BINANCE_PRICE='https://api.binance.com/api/v3/ticker/price?symbol=PEPEUSDT';
 const BINANCE_EXINFO='https://api.binance.com/api/v3/exchangeInfo?symbol=PEPEUSDT';
-const market = {
-  price: null, ts: 0, tickSize: null, stepSize: null,
-  status: 'init', failCount: 0
-};
+const market = { price:null, ts:0, tickSize:null, stepSize:null, status:'init', failCount:0 };
 
 async function fetchLivePrice(){
   try{
@@ -415,15 +520,12 @@ async function fetchLivePrice(){
     market.failCount = 0;
   }catch(e){
     market.failCount++;
-    if(market.price && Date.now()-market.ts < 5*60*1000){
-      market.status = 'stale';
-    }else{
-      market.status = 'offline';
-    }
+    if(market.price && Date.now()-market.ts < 5*60*1000){ market.status = 'stale'; }
+    else{ market.status = 'offline'; }
   }
   renderTicker();
+  renderDashboard();
 }
-
 async function fetchExchangeInfo(){
   try{
     const res = await fetch(BINANCE_EXINFO, {cache:'no-store'});
@@ -437,17 +539,13 @@ async function fetchExchangeInfo(){
     if(lf && lf.stepSize) market.stepSize = lf.stepSize;
   }catch(e){}
 }
-
 function renderTicker(){
   const elP=document.getElementById('livePrice');
   const elM=document.getElementById('liveMeta');
   const elS=document.getElementById('liveStatus');
   const elT=document.getElementById('liveTxt');
-  if(market.price){
-    elP.textContent = fmtP(market.price)+' USDT';
-  }else{
-    elP.textContent = '— USDT';
-  }
+  if(market.price){ elP.textContent = fmtP(market.price)+' USDT'; }
+  else{ elP.textContent = '— USDT'; }
   if(market.status==='live'){
     elS.className='live'; elT.textContent='LIVE';
     elM.textContent = 'Binance · '+new Date(market.ts).toLocaleTimeString();
@@ -458,9 +556,7 @@ function renderTicker(){
   }else if(market.status==='offline'){
     elS.className='live offline'; elT.textContent='OFFLINE';
     elM.textContent = 'Binance থেকে price পাওয়া যাচ্ছে না';
-  }else{
-    elM.textContent = 'সংযোগ স্থাপন হচ্ছে…';
-  }
+  }else{ elM.textContent = 'সংযোগ স্থাপন হচ্ছে…'; }
 }
 
 /* ---------- persistent storage (IndexedDB w/ LS fallback) ---------- */
@@ -473,10 +569,7 @@ function openDB(){
   return new Promise((resolve)=>{
     if(!('indexedDB' in window)) return resolve(null);
     const req = indexedDB.open(DB_NAME, DB_VER);
-    req.onupgradeneeded = ()=>{
-      const db=req.result;
-      if(!db.objectStoreNames.contains(STORE)) db.createObjectStore(STORE);
-    };
+    req.onupgradeneeded = ()=>{ const db=req.result; if(!db.objectStoreNames.contains(STORE)) db.createObjectStore(STORE); };
     req.onsuccess = ()=>resolve(req.result);
     req.onerror = ()=>resolve(null);
   });
@@ -516,30 +609,18 @@ const store = {
   async get(key, fallback){
     if(dbReady){
       const db=await dbReady;
-      if(db){
-        const v = await idbGet(db, key);
-        if(v !== undefined && v !== null) return v;
-      }
+      if(db){ const v = await idbGet(db, key); if(v !== undefined && v !== null) return v; }
     }
-    try{
-      const raw = localStorage.getItem(LS_PREFIX+key);
-      return raw ? JSON.parse(raw) : fallback;
-    }catch(e){ return fallback; }
+    try{ const raw = localStorage.getItem(LS_PREFIX+key); return raw ? JSON.parse(raw) : fallback; }catch(e){ return fallback; }
   },
   async set(key, val){
     let ok=false;
-    if(dbReady){
-      const db=await dbReady;
-      if(db) ok = await idbSet(db,key,val);
-    }
+    if(dbReady){ const db=await dbReady; if(db) ok = await idbSet(db,key,val); }
     try{ localStorage.setItem(LS_PREFIX+key, JSON.stringify(val)); ok=true; }catch(e){}
     return ok;
   },
   async del(key){
-    if(dbReady){
-      const db=await dbReady;
-      if(db) await idbDel(db,key);
-    }
+    if(dbReady){ const db=await dbReady; if(db) await idbDel(db,key); }
     try{ localStorage.removeItem(LS_PREFIX+key); }catch(e){}
   }
 };
@@ -549,25 +630,13 @@ let session = null;
 let settings = { maxInv: 0, maxBuys: 0 };
 let orderSeq = 1;
 
-function newSession(id){
-  return { id: id||1, startTs: Date.now(), targetPct: '0', orders: [], conversation:{state:'askBuyPrice', data:{}} };
-}
-
-async function persist(){
-  try{
-    await store.set('session', session);
-    await store.set('settings', settings);
-  }catch(e){}
-}
+function newSession(id){ return { id: id||1, startTs: Date.now(), targetPct:'0', orders:[], conversation:{state:'askBuyPrice', data:{}} }; }
+async function persist(){ try{ await store.set('session', session); await store.set('settings', settings); }catch(e){} }
 
 async function loadAll(){
   dbReady = openDB();
   let s = await store.get('session', null);
-  if(s && s.id && Array.isArray(s.orders)){
-    session = s;
-  }else{
-    session = newSession(1);
-  }
+  if(s && s.id && Array.isArray(s.orders)){ session = s; } else { session = newSession(1); }
   const st = await store.get('settings', null);
   if(st && typeof st==='object') settings = Object.assign({maxInv:0,maxBuys:0}, st);
   let maxId=0;
@@ -577,14 +646,10 @@ async function loadAll(){
   }
   orderSeq = maxId+1;
   if(!session.conversation) session.conversation = {state:'askBuyPrice', data:{}};
-
-  // ✅ Sanitize stale conversation state after load
   const sellStates=['askSellPrice','askSellQty','confirmSell','afterSellPending'];
   if(session.conversation && sellStates.includes(session.conversation.state)){
     const p = computePosition();
-    if(!D.gt(p.remainingQty,'0') || sessionTargetHit()){
-      session.conversation = {state:'afterBuyFilled', data:{}};
-    }
+    if(!D.gt(p.remainingQty,'0') || sessionTargetHit()){ session.conversation = {state:'afterBuyFilled', data:{}}; }
   }
   if(session.conversation && session.conversation.state==='sessionComplete' && !sessionTargetHit()){
     session.conversation = {state:'afterBuyFilled', data:{}};
@@ -595,53 +660,34 @@ async function loadAll(){
 function computePosition(){
   const buys = session.orders.filter(o=>o.side==='buy' && (o.status==='filled'||o.status==='partial'));
   const sells= session.orders.filter(o=>o.side==='sell'&& (o.status==='filled'||o.status==='partial'));
-
   let totalBuyCost='0', totalBuyQty='0';
   let totalSellProceeds='0', totalSellQty='0';
-
-  for(const b of buys){
-    totalBuyCost = D.add(totalBuyCost, b.filledUsdt||'0');
-    totalBuyQty  = D.add(totalBuyQty,  b.filledQty ||'0');
-  }
-  for(const s of sells){
-    totalSellProceeds = D.add(totalSellProceeds, s.filledUsdt||'0');
-    totalSellQty      = D.add(totalSellQty,      s.filledQty ||'0');
-  }
-
+  for(const b of buys){ totalBuyCost = D.add(totalBuyCost, b.filledUsdt||'0'); totalBuyQty = D.add(totalBuyQty, b.filledQty||'0'); }
+  for(const s of sells){ totalSellProceeds = D.add(totalSellProceeds, s.filledUsdt||'0'); totalSellQty = D.add(totalSellQty, s.filledQty||'0'); }
   let remainingQty = D.sub(totalBuyQty, totalSellQty);
   if(D.lt(remainingQty,'0')) remainingQty='0';
-
   const avgBuy = D.gt(totalBuyQty,'0') ? D.div(totalBuyCost, totalBuyQty, 18) : '0';
   const realizedCostOfSold = D.mul(totalSellQty, avgBuy);
   const realizedNet = D.sub(totalSellProceeds, realizedCostOfSold);
   const realizedPct = D.gt(totalBuyCost,'0') ? D.mul(D.div(realizedNet,totalBuyCost,18),'100') : '0';
-
   const remainingBasis = D.sub(totalBuyCost, realizedCostOfSold);
   const breakEven = D.gt(remainingQty,'0') ? D.div(remainingBasis, remainingQty, 18) : '0';
-
   const targetPct = session.targetPct || '0';
   const targetReturnTotal = D.mul(totalBuyCost, D.add('1', D.div(targetPct,'100',18)));
   const neededProceeds = D.sub(targetReturnTotal, totalSellProceeds);
   const sellTarget = D.gt(remainingQty,'0') ? D.div(neededProceeds, remainingQty, 18) : '0';
-
   const progress = D.gt(targetReturnTotal,'0')
     ? Math.max(0, Math.min(100, n(D.div(D.mul(totalSellProceeds,'100'), targetReturnTotal, 8))))
     : 0;
-
-  let unrealized = '0', hasPrice=false;
+  let unrealized='0', hasPrice=false;
   if(market.price && D.gt(remainingQty,'0')){
     hasPrice=true;
     const mktVal = D.mul(remainingQty, market.price);
     unrealized = D.sub(mktVal, remainingBasis);
   }
-
-  return {
-    totalBuyCost, totalBuyQty, totalSellProceeds, totalSellQty,
-    remainingQty, avgBuy, breakEven,
-    realizedNet, realizedPct, realizedCostOfSold, remainingBasis,
-    targetPct, targetReturnTotal, neededProceeds, sellTarget,
-    progress, unrealized, hasPrice
-  };
+  return { totalBuyCost, totalBuyQty, totalSellProceeds, totalSellQty, remainingQty, avgBuy, breakEven,
+    realizedNet, realizedPct, realizedCostOfSold, remainingBasis, targetPct, targetReturnTotal,
+    neededProceeds, sellTarget, progress, unrealized, hasPrice };
 }
 
 function sessionTargetHit(){
@@ -650,33 +696,20 @@ function sessionTargetHit(){
   return n(p.realizedPct) >= n(p.targetPct) - 0.001 && !D.gt(p.remainingQty,'0');
 }
 
-/* ---------- unified trade-state resolver (SINGLE SOURCE OF TRUTH) ---------- */
-/**
- * Returns one of:
- *   'empty'        — no orders yet
- *   'pending'      — has pending orders (buy or sell)
- *   'targetHit'    — Target Achieved AND no remaining qty
- *   'zeroNoTarget' — remainingQty === 0, sells filled, but realizedPct < targetPct
- *   'inPosition'   — remainingQty > 0
- */
 function getTradeState(){
   const p = computePosition();
   const hasPending = session.orders.some(o=>o.status==='pending');
   const hasBuyCost  = D.gt(p.totalBuyCost,'0');
   const hasRemaining= D.gt(p.remainingQty,'0');
   const hasFilledSell = session.orders.some(o=>o.side==='sell'&&(o.status==='filled'||o.status==='partial'));
-
   if(!hasBuyCost && !hasPending) return {kind:'empty', p};
   if(hasPending) return {kind:'pending', p};
   if(sessionTargetHit()) return {kind:'targetHit', p};
-  if(!hasRemaining && hasBuyCost && hasFilledSell && n(p.realizedPct) < n(p.targetPct)){
-    return {kind:'zeroNoTarget', p};
-  }
+  if(!hasRemaining && hasBuyCost && hasFilledSell && n(p.realizedPct) < n(p.targetPct)) return {kind:'zeroNoTarget', p};
   if(hasRemaining) return {kind:'inPosition', p};
   return {kind:'inPosition', p};
 }
 
-/** True if a new Sell flow must be blocked. */
 function sellBlocked(){
   const p = computePosition();
   if(!D.gt(p.remainingQty,'0')) return {blocked:true, reason:'zeroQty'};
@@ -684,34 +717,18 @@ function sellBlocked(){
   return {blocked:false};
 }
 
-/* ---------- order helpers ---------- */
 function nextOrderId(){ return 'O'+(orderSeq++); }
-
-function pushOrder(order){
-  session.orders.push(order);
-  persist();
-  renderAll();
-}
-
+function pushOrder(order){ session.orders.push(order); persist(); renderAll(); }
 function fillOrder(id){
   const o = session.orders.find(x=>x.id===id);
   if(!o || o.status==='filled' || o.status==='cancelled') return;
-  o.status='filled';
-  o.filledUsdt = o.usdt;
-  o.filledQty  = o.qty;
-  o.fillPrice  = o.price;
-  persist();
-  renderAll();
-  toast('✅ Order filled');
+  o.status='filled'; o.filledUsdt = o.usdt; o.filledQty = o.qty; o.fillPrice = o.price;
+  persist(); renderAll(); toast('✅ Order filled');
 }
-
 function cancelOrder(id){
   const o = session.orders.find(x=>x.id===id);
   if(!o || o.status==='filled') return;
-  o.status='cancelled';
-  persist();
-  renderAll();
-  toast('Order cancelled');
+  o.status='cancelled'; persist(); renderAll(); toast('Order cancelled');
 }
 
 /* ---------- DOM refs ---------- */
@@ -737,7 +754,6 @@ const STATES = {
     },
     next:'askInvest'
   },
-
   askInvest: {
     field:'invest',
     say:(d)=>`Buy Limit: <b>${fmtP(d.buyPrice)}</b>\n\nএখন কত <b>USDT</b> invest করতে চান?`,
@@ -747,16 +763,11 @@ const STATES = {
       if(x===null || n(x)<=0) return {ok:false,msg:'0-এর বেশি USDT দিন'};
       return {ok:true,value:x};
     },
-    /* ✅ NEW: skip askTargetPct when session target already set */
     next:(v,d)=>{
-      if(session.targetPct && n(session.targetPct) > 0){
-        d.targetPct = session.targetPct;
-        return 'confirmBuy';
-      }
+      if(session.targetPct && n(session.targetPct) > 0){ d.targetPct = session.targetPct; return 'confirmBuy'; }
       return 'askTargetPct';
     }
   },
-
   askTargetPct: {
     field:'targetPct',
     say:(d)=>`Investment: <b>${fmtU(d.invest)} USDT</b>\n\nসম্পূর্ণ Active Session-এর জন্য কত % <b>Net Profit Target</b> চান?`,
@@ -769,10 +780,8 @@ const STATES = {
     },
     next:'confirmBuy'
   },
-
   confirmBuy: {
     field:'_fill',
-    /* ✅ UPDATED: simplified say — no old/new target comparison note */
     say:(d)=>{
       const qty = D.div(d.invest, d.buyPrice, 12);
       const p = computePosition();
@@ -804,25 +813,14 @@ const STATES = {
     },
     next:(v,d)=>{
       const qty = D.div(d.invest, d.buyPrice, 12);
-      // ✅ Sticky Session Target: প্রথম Buy-এই Target সেট হবে, পরবর্তী Buy-তে overwrite হবে না
-      if(!session.targetPct || n(session.targetPct) <= 0){
-        session.targetPct = String(d.targetPct);
-      }
-      const order = {
-        id: nextOrderId(),
-        side:'buy', type:'limit',
-        price:d.buyPrice, usdt:d.invest, qty,
-        status: v==='filled'?'filled':'pending',
-        filledUsdt: v==='filled'?d.invest:'0',
-        filledQty:  v==='filled'?qty:'0',
-        fillPrice:  v==='filled'?d.buyPrice:null,
-        ts: Date.now(), note:''
-      };
+      if(!session.targetPct || n(session.targetPct) <= 0){ session.targetPct = String(d.targetPct); }
+      const order = { id: nextOrderId(), side:'buy', type:'limit', price:d.buyPrice, usdt:d.invest, qty,
+        status: v==='filled'?'filled':'pending', filledUsdt: v==='filled'?d.invest:'0',
+        filledQty: v==='filled'?qty:'0', fillPrice: v==='filled'?d.buyPrice:null, ts:Date.now(), note:'' };
       pushOrder(order);
       return v==='filled' ? 'afterBuyFilled' : 'afterPending';
     }
   },
-
   afterPending: {
     field:'_go',
     say:'⏳ Order pending। Fill হলে জানান অথবা cancel করুন।',
@@ -836,14 +834,10 @@ const STATES = {
     },
     next:(v)=>{
       const last = [...session.orders].reverse().find(o=>o.status==='pending');
-      if(last){
-        if(v==='filled') fillOrder(last.id);
-        else cancelOrder(last.id);
-      }
+      if(last){ if(v==='filled') fillOrder(last.id); else cancelOrder(last.id); }
       return v==='filled' ? 'afterBuyFilled' : 'askBuyPrice';
     }
   },
-
   afterBuyFilled: {
     field:'_go',
     say:()=>{
@@ -866,14 +860,10 @@ const STATES = {
     },
     next:(v)=>{
       if(v==='buy') return 'askBuyPrice';
-      if(v==='sell'){
-        // 🛡 Guard: no remaining qty → block sell
-        return sellBlocked().blocked ? 'afterBuyFilled' : 'askSellPrice';
-      }
+      if(v==='sell'){ return sellBlocked().blocked ? 'afterBuyFilled' : 'askSellPrice'; }
       return 'done';
     }
   },
-
   askSellPrice: {
     field:'sellPrice',
     say:()=>{
@@ -895,7 +885,6 @@ const STATES = {
     },
     next:'askSellQty'
   },
-
   askSellQty: {
     field:'sellQtyPct',
     say:(d)=>`Sell Price: <b>${fmtP(d.sellPrice)}</b>\n\nকত % PEPE বিক্রি করেছেন? (100 = সম্পূর্ণ)`,
@@ -908,7 +897,6 @@ const STATES = {
     },
     next:'confirmSell'
   },
-
   confirmSell: {
     field:'_fill',
     say:(d)=>{
@@ -933,21 +921,13 @@ const STATES = {
       const p = computePosition();
       const qty = D.mul(p.remainingQty, D.div(d.sellQtyPct,'100',18));
       const usdt = D.mul(qty, d.sellPrice);
-      const order = {
-        id: nextOrderId(),
-        side:'sell', type:'limit',
-        price:d.sellPrice, usdt, qty,
-        status: v==='filled'?'filled':'pending',
-        filledUsdt: v==='filled'?usdt:'0',
-        filledQty:  v==='filled'?qty:'0',
-        fillPrice:  v==='filled'?d.sellPrice:null,
-        ts: Date.now(), note:''
-      };
+      const order = { id: nextOrderId(), side:'sell', type:'limit', price:d.sellPrice, usdt, qty,
+        status: v==='filled'?'filled':'pending', filledUsdt: v==='filled'?usdt:'0',
+        filledQty: v==='filled'?qty:'0', fillPrice: v==='filled'?d.sellPrice:null, ts:Date.now(), note:'' };
       pushOrder(order);
       return v==='filled' ? 'afterSellFilled' : 'afterSellPending';
     }
   },
-
   afterSellPending: {
     field:'_go',
     say:'⏳ Sell pending। Fill হলে জানান বা cancel করুন।',
@@ -961,14 +941,10 @@ const STATES = {
     },
     next:(v)=>{
       const last = [...session.orders].reverse().find(o=>o.status==='pending');
-      if(last){
-        if(v==='filled') fillOrder(last.id);
-        else cancelOrder(last.id);
-      }
+      if(last){ if(v==='filled') fillOrder(last.id); else cancelOrder(last.id); }
       return v==='filled' ? 'afterSellFilled' : 'afterBuyFilled';
     }
   },
-
   afterSellFilled: {
     field:'_go',
     say:()=>{
@@ -984,14 +960,12 @@ const STATES = {
           `নতুন Session শুরু করতে Reset ব্যবহার করুন।`;
       }
       const warn = !D.gt(p.remainingQty,'0') && n(p.realizedPct)<n(p.targetPct)
-        ? `\n\n⚠️ সব PEPE বিক্রি হয়েছে কিন্তু Target পূরণ হয়নি — Loss Recovery Mode active.`
-        : '';
+        ? `\n\n⚠️ সব PEPE বিক্রি হয়েছে কিন্তু Target পূরণ হয়নি — Loss Recovery Mode active.` : '';
       return `✅ Sell fill হয়েছে।\n\n`+
         `Remaining PEPE: <b>${fmtQ(p.remainingQty)}</b>\n`+
         `Realized P/L: <span class="${n(p.realizedNet)>=0?'pos':'neg'}">${fmtU(p.realizedNet)} USDT</span> (${fmtPct(p.realizedPct)})\n`+
         `Target: ${p.targetPct}%\n`+
-        `Next Sell Target: <span class="hl">${fmtP(p.sellTarget)}</span>`+
-        warn+
+        `Next Sell Target: <span class="hl">${fmtP(p.sellTarget)}</span>`+warn+
         `\n\nপরবর্তী পদক্ষেপ?`;
     },
     placeholder:'buy / sell / done',
@@ -1004,16 +978,12 @@ const STATES = {
       return {ok:false,msg:'"buy", "sell", বা "done" দিন'};
     },
     next:(v)=>{
-      // After sell filled, check trade state first
       if(sessionTargetHit()) return 'sessionComplete';
       if(v==='buy') return 'askBuyPrice';
-      if(v==='sell'){
-        return sellBlocked().blocked ? 'afterBuyFilled' : 'askSellPrice';
-      }
+      if(v==='sell'){ return sellBlocked().blocked ? 'afterBuyFilled' : 'askSellPrice'; }
       return 'done';
     }
   },
-
   sessionComplete: {
     say:()=>{
       const p = computePosition();
@@ -1028,11 +998,7 @@ const STATES = {
     end:true,
     placeholder:'Session সম্পন্ন — Reset করুন'
   },
-
-  done: {
-    say:'ধন্যবাদ! Dashboard থেকে যেকোনো সময় নতুন Buy বা Sell plan করতে পারেন।',
-    end:true
-  }
+  done: { say:'ধন্যবাদ! Dashboard থেকে যেকোনো সময় নতুন Buy বা Sell plan করতে পারেন।', end:true }
 };
 
 /* ---------- parsers ---------- */
@@ -1041,9 +1007,7 @@ function parsePEPEPrice(v){
   if(!/^\d*\.?\d+(e-?\d+)?$/i.test(v)) return null;
   const num = Number(v);
   if(!isFinite(num) || num<=0 || num>1) return null;
-  if(v.includes('e')||v.includes('E')){
-    return Number(v).toFixed(11).replace(/0+$/,'').replace(/\.$/,'');
-  }
+  if(v.includes('e')||v.includes('E')){ return Number(v).toFixed(11).replace(/0+$/,'').replace(/\.$/,''); }
   return v;
 }
 function parseUSDT(v){
@@ -1054,54 +1018,71 @@ function parseUSDT(v){
   return v;
 }
 
-/* ---------- chat rendering ---------- */
-function scrollChat(){ chatBox.scrollTop = chatBox.scrollHeight; }
+/* ============================================================
+   CHAT RENDERING & SMART AUTO-SCROLL
+   ============================================================ */
+let userScrolledUp = false;
+const SCROLL_THRESHOLD = 60;
+
+function isNearBottom(){
+  return (chatBox.scrollHeight - chatBox.scrollTop - chatBox.clientHeight) < SCROLL_THRESHOLD;
+}
+function scrollChatSmart(){
+  // Only auto-scroll if user is already at/near bottom (avoids yanking them away)
+  if(!userScrolledUp || isNearBottom()){
+    requestAnimationFrame(()=>{
+      chatBox.scrollTop = chatBox.scrollHeight;
+    });
+  }
+}
+chatBox.addEventListener('scroll', ()=>{
+  userScrolledUp = !isNearBottom();
+}, {passive:true});
+
 function botSay(html){
   const d=document.createElement('div');
   d.className='msg bot';
   d.innerHTML='<div class="avatar">🐸</div><div class="bubble">'+html+'</div>';
-  chatBox.appendChild(d); scrollChat();
+  chatBox.appendChild(d);
+  scrollChatSmart();
 }
 function userSay(text){
   const d=document.createElement('div');
   d.className='msg user';
   d.innerHTML='<div class="avatar">👤</div><div class="bubble">'+escapeHtml(text)+'</div>';
-  chatBox.appendChild(d); scrollChat();
+  chatBox.appendChild(d);
+  scrollChatSmart();
 }
 function escapeHtml(s){
   return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 }
 
+/* ---------- input/quick controls ---------- */
 function setInputEnabled(on, placeholder, quick){
   input.disabled=!on; sendBtn.disabled=!on;
   input.placeholder = placeholder||(on?'উত্তর লিখুন...':'অপেক্ষা করুন...');
-  if(on) setTimeout(()=>{ try{input.focus({preventScroll:true});}catch(e){} },80);
+  if(on) setTimeout(()=>{ try{ input.focus({preventScroll:true}); }catch(e){} }, 80);
   quickBox.innerHTML='';
   if(quick && quick.length){
     quick.forEach(q=>{
       const b=document.createElement('button');
+      b.type='button';
       b.textContent=q.label;
-      b.onclick=()=>{ input.value=q.value; handleSubmit(); };
+      b.onclick=()=>{ if(input.disabled) return; input.value=q.value; handleSubmit(); };
       quickBox.appendChild(b);
     });
   }
 }
 
+/* ---------- state machine navigation ---------- */
 function goToState(name){
-  // 🛡 GLOBAL GUARD: Target Achieved হলে Sell flow-এ যাওয়া নিষিদ্ধ
   const sellStates = ['askSellPrice','askSellQty','confirmSell','afterSellPending'];
   if(sellStates.includes(name)){
     const p = computePosition();
     if(!D.gt(p.remainingQty,'0')){
-      if(sessionTargetHit()){
-        name = 'sessionComplete';
-      }else{
-        botSay('⚠️ কোনো PEPE নেই — Sell করা সম্ভব নয়। নতুন Buy করুন।');
-        name = 'afterBuyFilled';
-      }
-    }else if(sessionTargetHit()){
-      name = 'sessionComplete';
-    }
+      if(sessionTargetHit()){ name = 'sessionComplete'; }
+      else{ botSay('⚠️ কোনো PEPE নেই — Sell করা সম্ভব নয়। নতুন Buy করুন।'); name = 'afterBuyFilled'; }
+    }else if(sessionTargetHit()){ name = 'sessionComplete'; }
   }
 
   if(!name || name==='done'){
@@ -1117,7 +1098,6 @@ function goToState(name){
   session.conversation.state = name;
   persist();
 
-  // sessionComplete = terminal: no input
   if(name==='sessionComplete'){
     const say = typeof st.say==='function' ? st.say() : st.say;
     setTimeout(()=>{
@@ -1136,35 +1116,31 @@ function goToState(name){
   }, 120);
 }
 
+/* ---------- submit (with guard against double-submit) ---------- */
+let submitLock = false;
+
 function handleSubmit(){
+  if(submitLock) return;
   const raw = input.value.trim();
   if(!raw) return;
   const stateName = session.conversation.state;
 
-  // 🛡 GUARD: sessionComplete = terminal
-  if(stateName==='sessionComplete'){
-    input.value='';
-    return;
-  }
+  if(stateName==='sessionComplete'){ input.value=''; return; }
 
-  // 🛡 GUARD: sell-related states — zero qty / target hit check
   if(['askSellPrice','askSellQty','confirmSell','afterSellPending'].includes(stateName)){
     const p = computePosition();
     if(!D.gt(p.remainingQty,'0') || sessionTargetHit()){
       input.value='';
       userSay(raw);
-      if(sessionTargetHit()){
-        goToState('sessionComplete');
-      }else{
-        botSay('⚠️ কোনো PEPE নেই — Sell করা সম্ভব নয়।');
-        goToState('afterBuyFilled');
-      }
+      if(sessionTargetHit()){ goToState('sessionComplete'); }
+      else{ botSay('⚠️ কোনো PEPE নেই — Sell করা সম্ভব নয়।'); goToState('afterBuyFilled'); }
       return;
     }
   }
 
   const st = STATES[stateName];
   if(!st){ botSay('⚠️ Conversation state অজানা। Reset করুন।'); setInputEnabled(false); return; }
+
   const result = st.validate(raw, session.conversation.data);
   if(!result.ok){
     userSay(raw);
@@ -1174,21 +1150,27 @@ function handleSubmit(){
     setInputEnabled(true, st.placeholder, q);
     return;
   }
-  input.value='';
-  userSay(raw);
-  session.conversation.data[st.field] = result.value;
-  let next = st.next;
-  if(typeof next==='function') next = next(result.value, session.conversation.data, result);
-  session.conversation.data = session.conversation.data || {};
-  goToState(next);
+
+  submitLock = true;
+  try{
+    input.value='';
+    userSay(raw);
+    session.conversation.data[st.field] = result.value;
+    let next = st.next;
+    if(typeof next==='function') next = next(result.value, session.conversation.data, result);
+    session.conversation.data = session.conversation.data || {};
+    goToState(next);
+  } finally {
+    setTimeout(()=>{ submitLock=false; }, 60);
+  }
 }
 
-/* ---------- boot conversation (state-aware) ---------- */
+/* ---------- boot conversation ---------- */
 function startConversation(){
   chatBox.innerHTML='';
+  userScrolledUp = false;
   const {kind, p} = getTradeState();
 
-  // 🎉 TARGET ACHIEVED → Session Complete screen
   if(kind==='targetHit'){
     session.conversation = {state:'sessionComplete', data:{}};
     persist();
@@ -1199,13 +1181,11 @@ function startConversation(){
       `Realized Net Profit: <span class="pos">${fmtU(p.realizedNet)} USDT</span>\n`+
       `Realized P/L: <span class="pos">${fmtPct(p.realizedPct)}</span> (Target ${p.targetPct}%)\n\n`+
       `আপনার Trading Session সফলভাবে সম্পন্ন হয়েছে। ✅\n`+
-      `নতুন Session শুরু করতে <b>Reset</b> ব্যবহার করুন।`
-    );
+      `নতুন Session শুরু করতে <b>Reset</b> ব্যবহার করুন।`);
     setInputEnabled(false, 'Session সম্পন্ন — Reset করুন', null);
     return;
   }
 
-  // Zero qty but target not hit → Loss Recovery
   if(kind==='zeroNoTarget'){
     session.conversation = {state:'afterBuyFilled', data:{}};
     persist();
@@ -1216,8 +1196,7 @@ function startConversation(){
       `Realized P/L: <span class="${n(p.realizedNet)>=0?'pos':'neg'}">${fmtU(p.realizedNet)} USDT</span> (${fmtPct(p.realizedPct)})\n`+
       `Target: ${p.targetPct}%\n\n`+
       `⚠️ সব PEPE বিক্রি হয়েছে কিন্তু Target পূরণ হয়নি।\n`+
-      `নতুন Buy দিয়ে Recovery শুরু করুন।`
-    );
+      `নতুন Buy দিয়ে Recovery শুরু করুন।`);
     setInputEnabled(true, 'buy / done', [
       {label:'📉 নতুন Buy',value:'buy'},
       {label:'✅ শেষ',value:'done'}
@@ -1225,21 +1204,18 @@ function startConversation(){
     return;
   }
 
-  // Pending orders
   if(kind==='pending'){
     session.conversation = {state:'afterPending', data:{}};
     persist();
     const last = [...session.orders].reverse().find(o=>o.status==='pending');
     botSay(
       `⏳ Pending Order আছে (${last?last.side.toUpperCase():''} @ ${last?fmtP(last.price):''}).\n\n`+
-      `Fill হলে জানান অথবা Cancel করুন।`
-    );
+      `Fill হলে জানান অথবা Cancel করুন।`);
     const st = STATES.afterPending;
     setInputEnabled(true, st.placeholder, st.quick);
     return;
   }
 
-  // In position
   if(kind==='inPosition'){
     session.conversation = {state:'afterBuyFilled', data:{}};
     persist();
@@ -1250,32 +1226,25 @@ function startConversation(){
       `WAP: ${fmtP(p.avgBuy)}\n`+
       `Target: ${p.targetPct}%\n`+
       `Sell Target: <span class="hl">${fmtP(p.sellTarget)}</span>\n\n`+
-      `পরবর্তী পদক্ষেপ?`
-    );
+      `পরবর্তী পদক্ষেপ?`);
     const st = STATES.afterBuyFilled;
     setInputEnabled(true, st.placeholder, st.quick);
     return;
   }
 
-  // Empty — fresh start
   session.conversation = {state:'askBuyPrice', data:{}};
   goToState('askBuyPrice');
   persist();
 }
 
-/* ---------- dashboard render ---------- */
-function renderAll(){
-  renderDashboard();
-  renderOrders();
-  el('sessionTag').textContent = 'Session #'+session.id;
-}
+/* ---------- dashboard / orders render ---------- */
+function renderAll(){ renderDashboard(); renderOrders(); el('sessionTag').textContent = 'Session #'+session.id; }
 
 function renderDashboard(){
   const p = computePosition();
   const tState = getTradeState();
   const badge = el('statusBadge');
   let status='Ready to Start', cls='b-ready';
-
   if(tState.kind==='targetHit'){ status='Target Achieved'; cls='b-done'; }
   else if(tState.kind==='pending'){ status='Order Pending'; cls='b-pend'; }
   else if(tState.kind==='zeroNoTarget'){ status='Loss Recovery'; cls='b-rec'; }
@@ -1295,9 +1264,7 @@ function renderDashboard(){
   if(p.hasPrice && D.gt(p.remainingQty,'0')){
     upl.textContent = (n(p.unrealized)>=0?'+':'')+fmtU(p.unrealized)+' USDT';
     upl.className = 'v '+(n(p.unrealized)>=0?'pos':'neg');
-  }else{
-    upl.textContent='—'; upl.className='v';
-  }
+  }else{ upl.textContent='—'; upl.className='v'; }
 
   const rpl = el('sRpl');
   rpl.textContent = fmtU(p.realizedNet);
@@ -1309,26 +1276,14 @@ function renderDashboard(){
   rpp.className = 'v '+(n(p.realizedPct)>=0?'pos':'neg');
 
   el('sRecovery').textContent = D.gt(p.targetReturnTotal,'0')
-    ? `${p.progress.toFixed(1)}% (${fmtU(p.totalSellProceeds)} / ${fmtU(p.targetReturnTotal)})`
-    : '—';
+    ? `${p.progress.toFixed(1)}% (${fmtU(p.totalSellProceeds)} / ${fmtU(p.targetReturnTotal)})` : '—';
   el('recBar').style.width = Math.min(100,p.progress)+'%';
 
   const wa = el('warnArea');
   let html='';
-
-  // ✅ Single consistent warning: zero position but target not hit (after filled sell)
-  if(tState.kind === 'zeroNoTarget'){
-    html += '<div class="danger-msg">⚠️ Position শূন্য কিন্তু Target পূরণ হয়নি। নতুন Buy plan করুন।</div>';
-  }
-
-  // ✅ Target achieved — informational (no warning)
-  if(tState.kind === 'targetHit'){
-    html += '<div class="warn" style="background:#123a24;border-left-color:#22c55e;color:#4ade80">🎉 Target Achieved! Session সম্পন্ন হয়েছে। Reset করে নতুন Session শুরু করুন।</div>';
-  }
-
-  if(settings.maxInv>0 && n(p.totalBuyCost) >= settings.maxInv*0.95){
-    html += '<div class="warn">⚠️ Max Investment সীমার কাছাকাছি ('+fmtU(settings.maxInv)+' USDT)।</div>';
-  }
+  if(tState.kind === 'zeroNoTarget'){ html += '<div class="danger-msg">⚠️ Position শূন্য কিন্তু Target পূরণ হয়নি। নতুন Buy plan করুন।</div>'; }
+  if(tState.kind === 'targetHit'){ html += '<div class="warn" style="background:#123a24;border-left-color:#22c55e;color:#4ade80">🎉 Target Achieved! Session সম্পন্ন হয়েছে। Reset করে নতুন Session শুরু করুন।</div>'; }
+  if(settings.maxInv>0 && n(p.totalBuyCost) >= settings.maxInv*0.95){ html += '<div class="warn">⚠️ Max Investment সীমার কাছাকাছি ('+fmtU(settings.maxInv)+' USDT)।</div>'; }
   if(settings.maxBuys>0){
     const cnt = session.orders.filter(o=>o.side==='buy'&&(o.status==='filled'||o.status==='partial')).length;
     if(cnt>=settings.maxBuys) html += '<div class="warn">⚠️ Max Buy Orders সীমায় পৌঁছেছেন ('+settings.maxBuys+')।</div>';
@@ -1339,10 +1294,7 @@ function renderDashboard(){
 function renderOrders(){
   const box = el('ordersList');
   el('orderCount').textContent = session.orders.length;
-  if(session.orders.length===0){
-    box.innerHTML='<div class="empty">এখনো কোনো order নেই</div>';
-    return;
-  }
+  if(session.orders.length===0){ box.innerHTML='<div class="empty">এখনো কোনো order নেই</div>'; return; }
   box.innerHTML='';
   [...session.orders].reverse().forEach(o=>{
     const d=document.createElement('div');
@@ -1367,15 +1319,11 @@ function renderOrders(){
     </div>`;
     box.appendChild(d);
   });
-  box.querySelectorAll('[data-fill]').forEach(b=>{
-    b.onclick=()=>fillOrder(b.getAttribute('data-fill'));
-  });
-  box.querySelectorAll('[data-cancel]').forEach(b=>{
-    b.onclick=()=>cancelOrder(b.getAttribute('data-cancel'));
-  });
+  box.querySelectorAll('[data-fill]').forEach(b=>{ b.onclick=()=>fillOrder(b.getAttribute('data-fill')); });
+  box.querySelectorAll('[data-cancel]').forEach(b=>{ b.onclick=()=>cancelOrder(b.getAttribute('data-cancel')); });
 }
 
-/* ---------- toast ---------- */
+/* ---------- toast / confirm ---------- */
 let toastT;
 function toast(msg){
   const t=el('toast');
@@ -1383,8 +1331,6 @@ function toast(msg){
   clearTimeout(toastT);
   toastT=setTimeout(()=>t.classList.remove('show'),2200);
 }
-
-/* ---------- confirm dialog ---------- */
 function confirmDialog(title,msg,onOk){
   el('cfTitle').textContent=title;
   el('cfMsg').textContent=msg;
@@ -1396,19 +1342,21 @@ function confirmDialog(title,msg,onOk){
   cancel.onclick=cleanup;
 }
 
-/* ---------- action buttons ---------- */
-sendBtn.onclick = handleSubmit;
-input.addEventListener('keydown', e=>{ if(e.key==='Enter'){ e.preventDefault(); handleSubmit(); } });
+/* ---------- wire send controls (single source) ---------- */
+sendBtn.addEventListener('click', handleSubmit);
+input.addEventListener('keydown', e=>{
+  if(e.key==='Enter' && !e.isComposing){ e.preventDefault(); handleSubmit(); }
+});
 
-/* ✅ SINGLE "Sell / Record" button */
-el('btnSell').onclick = ()=>{
+/* ---------- Sell / Settings / Reset ---------- */
+el('btnSell').addEventListener('click', ()=>{
   const p = computePosition();
   const tState = getTradeState();
 
-  // 🛡 Target Achieved → hard block
   if(tState.kind === 'targetHit'){
     openChat();
     chatBox.innerHTML='';
+    userScrolledUp = false;
     botSay(
       `🎉 <b>TARGET ACHIEVED!</b>\n\n`+
       `Total Cost: ${fmtU(p.totalBuyCost)} USDT\n`+
@@ -1416,26 +1364,24 @@ el('btnSell').onclick = ()=>{
       `Realized Net Profit: <span class="pos">${fmtU(p.realizedNet)} USDT</span>\n`+
       `Realized P/L: <span class="pos">${fmtPct(p.realizedPct)}</span> (Target ${p.targetPct}%)\n\n`+
       `Session সম্পন্ন — নতুন Sell শুরু করা যাবে না।\n`+
-      `নতুন Session শুরু করতে <b>Reset</b> ব্যবহার করুন।`
-    );
+      `নতুন Session শুরু করতে <b>Reset</b> ব্যবহার করুন।`);
     session.conversation = {state:'sessionComplete', data:{}};
     persist();
     setInputEnabled(false, 'Session সম্পন্ন — Reset করুন', null);
     return;
   }
 
-  // 🛡 Zero position
   if(!D.gt(p.remainingQty,'0')){
     toast('⚠️ কোনো PEPE নেই — Sell করা সম্ভব নয়');
     openChat();
     chatBox.innerHTML='';
+    userScrolledUp = false;
     botSay(
       `⚠️ বর্তমানে কোনো PEPE নেই।\n\n`+
       `Total Cost: ${fmtU(p.totalBuyCost)} USDT\n`+
       `Realized P/L: ${fmtU(p.realizedNet)} USDT (${fmtPct(p.realizedPct)})\n`+
       `Target: ${p.targetPct}%\n\n`+
-      `নতুন Sell করতে হলে প্রথমে Buy করুন।`
-    );
+      `নতুন Sell করতে হলে প্রথমে Buy করুন।`);
     session.conversation = {state:'afterBuyFilled', data:{}};
     persist();
     setInputEnabled(true, 'buy / done', [
@@ -1445,9 +1391,9 @@ el('btnSell').onclick = ()=>{
     return;
   }
 
-  // Normal Sell flow
   openChat();
   chatBox.innerHTML='';
+  userScrolledUp = false;
   botSay(`💱 <b>Sell / Record Sell</b>\n\n`+
     `Remaining: <b>${fmtQFull(p.remainingQty)} PEPE</b>\n`+
     `Suggested Sell Target: <span class="hl">${fmtP(p.sellTarget)} USDT</span>\n`+
@@ -1456,9 +1402,9 @@ el('btnSell').onclick = ()=>{
   session.conversation = {state:'askSellPrice', data:{}};
   persist();
   goToState('askSellPrice');
-};
+});
 
-el('btnReset').onclick = ()=>{
+el('btnReset').addEventListener('click', ()=>{
   confirmDialog('সব ডেটা রিসেট করবেন?',
     'বর্তমান Session-এর সব order, holdings, P/L, target এবং conversation মুছে যাবে। এটি আর ফিরিয়ে আনা যাবে না।',
     async ()=>{
@@ -1467,19 +1413,20 @@ el('btnReset').onclick = ()=>{
       orderSeq = 1;
       await persist();
       chatBox.innerHTML='';
+      userScrolledUp = false;
       renderAll();
       startConversation();
       toast('✅ Reset সম্পন্ন — নতুন Session');
     });
-};
+});
 
-el('btnSettings').onclick = ()=>{
+el('btnSettings').addEventListener('click', ()=>{
   el('setMaxInv').value = settings.maxInv||'';
   el('setMaxBuys').value = settings.maxBuys||'';
   el('settingsModal').classList.add('show');
-};
-el('setCancel').onclick=()=>el('settingsModal').classList.remove('show');
-el('setSave').onclick=async ()=>{
+});
+el('setCancel').addEventListener('click', ()=>el('settingsModal').classList.remove('show'));
+el('setSave').addEventListener('click', async ()=>{
   const mi = Number(el('setMaxInv').value)||0;
   const mb = Number(el('setMaxBuys').value)||0;
   settings.maxInv = Math.max(0,mi);
@@ -1488,58 +1435,67 @@ el('setSave').onclick=async ()=>{
   el('settingsModal').classList.remove('show');
   renderDashboard();
   toast('✅ Settings সেভ হয়েছে');
-};
+});
 
-/* ---------- floating chat: open/close/drag ---------- */
+/* ============================================================
+   FLOATING WIDGET — position, drag, keyboard, open/close
+   ============================================================ */
 const fab = el('fab');
 const chatwin = el('chatwin');
-let isOpen=false;
-let dragState=null;
+let isOpen = false;
+let dragState = null;
+let suppressClickUntil = 0;
 
-function openChat(){
-  isOpen=true;
-  chatwin.classList.add('open');
-  fab.classList.remove('has-msg');
-  setTimeout(()=>{ try{input.focus({preventScroll:true});}catch(e){} },250);
+/* ----- persistent FAB position (bottom-right anchored by default) ----- */
+function getViewport(){
+  // Use visualViewport when available (handles mobile browser chrome)
+  const vv = window.visualViewport;
+  return {
+    w: vv ? vv.width  : window.innerWidth,
+    h: vv ? vv.height : window.innerHeight,
+    offsetTop: vv ? vv.offsetTop : 0,
+    offsetLeft: vv ? vv.offsetLeft : 0
+  };
 }
-function closeChat(){
-  isOpen=false;
-  chatwin.classList.remove('open');
-}
-fab.onclick = ()=>{
-  if(dragState && dragState.moved) return;
-  if(isOpen) closeChat(); else openChat();
-};
-el('chatClose').onclick = closeChat;
 
-function getFabPos(){
-  const r = fab.getBoundingClientRect();
-  return {x:r.left, y:r.top};
-}
 function setFabPos(x,y){
-  const w = fab.offsetWidth, h = fab.offsetHeight;
-  const maxX = window.innerWidth - w - 4;
-  const maxY = window.innerHeight - h - 4;
+  const w = fab.offsetWidth || 56, h = fab.offsetHeight || 56;
+  const vp = getViewport();
+  const maxX = vp.w - w - 4;
+  const maxY = vp.h - h - 4;
   x = Math.max(4, Math.min(maxX, x));
   y = Math.max(4, Math.min(maxY, y));
   fab.style.left = x+'px';
-  fab.style.top = y+'px';
+  fab.style.top  = (y + vp.offsetTop)+'px';
   fab.style.right = 'auto';
   fab.style.bottom = 'auto';
 }
-function initFabPosition(){
-  if(fab.style.left) return;
-  const w = fab.offsetWidth||58, h = fab.offsetHeight||58;
-  setFabPos(window.innerWidth - w - 20, window.innerHeight - h - 20);
+
+function resetFabToDefault(){
+  fab.style.left='';
+  fab.style.top='';
+  fab.style.right='20px';
+  fab.style.bottom='calc(20px + var(--safe-bottom))';
 }
+
+function initFabPosition(){
+  // Always anchor bottom-right on load — never restore weird drag position
+  // (requirement: never appear at top / abnormal place after reload)
+  resetFabToDefault();
+}
+
+function saveFabPos(){ /* intentionally no persistence — always bottom-right */ }
+
+/* ----- drag handling ----- */
 function dragStart(e){
+  if(e.button !== undefined && e.button !== 0) return;
   const p = e.touches ? e.touches[0] : e;
-  const pos = getFabPos();
+  const rect = fab.getBoundingClientRect();
   dragState = {
     startX: p.clientX, startY: p.clientY,
-    offX: p.clientX - pos.x,
-    offY: p.clientY - pos.y,
-    moved:false
+    offX: p.clientX - rect.left,
+    offY: p.clientY - rect.top,
+    moved: false
   };
 }
 function dragMove(e){
@@ -1547,15 +1503,32 @@ function dragMove(e){
   const p = e.touches ? e.touches[0] : e;
   const dx = p.clientX - dragState.startX;
   const dy = p.clientY - dragState.startY;
-  if(Math.abs(dx)>4 || Math.abs(dy)>4) dragState.moved = true;
+  if(!dragState.moved && (Math.abs(dx)>5 || Math.abs(dy)>5)){
+    dragState.moved = true;
+    fab.style.transition = 'none';
+  }
   if(dragState.moved){
     if(e.cancelable) e.preventDefault();
-    setFabPos(p.clientX - dragState.offX, p.clientY - dragState.offY);
+    const vp = getViewport();
+    setFabPos(p.clientX - dragState.offX - vp.offsetLeft, p.clientY - dragState.offY - vp.offsetTop);
   }
 }
 function dragEnd(){
   if(!dragState) return;
-  setTimeout(()=>{ dragState=null; }, 50);
+  if(dragState.moved){
+    suppressClickUntil = Date.now() + 350;
+    // Snap back to bottom-right if too close to edge, so it never disappears
+    const rect = fab.getBoundingClientRect();
+    const vp = getViewport();
+    const w = fab.offsetWidth || 56, h = fab.offsetHeight || 56;
+    const margin = 12;
+    if(rect.left < margin || rect.top < margin ||
+       rect.right > vp.w - margin || rect.bottom > vp.h - margin){
+      resetFabToDefault();
+    }
+    fab.style.transition = '';
+  }
+  dragState = null;
 }
 fab.addEventListener('mousedown', dragStart);
 window.addEventListener('mousemove', dragMove);
@@ -1564,13 +1537,118 @@ fab.addEventListener('touchstart', dragStart, {passive:true});
 window.addEventListener('touchmove', dragMove, {passive:false});
 window.addEventListener('touchend', dragEnd);
 window.addEventListener('touchcancel', dragEnd);
-window.addEventListener('resize', ()=>{
-  const p = getFabPos();
-  setFabPos(p.x, p.y);
-  initFabPosition();
+
+/* ----- open / close (single click handler, deduped) ----- */
+function openChat(){
+  if(isOpen) return;
+  isOpen = true;
+  chatwin.classList.add('open');
+  fab.classList.remove('has-msg');
+  // Focus input only after animation
+  setTimeout(()=>{
+    if(input.disabled) return;
+    try{ input.focus({preventScroll:true}); }catch(e){}
+  }, 240);
+}
+function closeChat(){
+  if(!isOpen) return;
+  isOpen = false;
+  chatwin.classList.remove('open');
+  // Blur to dismiss keyboard on mobile
+  try{ if(document.activeElement && chatwin.contains(document.activeElement)) document.activeElement.blur(); }catch(e){}
+}
+fab.addEventListener('click', (e)=>{
+  if(Date.now() < suppressClickUntil){ e.preventDefault(); e.stopPropagation(); return; }
+  if(isOpen) closeChat(); else openChat();
+});
+el('chatClose').addEventListener('click', (e)=>{ e.preventDefault(); e.stopPropagation(); closeChat(); });
+
+/* tap outside chat → close (but never swallow FAB or chat taps) */
+document.addEventListener('pointerdown', (e)=>{
+  if(!isOpen) return;
+  const t = e.target;
+  if(chatwin.contains(t) || fab.contains(t)) return;
+  // don't close when clicking inside a modal
+  if(t.closest && t.closest('.modal.show')) return;
+  closeChat();
+}, {passive:true});
+
+/* Esc closes on desktop */
+document.addEventListener('keydown', (e)=>{
+  if(e.key === 'Escape' && isOpen) closeChat();
 });
 
-/* ---------- PWA icons + manifest ---------- */
+/* ----- resize / orientation / visualViewport handling ----- */
+function onResizeOrViewportChange(){
+  // Keep FAB anchored bottom-right if it has not been manually dragged
+  if(!fab.style.left){ resetFabToDefault(); }
+  else {
+    const rect = fab.getBoundingClientRect();
+    const vp = getViewport();
+    // Clamp if now off-screen
+    if(rect.left < 0 || rect.top < 0 || rect.right > vp.w || rect.bottom > vp.h){
+      resetFabToDefault();
+    }
+  }
+}
+window.addEventListener('resize', onResizeOrViewportChange);
+window.addEventListener('orientationchange', ()=>setTimeout(onResizeOrViewportChange, 120));
+
+/* ----- keyboard handling via visualViewport ----- */
+(function keyboardHandler(){
+  const vv = window.visualViewport;
+  if(!vv) return;
+  let kbOpen = false;
+
+  function apply(){
+    // Detect keyboard open: viewport height significantly less than layout height
+    const layoutH = window.innerHeight;
+    const visualH = vv.height;
+    const diff = layoutH - visualH;
+
+    if(diff > 140){
+      // keyboard is open
+      if(!kbOpen){
+        kbOpen = true;
+        document.body.classList.add('kb-open');
+        document.documentElement.style.setProperty('--kb-height', visualH+'px');
+      } else {
+        document.documentElement.style.setProperty('--kb-height', visualH+'px');
+      }
+      // Ensure input visible
+      if(document.activeElement === input){
+        requestAnimationFrame(()=>{
+          chatBox.scrollTop = chatBox.scrollHeight;
+        });
+      }
+    } else {
+      if(kbOpen){
+        kbOpen = false;
+        document.body.classList.remove('kb-open');
+        document.documentElement.style.removeProperty('--kb-height');
+      }
+    }
+  }
+  vv.addEventListener('resize', apply);
+  vv.addEventListener('scroll', apply);
+  // Also fall back on window resize for browsers without visualViewport events
+  if(!window.visualViewport){
+    window.addEventListener('resize', apply);
+  }
+
+  // When input is focused, make sure it's visible
+  input.addEventListener('focus', ()=>{
+    setTimeout(()=>{
+      if(isOpen){
+        requestAnimationFrame(()=>{ chatBox.scrollTop = chatBox.scrollHeight; });
+      }
+    }, 300);
+  });
+})();
+
+/* ============================================================
+   PWA icons + manifest (unchanged logic)
+   ============================================================ */
 (function buildPWA(){
   const svg=`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
     <rect width="512" height="512" rx="96" fill="#0a0f1e"/>
