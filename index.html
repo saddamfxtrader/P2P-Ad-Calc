@@ -38,7 +38,6 @@ body{background:linear-gradient(180deg,#080c17 0%,#0a0f1e 100%);color:var(--txt)
 .card h2{font-size:14px;font-weight:700;color:var(--txt);margin-bottom:10px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px}
 .card h2 .tag{font-size:10px;font-weight:600;color:var(--mut);background:#0d1626;border:1px solid var(--line);padding:2px 8px;border-radius:20px}
 
-/* price ticker */
 .ticker{display:flex;justify-content:space-between;align-items:center;background:linear-gradient(135deg,#0c1e3a,#0a2a3a);border:1px solid #1e4a6f;border-radius:14px;padding:11px 14px;margin-bottom:14px}
 .ticker .lbl{font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:#7dd3fc;font-weight:700}
 .ticker .price{font-size:19px;font-weight:800;color:#fff;margin-top:2px;letter-spacing:.3px}
@@ -51,7 +50,6 @@ body{background:linear-gradient(180deg,#080c17 0%,#0a0f1e 100%);color:var(--txt)
 .ticker .live.offline .dot{background:var(--neg)}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
 
-/* dashboard */
 .grid{display:grid;grid-template-columns:1fr 1fr;gap:9px}
 .stat{background:var(--panel2);border:1px solid #182338;border-radius:13px;padding:10px 11px}
 .stat .l{font-size:10px;text-transform:uppercase;letter-spacing:.4px;color:var(--mut);font-weight:600}
@@ -96,11 +94,6 @@ body{background:linear-gradient(180deg,#080c17 0%,#0a0f1e 100%);color:var(--txt)
 .toast{position:fixed;left:50%;bottom:120px;transform:translateX(-50%) translateY(30px);background:#0b1a33;color:#fff;border:1px solid #1e3a5f;padding:11px 20px;border-radius:30px;font-size:13px;font-weight:600;box-shadow:0 10px 30px rgba(0,0,0,.5);opacity:0;transition:.3s;z-index:999;pointer-events:none;max-width:88%;text-align:center}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 
-/* ============================================================
-   FLOATING CHAT WIDGET — MOBILE-OPTIMIZED
-   ============================================================ */
-
-/* ---- floating action button ---- */
 .fab{
   position:fixed;z-index:400;
   width:56px;height:56px;border-radius:50%;
@@ -117,15 +110,8 @@ body{background:linear-gradient(180deg,#080c17 0%,#0a0f1e 100%);color:var(--txt)
 .fab .badge-dot{position:absolute;top:1px;right:1px;width:13px;height:13px;border-radius:50%;background:var(--neg);border:2px solid var(--panel);display:none}
 .fab.has-msg .badge-dot{display:block}
 .fab::after{content:'';position:absolute;inset:-4px;border-radius:50%;background:radial-gradient(circle,rgba(37,99,235,.25),transparent 70%);z-index:-1;pointer-events:none}
+.fab.hidden{opacity:0;pointer-events:none;transform:scale(.6)}
 
-/* Hide FAB completely when chat is open */
-.fab.hidden{
-  opacity:0;
-  pointer-events:none;
-  transform:scale(.6);
-}
-
-/* ---- chat window ---- */
 .chatwin{
   position:fixed;z-index:399;
   right:12px;
@@ -147,7 +133,6 @@ body{background:linear-gradient(180deg,#080c17 0%,#0a0f1e 100%);color:var(--txt)
 }
 .chatwin.open{opacity:1;pointer-events:auto;transform:none}
 
-/* header */
 .chatwin header{
   display:flex;align-items:center;justify-content:space-between;
   padding:11px 14px;
@@ -165,8 +150,6 @@ body{background:linear-gradient(180deg,#080c17 0%,#0a0f1e 100%);color:var(--txt)
 .chatwin header .title .nm{font-size:13px;font-weight:700;color:#fff;line-height:1.2}
 .chatwin header .title .st{font-size:10px;color:#7dd3fc;margin-top:1px;line-height:1.2}
 
-
-/* chat area */
 .chatwin .chat{
   flex:1 1 auto;overflow-y:auto;overflow-x:hidden;
   padding:12px;
@@ -199,7 +182,6 @@ body{background:linear-gradient(180deg,#080c17 0%,#0a0f1e 100%);color:var(--txt)
 .msg .bubble .neg{color:var(--neg);font-weight:700}
 .msg .bubble code{background:#0a1424;padding:1px 5px;border-radius:5px;font-size:12px;color:#7dd3fc}
 
-/* dock / input area */
 .chatwin .dock-chat{
   border-top:1px solid var(--line);
   padding:7px 10px calc(8px + var(--safe-bottom));
@@ -249,14 +231,12 @@ body{background:linear-gradient(180deg,#080c17 0%,#0a0f1e 100%);color:var(--txt)
 .chatwin .dock-inner button:active{transform:scale(.9)}
 .chatwin .dock-inner button:disabled{opacity:.4;cursor:not-allowed}
 
-/* keyboard-open state */
 body.kb-open .chatwin{
   bottom:calc(8px + var(--safe-bottom));
   height:calc(var(--kb-height,60vh) - 16px);
   max-height:calc(var(--kb-height,60vh) - 16px);
 }
 
-/* modal */
 .modal{position:fixed;inset:0;background:rgba(3,6,14,.82);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;padding:20px;z-index:600;opacity:0;pointer-events:none;transition:.25s}
 .modal.show{opacity:1;pointer-events:auto}
 .modal-box{background:var(--panel);border:1px solid #22304e;border-radius:20px;padding:22px 18px;max-width:420px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,.6);transform:scale(.92);transition:.25s}
@@ -269,6 +249,7 @@ body.kb-open .chatwin{
 .modal-box .actions button{flex:1;padding:11px;border-radius:12px;border:none;font-weight:700;font-size:13px;cursor:pointer}
 .modal-box .actions .cancel{background:#1a2438;color:#93b4e0}
 .modal-box .actions .ok{background:linear-gradient(135deg,#2563eb,#0891b2);color:#fff}
+.modal-box .hint{font-size:11px;color:#5c7299;margin-top:-6px;margin-bottom:10px}
 
 @media(max-width:420px){
   .grid{grid-template-columns:1fr}
@@ -285,8 +266,6 @@ body.kb-open .chatwin{
   .row button{font-size:12px;padding:10px 8px}
   .msg .bubble{font-size:12.5px;padding:8px 11px}
 }
-
-/* landscape phones */
 @media (max-height:500px) and (orientation:landscape){
   .chatwin{
     right:8px;left:auto;
@@ -331,9 +310,9 @@ body.kb-open .chatwin{
       <div class="stat"><div class="l">Weighted Avg Buy</div><div class="v" id="sWap">—</div></div>
       <div class="stat"><div class="l">Break-even</div><div class="v" id="sBe">—</div></div>
       <div class="stat"><div class="l">Unrealized P/L</div><div class="v" id="sUpl">—</div></div>
-      <div class="stat"><div class="l">Realized Net P/L</div><div class="v" id="sRpl">0.00</div></div>
+      <div class="stat"><div class="l">Realized P/L (gross)</div><div class="v" id="sRpl">0.00</div></div>
       <div class="stat"><div class="l">Target Profit %</div><div class="v" id="sTargetPct">0%</div></div>
-      <div class="stat"><div class="l">Realized P/L %</div><div class="v" id="sRplPct">0%</div></div>
+      <div class="stat"><div class="l">Realized % (on sold basis)</div><div class="v" id="sRplPct">0%</div></div>
       <div class="stat wide">
         <div class="l">Recovery Progress</div>
         <div class="v" id="sRecovery">—</div>
@@ -356,7 +335,6 @@ body.kb-open .chatwin{
   </div>
 </div>
 
-<!-- Floating Chat -->
 <button class="fab" id="fab" aria-label="Trading Assistant">
   💬<span class="badge-dot"></span>
 </button>
@@ -383,6 +361,7 @@ body.kb-open .chatwin{
 
 <div class="toast" id="toast"></div>
 
+<!-- Settings modal -->
 <div class="modal" id="settingsModal">
   <div class="modal-box">
     <h3>⚙ Risk & Settings</h3>
@@ -391,6 +370,8 @@ body.kb-open .chatwin{
     <input id="setMaxInv" type="number" min="0" step="0.01" placeholder="0 = unlimited">
     <label>Max Buy Orders (0 = unlimited)</label>
     <input id="setMaxBuys" type="number" min="0" step="1" placeholder="0 = unlimited">
+    <label>Fee per Sell (% of proceeds)</label>
+    <input id="setFee" type="number" min="0" step="0.01" placeholder="e.g. 0.1">
     <div class="actions">
       <button class="cancel" id="setCancel">বাতিল</button>
       <button class="ok" id="setSave">সেভ</button>
@@ -398,6 +379,7 @@ body.kb-open .chatwin{
   </div>
 </div>
 
+<!-- Confirm modal -->
 <div class="modal" id="confirmModal">
   <div class="modal-box">
     <h3 id="cfTitle">নিশ্চিত করুন</h3>
@@ -409,51 +391,62 @@ body.kb-open .chatwin{
   </div>
 </div>
 
+<!-- Partial-fill / actual-fill modal -->
+<div class="modal" id="fillModal">
+  <div class="modal-box">
+    <h3 id="fmTitle">Fill Order</h3>
+    <p id="fmInfo" style="font-size:12px;color:#93b4e0"></p>
+    <label>Actual filled PEPE quantity</label>
+    <input id="fmQty" type="number" min="0" step="any" inputmode="decimal" placeholder="e.g. 6000000">
+    <div class="hint" id="fmQtyHint"></div>
+    <label>Actual USDT (spent for buy / received for sell)</label>
+    <input id="fmUsdt" type="number" min="0" step="any" inputmode="decimal" placeholder="e.g. 60">
+    <div class="hint" id="fmUsdtHint"></div>
+    <div class="actions">
+      <button class="cancel" id="fmCancel">বাতিল</button>
+      <button class="ok" id="fmSave">✅ Fill</button>
+    </div>
+  </div>
+</div>
+
 <script>
 /* =====================================================================
-   PEPE Smart Trader — v5
-   Changes in this version:
-     - Chat messages persist across reload / page close (IndexedDB + LS)
-     - Reset clears chat history too
-     - Floating FAB hides while chat window is open (returns on close)
-     - All trading logic unchanged
+   PEPE Smart Trader — v7 (ledger + partial-fill modal + UUID + PWA)
+   All prior v6 fixes retained. New in v7:
+     (ক) Dashboard fill -> modal for actual qty/USDT (partial-ready)
+     (খ) Session sequence auto-increment + short unique session code
+     (গ) Real sw.js (same-origin) - register 'sw.js'
    ===================================================================== */
 (function(){
 'use strict';
 
-/* ---------- Decimal precision engine (BigInt) ---------- */
+/* ---------------- Decimal engine ---------------- */
 const D = {
-  mul(a,b){
-    const A=dp(a),B=dp(b);
-    const ia=BigInt(A.i+A.f),ib=BigInt(B.i+B.f);
-    return fmtScaled(ia*ib, A.d+B.d);
-  },
+  mul(a,b){ const A=dp(a),B=dp(b); return fmtScaled(BigInt(A.i+A.f)*BigInt(B.i+B.f), A.d+B.d); },
   div(a,b,dp_=18){
     const A=dp(a),B=dp(b);
-    if(B.i==='0'&&!B.f.replace(/0/g,'')) return '0';
-    const ia=BigInt(A.i+A.f),ib=BigInt(B.i+B.f);
-    const num=ia*(10n**BigInt(B.d+dp_));
-    const den=ib*(10n**BigInt(A.d));
+    if(B.i==='0'&&!B.f) return '0';
+    const num=BigInt(A.i+A.f)*(10n**BigInt(B.d+dp_));
+    const den=BigInt(B.i+B.f)*(10n**BigInt(A.d));
     return fmtScaled(num/den, dp_);
   },
   add(a,b){
-    const A=dp(a),B=dp(b);
-    const dpv=Math.max(A.d,B.d);
-    const ia=BigInt(A.i+A.f)*(10n**BigInt(dpv-A.d));
-    const ib=BigInt(B.i+B.f)*(10n**BigInt(dpv-B.d));
-    return fmtScaled(ia+ib, dpv);
+    const A=dp(a),B=dp(b); const dpv=Math.max(A.d,B.d);
+    return fmtScaled(BigInt(A.i+A.f)*(10n**BigInt(dpv-A.d))+BigInt(B.i+B.f)*(10n**BigInt(dpv-B.d)), dpv);
   },
   sub(a,b){ return D.add(a,D.neg(b)); },
   neg(a){ if(!a||a==='0') return '0'; return a.startsWith('-')?a.slice(1):'-'+a; },
   cmp(a,b){
-    const A=dp(a),B=dp(b);
-    const dpv=Math.max(A.d,B.d,0);
+    const A=dp(a),B=dp(b); const dpv=Math.max(A.d,B.d,0);
     const ia=BigInt(A.i+A.f)*(10n**BigInt(dpv-A.d));
     const ib=BigInt(B.i+B.f)*(10n**BigInt(dpv-B.d));
     return ia<ib?-1:ia>ib?1:0;
   },
   gt(a,b){return D.cmp(a,b)>0;},
-  lt(a,b){return D.cmp(a,b)<0;}
+  lt(a,b){return D.cmp(a,b)<0;},
+  gte(a,b){return D.cmp(a,b)>=0;},
+  isZero(a){ return D.cmp(a,'0')===0; },
+  abs(a){ return a.startsWith('-')?a.slice(1):a; }
 };
 function dp(s){
   s=String(s==null?'0':s).trim();
@@ -474,11 +467,10 @@ function fmtScaled(big, scale){
   let i=s.slice(0,s.length-scale);
   let f=s.slice(s.length-scale).replace(/0+$/,'');
   let out=(neg?'-':'')+i+(f?'.'+f:'');
-  if(out==='-0') return '0';
-  return out;
+  return out==='-0'?'0':out;
 }
 
-/* ---------- formatters ---------- */
+/* ---------------- formatters ---------------- */
 function n(x){ const v=Number(x); return isFinite(v)?v:0; }
 function fmtU(x,dp_=2){
   const v=n(x);
@@ -488,8 +480,7 @@ function fmtU(x,dp_=2){
 function fmtP(x){
   const v=n(x);
   if(!v) return '—';
-  const fixed=v.toFixed(11);
-  return fixed.replace(/0+$/,'').replace(/\.$/,'');
+  return v.toFixed(11).replace(/0+$/,'').replace(/\.$/,'');
 }
 function fmtQ(x){
   const v=n(x);
@@ -503,166 +494,142 @@ function fmtQFull(x){
 }
 function fmtPct(x){ const v=n(x); return (v>=0?'+':'')+v.toFixed(2)+'%'; }
 
-/* ---------- Binance live market ---------- */
+/* ---------------- Binance live ---------------- */
 const BINANCE_PRICE='https://api.binance.com/api/v3/ticker/price?symbol=PEPEUSDT';
 const BINANCE_EXINFO='https://api.binance.com/api/v3/exchangeInfo?symbol=PEPEUSDT';
-const market = { price:null, ts:0, tickSize:null, stepSize:null, status:'init', failCount:0 };
+const market = { price:null, ts:0, tickSize:null, stepSize:null, minQty:null, minNotional:null, status:'init', failCount:0 };
 
 async function fetchLivePrice(){
   try{
-    const ctrl = new AbortController();
-    const t = setTimeout(()=>ctrl.abort(), 8000);
-    const res = await fetch(BINANCE_PRICE, {signal:ctrl.signal, cache:'no-store'});
-    clearTimeout(t);
+    const ctrl=new AbortController(); const t=setTimeout(()=>ctrl.abort(),8000);
+    const res=await fetch(BINANCE_PRICE,{signal:ctrl.signal,cache:'no-store'}); clearTimeout(t);
     if(!res.ok) throw new Error('HTTP '+res.status);
-    const json = await res.json();
-    if(!json || !json.price) throw new Error('no price');
-    market.price = String(json.price);
-    market.ts = Date.now();
-    market.status = 'live';
-    market.failCount = 0;
+    const j=await res.json(); if(!j||!j.price) throw new Error('no price');
+    market.price=String(j.price); market.ts=Date.now(); market.status='live'; market.failCount=0;
   }catch(e){
     market.failCount++;
-    if(market.price && Date.now()-market.ts < 5*60*1000){ market.status = 'stale'; }
-    else{ market.status = 'offline'; }
+    if(market.price && Date.now()-market.ts<5*60*1000) market.status='stale';
+    else market.status='offline';
   }
-  renderTicker();
-  renderDashboard();
+  renderTicker(); renderDashboard();
 }
 async function fetchExchangeInfo(){
   try{
-    const res = await fetch(BINANCE_EXINFO, {cache:'no-store'});
-    if(!res.ok) return;
-    const j = await res.json();
-    const sym = j.symbols && j.symbols[0];
-    if(!sym) return;
-    const f = (sym.filters||[]).find(x=>x.filterType==='PRICE_FILTER');
-    if(f && f.tickSize) market.tickSize = f.tickSize;
-    const lf = (sym.filters||[]).find(x=>x.filterType==='LOT_SIZE');
-    if(lf && lf.stepSize) market.stepSize = lf.stepSize;
+    const res=await fetch(BINANCE_EXINFO,{cache:'no-store'}); if(!res.ok) return;
+    const j=await res.json(); const sym=j.symbols&&j.symbols[0]; if(!sym) return;
+    const pf=(sym.filters||[]).find(x=>x.filterType==='PRICE_FILTER');
+    if(pf&&pf.tickSize) market.tickSize=pf.tickSize;
+    const lf=(sym.filters||[]).find(x=>x.filterType==='LOT_SIZE');
+    if(lf&&lf.stepSize) market.stepSize=lf.stepSize;
+    if(lf&&lf.minQty) market.minQty=lf.minQty;
+    const nf=(sym.filters||[]).find(x=>x.filterType==='NOTIONAL'||x.filterType==='MIN_NOTIONAL');
+    if(nf&&(nf.minNotional||nf.notional)) market.minNotional=nf.minNotional||nf.notional;
   }catch(e){}
 }
 function renderTicker(){
-  const elP=document.getElementById('livePrice');
-  const elM=document.getElementById('liveMeta');
-  const elS=document.getElementById('liveStatus');
-  const elT=document.getElementById('liveTxt');
-  if(market.price){ elP.textContent = fmtP(market.price)+' USDT'; }
-  else{ elP.textContent = '— USDT'; }
-  if(market.status==='live'){
-    elS.className='live'; elT.textContent='LIVE';
-    elM.textContent = 'Binance · '+new Date(market.ts).toLocaleTimeString();
-  }else if(market.status==='stale'){
-    elS.className='live stale'; elT.textContent='STALE';
-    const age = Math.round((Date.now()-market.ts)/1000);
-    elM.textContent = 'সর্বশেষ: '+new Date(market.ts).toLocaleTimeString()+' ('+age+'s আগে)';
-  }else if(market.status==='offline'){
-    elS.className='live offline'; elT.textContent='OFFLINE';
-    elM.textContent = 'Binance থেকে price পাওয়া যাচ্ছে না';
-  }else{ elM.textContent = 'সংযোগ স্থাপন হচ্ছে…'; }
+  const elP=document.getElementById('livePrice'), elM=document.getElementById('liveMeta');
+  const elS=document.getElementById('liveStatus'), elT=document.getElementById('liveTxt');
+  elP.textContent = market.price? fmtP(market.price)+' USDT' : '— USDT';
+  if(market.status==='live'){ elS.className='live'; elT.textContent='LIVE'; elM.textContent='Binance · '+new Date(market.ts).toLocaleTimeString(); }
+  else if(market.status==='stale'){ elS.className='live stale'; elT.textContent='STALE'; elM.textContent='সর্বশেষ: '+new Date(market.ts).toLocaleTimeString()+' ('+Math.round((Date.now()-market.ts)/1000)+'s আগে)'; }
+  else if(market.status==='offline'){ elS.className='live offline'; elT.textContent='OFFLINE'; elM.textContent='Binance থেকে price পাওয়া যাচ্ছে না'; }
+  else{ elM.textContent='সংযোগ স্থাপন হচ্ছে…'; }
 }
 
-/* ---------- persistent storage (IndexedDB w/ LS fallback) ---------- */
-const DB_NAME='pepeSmartTrader';
-const DB_VER=1;
-const STORE='kv';
-let dbReady=null;
+/* ---------------- rounding helpers ---------------- */
+function roundToStep(val, step, mode){
+  if(!step) return String(val);
+  try{
+    const v=n(val), s=n(step);
+    if(!s) return String(val);
+    const q = mode==='floor' ? Math.floor(v/s) : Math.round(v/s);
+    const out = (q*s);
+    const dec = (String(step).split('.')[1]||'').length;
+    return out.toFixed(dec);
+  }catch(e){ return String(val); }
+}
+function floorQty(val){ return roundToStep(val, market.stepSize, 'floor'); }
+function roundPrice(val){ return roundToStep(val, market.tickSize, 'round'); }
 
+/* ---------------- storage (serial queue) ---------------- */
+const DB_NAME='pepeSmartTrader', DB_VER=1, STORE='kv';
+let dbReady=null;
 function openDB(){
   return new Promise((resolve)=>{
     if(!('indexedDB' in window)) return resolve(null);
-    const req = indexedDB.open(DB_NAME, DB_VER);
-    req.onupgradeneeded = ()=>{ const db=req.result; if(!db.objectStoreNames.contains(STORE)) db.createObjectStore(STORE); };
-    req.onsuccess = ()=>resolve(req.result);
-    req.onerror = ()=>resolve(null);
+    const req=indexedDB.open(DB_NAME,DB_VER);
+    req.onupgradeneeded=()=>{const db=req.result;if(!db.objectStoreNames.contains(STORE))db.createObjectStore(STORE);};
+    req.onsuccess=()=>resolve(req.result);
+    req.onerror=()=>resolve(null);
   });
 }
-function idbGet(db,key){
-  return new Promise((resolve)=>{
-    try{
-      const tx=db.transaction(STORE,'readonly');
-      const r=tx.objectStore(STORE).get(key);
-      r.onsuccess=()=>resolve(r.result);
-      r.onerror=()=>resolve(null);
-    }catch(e){resolve(null);}
-  });
-}
-function idbSet(db,key,val){
-  return new Promise((resolve)=>{
-    try{
-      const tx=db.transaction(STORE,'readwrite');
-      tx.objectStore(STORE).put(val,key);
-      tx.oncomplete=()=>resolve(true);
-      tx.onerror=()=>resolve(false);
-    }catch(e){resolve(false);}
-  });
-}
-function idbDel(db,key){
-  return new Promise((resolve)=>{
-    try{
-      const tx=db.transaction(STORE,'readwrite');
-      tx.objectStore(STORE).delete(key);
-      tx.oncomplete=()=>resolve(true);
-    }catch(e){resolve(false);}
-  });
-}
+function idbGet(db,key){ return new Promise(r=>{try{const tx=db.transaction(STORE,'readonly');const q=tx.objectStore(STORE).get(key);q.onsuccess=()=>r(q.result);q.onerror=()=>r(null);}catch(e){r(null);}}); }
+function idbSet(db,key,val){ return new Promise(r=>{try{const tx=db.transaction(STORE,'readwrite');tx.objectStore(STORE).put(val,key);tx.oncomplete=()=>r(true);tx.onerror=()=>r(false);}catch(e){r(false);}}); }
+function idbDel(db,key){ return new Promise(r=>{try{const tx=db.transaction(STORE,'readwrite');tx.objectStore(STORE).delete(key);tx.oncomplete=()=>r(true);}catch(e){r(false);}}); }
 
-const LS_PREFIX='pepe_v2_';
+const LS_PREFIX='pepe_v4_';
+let writeChain = Promise.resolve();
+function enqueueWrite(fn){
+  writeChain = writeChain.then(fn).catch(()=>{});
+  return writeChain;
+}
 const store = {
   async get(key, fallback){
-    if(dbReady){
-      const db=await dbReady;
-      if(db){ const v = await idbGet(db, key); if(v !== undefined && v !== null) return v; }
-    }
-    try{ const raw = localStorage.getItem(LS_PREFIX+key); return raw ? JSON.parse(raw) : fallback; }catch(e){ return fallback; }
+    if(dbReady){ const db=await dbReady; if(db){ const v=await idbGet(db,key); if(v!==undefined && v!==null) return v; } }
+    try{ const raw=localStorage.getItem(LS_PREFIX+key); return raw?JSON.parse(raw):fallback; }catch(e){ return fallback; }
   },
-  async set(key, val){
-    let ok=false;
-    if(dbReady){ const db=await dbReady; if(db) ok = await idbSet(db,key,val); }
-    try{ localStorage.setItem(LS_PREFIX+key, JSON.stringify(val)); ok=true; }catch(e){}
-    return ok;
+  set(key,val){
+    return enqueueWrite(async ()=>{
+      let ok=false;
+      if(dbReady){ const db=await dbReady; if(db) ok=await idbSet(db,key,val); }
+      try{ localStorage.setItem(LS_PREFIX+key,JSON.stringify(val)); ok=true; }catch(e){}
+      return ok;
+    });
   },
-  async del(key){
-    if(dbReady){ const db=await dbReady; if(db) await idbDel(db,key); }
-    try{ localStorage.removeItem(LS_PREFIX+key); }catch(e){}
+  del(key){
+    return enqueueWrite(async ()=>{
+      if(dbReady){ const db=await dbReady; if(db) await idbDel(db,key); }
+      try{ localStorage.removeItem(LS_PREFIX+key); }catch(e){}
+    });
   }
 };
 
-/* ---------- chat message history (persisted) ----------
-   Stored separately from `session` so the trading state machine is
-   untouched. Reset clears this key. Each entry: {who:'bot'|'user', html, ts}
-   Note: for user messages we store the escaped text so reload reproduces
-   exactly the same rendering.
-------------------------------------------------------------- */
-let chatHistory = [];         // in-memory mirror
+/* ---------------- chat history ---------------- */
+let chatHistory = [];
 const CHAT_KEY = 'chatHistory';
 
-async function persistChat(){
-  try{ await store.set(CHAT_KEY, chatHistory); }catch(e){}
-}
-async function loadChat(){
-  const arr = await store.get(CHAT_KEY, []);
-  chatHistory = Array.isArray(arr) ? arr : [];
-}
-async function clearChat(){
-  chatHistory = [];
-  await store.del(CHAT_KEY);
-}
+async function persistChat(){ try{ await store.set(CHAT_KEY, chatHistory); }catch(e){} }
+async function loadChat(){ const arr=await store.get(CHAT_KEY,[]); chatHistory=Array.isArray(arr)?arr:[]; }
+async function clearChat(){ chatHistory=[]; await store.del(CHAT_KEY); }
 
-/* ---------- session model ---------- */
+/* ---------------- session model (v7: seq + short code) ---------------- */
 let session = null;
-let settings = { maxInv: 0, maxBuys: 0 };
+let settings = { maxInv:0, maxBuys:0, feePct:0 };
 let orderSeq = 1;
 
-function newSession(id){ return { id: id||1, startTs: Date.now(), targetPct:'0', orders:[], conversation:{state:'askBuyPrice', data:{}} }; }
-async function persist(){ try{ await store.set('session', session); await store.set('settings', settings); }catch(e){} }
+function shortCode(seq){
+  // deterministic-ish 6-char code from sequence + timestamp
+  const base = (Number(seq)||1)*2654435761 + (Date.now()&0xffff);
+  const hex = (base>>>0).toString(16).padStart(8,'0');
+  return hex.slice(0,6);
+}
+function newSession(seq, code){
+  const s = (seq==null) ? 1 : Number(seq)||1;
+  const c = code || shortCode(s);
+  return { id:s, code:c, startTs:Date.now(), targetPct:'0', orders:[], conversation:{state:'askBuyPrice', data:{}} };
+}
+function persist(){ return store.set('session', session).then(()=>store.set('settings', settings)); }
 
 async function loadAll(){
   dbReady = openDB();
   let s = await store.get('session', null);
-  if(s && s.id && Array.isArray(s.orders)){ session = s; } else { session = newSession(1); }
+  if(s && s.id && Array.isArray(s.orders)){
+    // backfill code for older sessions
+    if(!s.code) s.code = shortCode(s.id);
+    session = s;
+  } else session = newSession(1);
   const st = await store.get('settings', null);
-  if(st && typeof st==='object') settings = Object.assign({maxInv:0,maxBuys:0}, st);
+  if(st && typeof st==='object') settings = Object.assign({maxInv:0,maxBuys:0,feePct:0}, st);
   let maxId=0;
   for(const o of session.orders){
     const num = parseInt(String(o.id).replace(/\D/g,''),10);
@@ -670,67 +637,92 @@ async function loadAll(){
   }
   orderSeq = maxId+1;
   if(!session.conversation) session.conversation = {state:'askBuyPrice', data:{}};
+
   const sellStates=['askSellPrice','askSellQty','confirmSell','afterSellPending'];
   if(session.conversation && sellStates.includes(session.conversation.state)){
     const p = computePosition();
-    if(!D.gt(p.remainingQty,'0') || sessionTargetHit()){ session.conversation = {state:'afterBuyFilled', data:{}}; }
+    if(!D.gt(p.remainingQty,'0') || sessionTargetHit()){
+      session.conversation = {state:'afterBuyFilled', data:{}};
+    }
   }
-  if(session.conversation && session.conversation.state==='sessionComplete' && !sessionTargetHit()){
-    session.conversation = {state:'afterBuyFilled', data:{}};
+  const pend = session.orders.find(o=>o.status==='pending');
+  if(pend && !['afterPending','afterSellPending'].includes(session.conversation.state)){
+    session.conversation = { state: pend.side==='buy'?'afterPending':'afterSellPending', data:{ pendingOrderId: pend.id } };
   }
+
   await loadChat();
 }
 
-/* ---------- financial engine ---------- */
+/* ---------------- financial engine (LEDGER, same as v6) ---------------- */
 function computePosition(){
-  const buys = session.orders.filter(o=>o.side==='buy' && (o.status==='filled'||o.status==='partial'));
-  const sells= session.orders.filter(o=>o.side==='sell'&& (o.status==='filled'||o.status==='partial'));
+  const buys  = session.orders.filter(o=>o.side==='buy'  && (o.status==='filled'||o.status==='partial'));
+  const sells = session.orders.filter(o=>o.side==='sell' && (o.status==='filled'||o.status==='partial'));
   let totalBuyCost='0', totalBuyQty='0';
   let totalSellProceeds='0', totalSellQty='0';
-  for(const b of buys){ totalBuyCost = D.add(totalBuyCost, b.filledUsdt||'0'); totalBuyQty = D.add(totalBuyQty, b.filledQty||'0'); }
-  for(const s of sells){ totalSellProceeds = D.add(totalSellProceeds, s.filledUsdt||'0'); totalSellQty = D.add(totalSellQty, s.filledQty||'0'); }
+  for(const b of buys ){ totalBuyCost     = D.add(totalBuyCost,     b.filledUsdt||'0'); totalBuyQty     = D.add(totalBuyQty,     b.filledQty||'0'); }
+  for(const s of sells){ totalSellProceeds= D.add(totalSellProceeds,s.filledUsdt||'0'); totalSellQty    = D.add(totalSellQty,    s.filledQty||'0'); }
   let remainingQty = D.sub(totalBuyQty, totalSellQty);
   if(D.lt(remainingQty,'0')) remainingQty='0';
+
   const avgBuy = D.gt(totalBuyQty,'0') ? D.div(totalBuyCost, totalBuyQty, 18) : '0';
   const realizedCostOfSold = D.mul(totalSellQty, avgBuy);
-  const realizedNet = D.sub(totalSellProceeds, realizedCostOfSold);
-  const realizedPct = D.gt(totalBuyCost,'0') ? D.mul(D.div(realizedNet,totalBuyCost,18),'100') : '0';
+  const realizedGross = D.sub(totalSellProceeds, realizedCostOfSold);
+  const realizedPct_onSold = D.gt(realizedCostOfSold,'0') ? D.mul(D.div(realizedGross,realizedCostOfSold,18),'100') : '0';
+  const sessionReturnPct   = D.gt(totalBuyCost,'0') ? D.mul(D.div(realizedGross,totalBuyCost,18),'100') : '0';
+
   const remainingBasis = D.sub(totalBuyCost, realizedCostOfSold);
   const breakEven = D.gt(remainingQty,'0') ? D.div(remainingBasis, remainingQty, 18) : '0';
+
+  const feePct = String(settings.feePct||0);
+  const feeEstimate = D.mul(totalSellProceeds, D.div(feePct,'100',18));
+  const realizedNet = D.sub(realizedGross, feeEstimate);
+
   const targetPct = session.targetPct || '0';
   const targetReturnTotal = D.mul(totalBuyCost, D.add('1', D.div(targetPct,'100',18)));
   const neededProceeds = D.sub(targetReturnTotal, totalSellProceeds);
-  const sellTarget = D.gt(remainingQty,'0') ? D.div(neededProceeds, remainingQty, 18) : '0';
+  let sellTarget='0', targetSecured=false;
+  if(D.gt(remainingQty,'0')){
+    if(D.lt(neededProceeds,'0')){ targetSecured=true; sellTarget='0'; }
+    else sellTarget = D.div(neededProceeds, remainingQty, 18);
+  } else if(!D.gt(neededProceeds,'0')){ targetSecured=true; }
+
   const progress = D.gt(targetReturnTotal,'0')
     ? Math.max(0, Math.min(100, n(D.div(D.mul(totalSellProceeds,'100'), targetReturnTotal, 8))))
     : 0;
+
   let unrealized='0', hasPrice=false;
   if(market.price && D.gt(remainingQty,'0')){
     hasPrice=true;
     const mktVal = D.mul(remainingQty, market.price);
     unrealized = D.sub(mktVal, remainingBasis);
   }
-  return { totalBuyCost, totalBuyQty, totalSellProceeds, totalSellQty, remainingQty, avgBuy, breakEven,
-    realizedNet, realizedPct, realizedCostOfSold, remainingBasis, targetPct, targetReturnTotal,
-    neededProceeds, sellTarget, progress, unrealized, hasPrice };
+
+  return {
+    totalBuyCost, totalBuyQty, totalSellProceeds, totalSellQty,
+    remainingQty, avgBuy, breakEven,
+    realizedCostOfSold, realizedGross, realizedNet, feeEstimate,
+    realizedPct_onSold, sessionReturnPct,
+    remainingBasis, targetPct, targetReturnTotal,
+    neededProceeds, sellTarget, targetSecured, progress, unrealized, hasPrice
+  };
 }
 
 function sessionTargetHit(){
   const p = computePosition();
   if(D.lt(p.totalBuyCost,'0.00000001')) return false;
-  return n(p.realizedPct) >= n(p.targetPct) - 0.001 && !D.gt(p.remainingQty,'0');
+  return n(p.sessionReturnPct) >= n(p.targetPct) - 0.001 && !D.gt(p.remainingQty,'0');
 }
 
 function getTradeState(){
   const p = computePosition();
   const hasPending = session.orders.some(o=>o.status==='pending');
-  const hasBuyCost  = D.gt(p.totalBuyCost,'0');
-  const hasRemaining= D.gt(p.remainingQty,'0');
+  const hasBuyCost = D.gt(p.totalBuyCost,'0');
+  const hasRemaining = D.gt(p.remainingQty,'0');
   const hasFilledSell = session.orders.some(o=>o.side==='sell'&&(o.status==='filled'||o.status==='partial'));
   if(!hasBuyCost && !hasPending) return {kind:'empty', p};
   if(hasPending) return {kind:'pending', p};
   if(sessionTargetHit()) return {kind:'targetHit', p};
-  if(!hasRemaining && hasBuyCost && hasFilledSell && n(p.realizedPct) < n(p.targetPct)) return {kind:'zeroNoTarget', p};
+  if(!hasRemaining && hasBuyCost && hasFilledSell && n(p.sessionReturnPct) < n(p.targetPct)) return {kind:'zeroNoTarget', p};
   if(hasRemaining) return {kind:'inPosition', p};
   return {kind:'inPosition', p};
 }
@@ -744,26 +736,74 @@ function sellBlocked(){
 
 function nextOrderId(){ return 'O'+(orderSeq++); }
 function pushOrder(order){ session.orders.push(order); persist(); renderAll(); }
-function fillOrder(id){
+
+function fillOrder(id, actualQty, actualUsdt){
   const o = session.orders.find(x=>x.id===id);
-  if(!o || o.status==='filled' || o.status==='cancelled') return;
-  o.status='filled'; o.filledUsdt = o.usdt; o.filledQty = o.qty; o.fillPrice = o.price;
-  persist(); renderAll(); toast('✅ Order filled');
+  if(!o || o.status==='filled' || o.status==='cancelled') return false;
+  const fq = actualQty ? String(actualQty) : o.qty;
+  const fu = actualUsdt ? String(actualUsdt) : o.usdt;
+  o.filledQty = fq;
+  o.filledUsdt = fu;
+  o.fillPrice = (n(fq)>0) ? D.div(fu, fq, 18) : o.price;
+  o.status = (n(fq) >= n(o.qty) - 1e-12) ? 'filled' : 'partial';
+  persist(); renderAll();
+  syncConversationAfterOrderAction(id, 'filled');
+  toast(o.status==='partial'?'✅ Partial fill recorded':'✅ Order filled');
+  return true;
 }
 function cancelOrder(id){
   const o = session.orders.find(x=>x.id===id);
-  if(!o || o.status==='filled') return;
-  o.status='cancelled'; persist(); renderAll(); toast('Order cancelled');
+  if(!o || o.status==='filled') return false;
+  o.status='cancelled'; persist(); renderAll();
+  syncConversationAfterOrderAction(id, 'cancelled');
+  toast('Order cancelled');
+  return true;
+}
+function syncConversationAfterOrderAction(orderId, action){
+  const conv = session.conversation;
+  const isPendingState = conv && ['afterPending','afterSellPending'].includes(conv.state);
+  if(!isPendingState) return;
+  const matchId = conv && conv.data && conv.data.pendingOrderId;
+  if(matchId && matchId !== orderId) return;
+  const o = session.orders.find(x=>x.id===orderId);
+  if(!o) return;
+  if(action==='filled'){
+    goToState(o.side==='buy' ? 'afterBuyFilled' : 'afterSellFilled');
+  } else {
+    goToState(o.side==='buy' ? 'askBuyPrice' : 'afterBuyFilled');
+  }
 }
 
-/* ---------- DOM refs ---------- */
+/* ---------------- DOM ---------------- */
 const el = id => document.getElementById(id);
-const chatBox = el('chat');
-const input = el('chatInput');
-const sendBtn = el('sendBtn');
-const quickBox = el('quickBtns');
+const chatBox = el('chat'), input = el('chatInput'), sendBtn = el('sendBtn'), quickBox = el('quickBtns');
 
-/* ---------- conversation states ---------- */
+/* ---------------- Sanitizer ---------------- */
+const ALLOWED_TAGS = new Set(['B','I','BR','CODE','SPAN','DIV','SMALL','EM','STRONG']);
+const ALLOWED_CLASS = new Set(['hl','pos','neg','gold','mut','warn','danger-msg']);
+function sanitizeHTML(html){
+  const tpl = document.createElement('template');
+  tpl.innerHTML = String(html);
+  const walk = (node)=>{
+    for(const child of Array.from(node.childNodes)){
+      if(child.nodeType===1){
+        const tag = child.tagName;
+        if(!ALLOWED_TAGS.has(tag)){ child.replaceWith(document.createTextNode(child.textContent||'')); continue; }
+        for(const attr of Array.from(child.attributes)){
+          if(attr.name==='class'){
+            const cls = attr.value.split(/\s+/).filter(c=>ALLOWED_CLASS.has(c)).join(' ');
+            if(cls) child.setAttribute('class',cls); else child.removeAttribute('class');
+          } else child.removeAttribute(attr.name);
+        }
+        walk(child);
+      } else if(child.nodeType===8){ child.remove(); }
+    }
+  };
+  walk(tpl.content);
+  return tpl.innerHTML;
+}
+
+/* ---------------- conversation states ---------------- */
 const STATES = {
   askBuyPrice: {
     field:'buyPrice',
@@ -773,8 +813,10 @@ const STATES = {
     },
     placeholder:'Buy limit price (USDT)',
     validate:(v)=>{
-      const x = parsePEPEPrice(v);
+      let x = parsePEPEPrice(v);
       if(x===null) return {ok:false,msg:'সঠিক price দিন, যেমন 0.00000680'};
+      x = roundPrice(x);
+      if(n(x)<=0) return {ok:false,msg:'tick size-এ round করার পর price 0 হয়ে গেছে'};
       return {ok:true,value:x};
     },
     next:'askInvest'
@@ -786,6 +828,11 @@ const STATES = {
     validate:(v)=>{
       const x=parseUSDT(v);
       if(x===null || n(x)<=0) return {ok:false,msg:'0-এর বেশি USDT দিন'};
+      const qty = floorQty(D.div(x, session.conversation.data.buyPrice||'1', 18));
+      if(D.lt(qty,'0.00000001') || (market.minQty && D.lt(qty,market.minQty)))
+        return {ok:false,msg:'Binance minimum quantity-এর চেয়ে ছোট'};
+      if(market.minNotional && D.lt(x, market.minNotional))
+        return {ok:false,msg:'Binance minimum notional-এর চেয়ে ছোট ('+market.minNotional+' USDT)'};
       return {ok:true,value:x};
     },
     next:(v,d)=>{
@@ -795,7 +842,7 @@ const STATES = {
   },
   askTargetPct: {
     field:'targetPct',
-    say:(d)=>`Investment: <b>${fmtU(d.invest)} USDT</b>\n\nসম্পূর্ণ Active Session-এর জন্য কত % <b>Net Profit Target</b> চান?`,
+    say:(d)=>`Investment: <b>${fmtU(d.invest)} USDT</b>\n\nসম্পূর্ণ Active Session-এর জন্য কত % <b>Profit Target (gross)</b> চান?\n(fee পরে যোগ হবে)`,
     placeholder:'Profit % (যেমন 2)',
     validate:(v)=>{
       const x=parseUSDT(v);
@@ -808,25 +855,38 @@ const STATES = {
   confirmBuy: {
     field:'_fill',
     say:(d)=>{
-      const qty = D.div(d.invest, d.buyPrice, 12);
+      const rawQty = D.div(d.invest, d.buyPrice, 18);
+      const qty = floorQty(rawQty);
       const p = computePosition();
       const effectiveTarget = n(session.targetPct) > 0 ? n(session.targetPct) : n(d.targetPct);
       const newTotalCost = D.add(p.totalBuyCost, d.invest);
-      const newTotalQty  = D.add(p.remainingQty, qty);
-      const newWap = D.gt(newTotalQty,'0') ? D.div(newTotalCost, newTotalQty, 18) : '0';
+      const newTotalQty  = D.add(p.totalBuyQty, qty);
+      const newAvg = D.gt(newTotalQty,'0') ? D.div(newTotalCost, newTotalQty, 18) : '0';
+      const newSoldCost = D.mul(p.totalSellQty, newAvg);
+      const newRemainingQty = D.sub(newTotalQty, p.totalSellQty);
+      const newRemainingBasis = D.sub(newTotalCost, newSoldCost);
+      const newBe = D.gt(newRemainingQty,'0') ? D.div(newRemainingBasis, newRemainingQty, 18) : '0';
       const newTargetReturn = D.mul(newTotalCost, D.add('1', D.div(String(effectiveTarget),'100',18)));
-      const newSellTarget = D.gt(newTotalQty,'0') ? D.div(D.sub(newTargetReturn, p.totalSellProceeds), newTotalQty, 18) : '0';
+      const newNeeded = D.sub(newTargetReturn, p.totalSellProceeds);
+      let newSellTarget='0', secured=false;
+      if(D.gt(newRemainingQty,'0')){
+        if(D.lt(newNeeded,'0')){ secured=true; }
+        else newSellTarget = D.div(newNeeded, newRemainingQty, 18);
+      } else if(!D.gt(newNeeded,'0')) secured=true;
+
       return `📋 <b>Buy Plan</b>\n\n`+
         `Buy Limit: <span class="hl">${fmtP(d.buyPrice)}</span>\n`+
         `Investment: <span class="hl">${fmtU(d.invest)} USDT</span>\n`+
-        `Est. PEPE: <b>${fmtQ(qty)}</b>\n`+
+        `Est. PEPE (step-floored): <b>${fmtQ(qty)}</b>\n`+
         `Effective Target: <b>${effectiveTarget}%</b>\n\n`+
         `<b>Fill হলে Position:</b>\n`+
         `Total Cost: ${fmtU(newTotalCost)} USDT\n`+
         `Total PEPE: ${fmtQ(newTotalQty)}\n`+
-        `WAP: ${fmtP(newWap)}\n`+
-        `Sell Target: <span class="hl">${fmtP(newSellTarget)}</span>\n\n`+
-        `Binance-এ Limit Buy set করুন। Fill হলে জানান।`;
+        `WAP: ${fmtP(newAvg)}\n`+
+        `Break-even: ${fmtP(newBe)}\n`+
+        (secured ? `Sell Target: <span class="pos">Target secured</span>\n`
+                 : `Sell Target: <span class="hl">${fmtP(newSellTarget)}</span>\n`)+
+        `\nBinance-এ Limit Buy set করুন। Fill হলে জানান।`;
     },
     placeholder:'filled / pending',
     quick:[{label:'✅ Filled',value:'filled'},{label:'⏳ Pending',value:'pending'}],
@@ -837,30 +897,42 @@ const STATES = {
       return {ok:false,msg:'"filled" অথবা "pending" দিন'};
     },
     next:(v,d)=>{
-      const qty = D.div(d.invest, d.buyPrice, 12);
+      const qty = floorQty(D.div(d.invest, d.buyPrice, 18));
       if(!session.targetPct || n(session.targetPct) <= 0){ session.targetPct = String(d.targetPct); }
       const order = { id: nextOrderId(), side:'buy', type:'limit', price:d.buyPrice, usdt:d.invest, qty,
         status: v==='filled'?'filled':'pending', filledUsdt: v==='filled'?d.invest:'0',
         filledQty: v==='filled'?qty:'0', fillPrice: v==='filled'?d.buyPrice:null, ts:Date.now(), note:'' };
       pushOrder(order);
+      if(v==='pending') session.conversation.data.pendingOrderId = order.id;
       return v==='filled' ? 'afterBuyFilled' : 'afterPending';
     }
   },
   afterPending: {
     field:'_go',
-    say:'⏳ Order pending। Fill হলে জানান অথবা cancel করুন।',
-    placeholder:'filled / cancel',
+    say:(d)=>{
+      const o = d.pendingOrderId ? session.orders.find(x=>x.id===d.pendingOrderId) : null;
+      const info = o ? `\n\nPending: <b>${o.id}</b> · BUY @ ${fmtP(o.price)}` : '';
+      return `⏳ Buy order pending.${info}\n\nFill হলে জানান (partial হলে actual qty/USDT লিখুন: <code>filled 5000000 100</code>) অথবা cancel করুন।`;
+    },
+    placeholder:'filled / pending details / cancel',
     quick:[{label:'✅ Filled',value:'filled'},{label:'❌ Cancel',value:'cancel'}],
     validate:(v)=>{
-      const s=v.toLowerCase();
-      if(['filled','fill','done'].includes(s)) return {ok:true,value:'filled'};
-      if(['cancel','no'].includes(s)) return {ok:true,value:'cancel'};
-      return {ok:false,msg:'"filled" বা "cancel" দিন'};
+      const s=v.toLowerCase().trim();
+      if(['filled','fill','done'].includes(s)) return {ok:true,value:{act:'fill',qty:null,usdt:null}};
+      if(['cancel','no'].includes(s)) return {ok:true,value:{act:'cancel'}};
+      const m = s.match(/^filled\s+([0-9.]+)\s+([0-9.]+)$/);
+      if(m) return {ok:true,value:{act:'fillPartial',qty:m[1],usdt:m[2]}};
+      return {ok:false,msg:'"filled", "cancel", বা "filled <qty> <usdt>" দিন'};
     },
-    next:(v)=>{
-      const last = [...session.orders].reverse().find(o=>o.status==='pending');
-      if(last){ if(v==='filled') fillOrder(last.id); else cancelOrder(last.id); }
-      return v==='filled' ? 'afterBuyFilled' : 'askBuyPrice';
+    next:(v,d)=>{
+      const id = d.pendingOrderId || ([...session.orders].reverse().find(o=>o.status==='pending')||{}).id;
+      if(id){
+        if(v.act==='fillPartial') fillOrder(id, v.qty, v.usdt);
+        else if(v.act==='fill') fillOrder(id);
+        else cancelOrder(id);
+      }
+      if(d.pendingOrderId) delete d.pendingOrderId;
+      return v.act==='cancel' ? 'askBuyPrice' : 'afterBuyFilled';
     }
   },
   afterBuyFilled: {
@@ -870,9 +942,10 @@ const STATES = {
       return `✅ Order fill হয়েছে!\n\n`+
         `Total Cost: <b>${fmtU(p.totalBuyCost)} USDT</b>\n`+
         `PEPE: <b>${fmtQ(p.remainingQty)}</b>\n`+
-        `WAP: ${fmtP(p.avgBuy)}\n`+
-        `Sell Target (${p.targetPct}%): <span class="hl">${fmtP(p.sellTarget)}</span>\n\n`+
-        `পরবর্তী পদক্ষেপ?`;
+        `WAP: ${fmtP(p.avgBuy)} · BE: ${fmtP(p.breakEven)}\n`+
+        (p.targetSecured ? `Target: <span class="pos">secured</span>\n`
+                         : `Sell Target (${p.targetPct}%): <span class="hl">${fmtP(p.sellTarget)}</span>\n`)+
+        `\nপরবর্তী পদক্ষেপ?`;
     },
     placeholder:'buy / sell / done',
     quick:[{label:'📉 নতুন Buy',value:'buy'},{label:'💱 Sell',value:'sell'},{label:'✅ শেষ',value:'done'}],
@@ -884,7 +957,10 @@ const STATES = {
       return {ok:false,msg:'"buy", "sell", বা "done" দিন'};
     },
     next:(v)=>{
-      if(v==='buy') return 'askBuyPrice';
+      if(v==='buy'){
+        if(session.orders.some(o=>o.status==='pending')) return 'afterPending';
+        return 'askBuyPrice';
+      }
       if(v==='sell'){ return sellBlocked().blocked ? 'afterBuyFilled' : 'askSellPrice'; }
       return 'done';
     }
@@ -895,17 +971,25 @@ const STATES = {
       const p = computePosition();
       return `💱 <b>Sell / Record Sell</b>\n\n`+
         `Position: ${fmtQFull(p.remainingQty)} PEPE\n`+
-        `Suggested Sell Target: <span class="hl">${fmtP(p.sellTarget)} USDT</span>\n`+
-        `Target: ${p.targetPct}%\n\n`+
-        `Binance-এ যেই price-এ sell করেছেন সেটি দিন।`;
+        `Break-even: ${fmtP(p.breakEven)}\n`+
+        (p.targetSecured
+          ? `Target: <span class="pos">already secured</span> — যেকোনো valid price দিতে পারেন।\n`
+          : `Suggested Sell Target: <span class="hl">${fmtP(p.sellTarget)} USDT</span>\n`)+
+        `\nBinance-এ যেই price-এ sell করেছেন সেটি দিন।`;
     },
     placeholder:'Sell price (USDT)',
     quick:()=>[{label:'🎯 Suggested',value:'__suggested__'}],
     validate:(v)=>{
       let x;
-      if(v==='__suggested__') x = computePosition().sellTarget;
-      else x = parsePEPEPrice(v);
+      if(v==='__suggested__'){
+        const p = computePosition();
+        if(p.targetSecured) return {ok:false,msg:'Target secured — নিজে valid price দিন'};
+        x = p.sellTarget;
+        if(n(x)<=0) return {ok:false,msg:'Suggested target নেই — নিজে valid price দিন'};
+      } else x = parsePEPEPrice(v);
       if(x===null || n(x)<=0) return {ok:false,msg:'সঠিক price দিন'};
+      x = roundPrice(x);
+      if(n(x)<=0) return {ok:false,msg:'tick size-এ round করার পর price 0 হয়ে গেছে'};
       return {ok:true,value:x};
     },
     next:'askSellQty'
@@ -926,48 +1010,69 @@ const STATES = {
     field:'_fill',
     say:(d)=>{
       const p = computePosition();
-      const qty = D.mul(p.remainingQty, D.div(d.sellQtyPct,'100',18));
+      const rawQty = D.mul(p.remainingQty, D.div(d.sellQtyPct,'100',18));
+      const qty = floorQty(rawQty);
       const gross = D.mul(qty, d.sellPrice);
       return `📋 <b>Sell Record</b>\n\n`+
         `Price: <span class="hl">${fmtP(d.sellPrice)}</span>\n`+
         `Qty: ${fmtQ(qty)} PEPE (${d.sellQtyPct}%)\n`+
-        `Est. Proceeds: <b>${fmtU(gross)} USDT</b>\n\n`+
+        `Est. Gross Proceeds: <b>${fmtU(gross)} USDT</b> (before fees)\n\n`+
         `Binance-এ এই Sell সম্পন্ন হয়েছে?`;
     },
-    placeholder:'filled / pending',
+    placeholder:'filled / pending / partial (qty usdt)',
     quick:[{label:'✅ Filled',value:'filled'},{label:'⏳ Pending',value:'pending'}],
     validate:(v)=>{
-      const s=v.toLowerCase();
-      if(['filled','fill','done','হয়েছে'].includes(s)) return {ok:true,value:'filled'};
-      if(['pending','pend'].includes(s)) return {ok:true,value:'pending'};
-      return {ok:false,msg:'"filled" বা "pending" দিন'};
+      const s=v.toLowerCase().trim();
+      if(['filled','fill','done','হয়েছে'].includes(s)) return {ok:true,value:{act:'fill'}};
+      if(['pending','pend'].includes(s)) return {ok:true,value:{act:'pending'}};
+      const m = s.match(/^(?:partial|filled)\s+([0-9.]+)\s+([0-9.]+)$/);
+      if(m) return {ok:true,value:{act:'partial',qty:m[1],usdt:m[2]}};
+      return {ok:false,msg:'"filled", "pending", বা "partial <qty> <usdt>" দিন'};
     },
     next:(v,d)=>{
       const p = computePosition();
-      const qty = D.mul(p.remainingQty, D.div(d.sellQtyPct,'100',18));
-      const usdt = D.mul(qty, d.sellPrice);
+      let qty, usdt;
+      if(v.act==='partial'){ qty=floorQty(v.qty); usdt=String(v.usdt); }
+      else {
+        qty = floorQty(D.mul(p.remainingQty, D.div(d.sellQtyPct,'100',18)));
+        usdt = D.mul(qty, d.sellPrice);
+      }
+      const status = v.act==='fill' ? 'filled' : v.act==='pending' ? 'pending' : 'partial';
       const order = { id: nextOrderId(), side:'sell', type:'limit', price:d.sellPrice, usdt, qty,
-        status: v==='filled'?'filled':'pending', filledUsdt: v==='filled'?usdt:'0',
-        filledQty: v==='filled'?qty:'0', fillPrice: v==='filled'?d.sellPrice:null, ts:Date.now(), note:'' };
+        status, filledUsdt: status!=='pending'?usdt:'0',
+        filledQty: status!=='pending'?qty:'0',
+        fillPrice: status!=='pending'?d.sellPrice:null, ts:Date.now(), note:'' };
       pushOrder(order);
-      return v==='filled' ? 'afterSellFilled' : 'afterSellPending';
+      if(status==='pending') session.conversation.data.pendingOrderId = order.id;
+      return status==='pending' ? 'afterSellPending' : 'afterSellFilled';
     }
   },
   afterSellPending: {
     field:'_go',
-    say:'⏳ Sell pending। Fill হলে জানান বা cancel করুন।',
-    placeholder:'filled / cancel',
+    say:(d)=>{
+      const o = d.pendingOrderId ? session.orders.find(x=>x.id===d.pendingOrderId) : null;
+      const info = o ? `\n\nPending: <b>${o.id}</b> · SELL @ ${fmtP(o.price)}` : '';
+      return `⏳ Sell pending.${info}\n\nFill হলে জানান (partial হলে: <code>filled <qty> <usdt></code>) অথবা cancel করুন।`;
+    },
+    placeholder:'filled / partial (qty usdt) / cancel',
     quick:[{label:'✅ Filled',value:'filled'},{label:'❌ Cancel',value:'cancel'}],
     validate:(v)=>{
-      const s=v.toLowerCase();
-      if(['filled','fill','done'].includes(s)) return {ok:true,value:'filled'};
-      if(['cancel','no'].includes(s)) return {ok:true,value:'cancel'};
-      return {ok:false,msg:'"filled" বা "cancel" দিন'};
+      const s=v.toLowerCase().trim();
+      if(['filled','fill','done'].includes(s)) return {ok:true,value:{act:'fill'}};
+      if(['cancel','no'].includes(s)) return {ok:true,value:{act:'cancel'}};
+      const m = s.match(/^filled\s+([0-9.]+)\s+([0-9.]+)$/);
+      if(m) return {ok:true,value:{act:'fillPartial',qty:m[1],usdt:m[2]}};
+      return {ok:false,msg:'"filled", "cancel", বা "filled <qty> <usdt>" দিন'};
     },
-    next:(v)=>{
-      const last = [...session.orders].reverse().find(o=>o.status==='pending');
-      if(last){ if(v==='filled') fillOrder(last.id); else cancelOrder(last.id); }
-      return v==='filled' ? 'afterSellFilled' : 'afterBuyFilled';
+    next:(v,d)=>{
+      const id = d.pendingOrderId || ([...session.orders].reverse().find(o=>o.status==='pending')||{}).id;
+      if(id){
+        if(v.act==='fillPartial') fillOrder(id, v.qty, v.usdt);
+        else if(v.act==='fill') fillOrder(id);
+        else cancelOrder(id);
+      }
+      if(d.pendingOrderId) delete d.pendingOrderId;
+      return v.act==='cancel' ? 'afterBuyFilled' : 'afterSellFilled';
     }
   },
   afterSellFilled: {
@@ -978,19 +1083,23 @@ const STATES = {
       if(done){
         return `🎉 <b>TARGET ACHIEVED!</b>\n\n`+
           `Total Cost: ${fmtU(p.totalBuyCost)} USDT\n`+
-          `Total Sell Proceeds: ${fmtU(p.totalSellProceeds)} USDT\n`+
-          `Realized Net Profit: <span class="pos">${fmtU(p.realizedNet)} USDT</span>\n`+
-          `Realized P/L: <span class="pos">${fmtPct(p.realizedPct)}</span> (Target ${p.targetPct}%)\n\n`+
-          `আপনার Trading Session সফলভাবে সম্পন্ন হয়েছে। ✅\n`+
-          `নতুন Session শুরু করতে Reset ব্যবহার করুন।`;
+          `Total Sell Proceeds (gross): ${fmtU(p.totalSellProceeds)} USDT\n`+
+          `Realized Gross: <span class="pos">${fmtU(p.realizedGross)} USDT</span>\n`+
+          (n(p.feeEstimate)>0?`Est. Fee: ${fmtU(p.feeEstimate)} USDT\nRealized Net (est.): <span class="pos">${fmtU(p.realizedNet)} USDT</span>\n`:'')+
+          `Session Return: <span class="pos">${fmtPct(p.sessionReturnPct)}</span> (Target ${p.targetPct}%)\n`+
+          `Realized % (on sold basis): ${fmtPct(p.realizedPct_onSold)}\n\n`+
+          `Session সফলভাবে সম্পন্ন ✅ — Reset করে নতুন Session শুরু করুন।`;
       }
-      const warn = !D.gt(p.remainingQty,'0') && n(p.realizedPct)<n(p.targetPct)
-        ? `\n\n⚠️ সব PEPE বিক্রি হয়েছে কিন্তু Target পূরণ হয়নি — Loss Recovery Mode active.` : '';
+      const warn = !D.gt(p.remainingQty,'0') && n(p.sessionReturnPct)<n(p.targetPct)
+        ? `\n\n⚠️ সব PEPE বিক্রি হয়েছে কিন্তু Target পূরণ হয়নি — Loss Recovery Mode.` : '';
       return `✅ Sell fill হয়েছে।\n\n`+
         `Remaining PEPE: <b>${fmtQ(p.remainingQty)}</b>\n`+
-        `Realized P/L: <span class="${n(p.realizedNet)>=0?'pos':'neg'}">${fmtU(p.realizedNet)} USDT</span> (${fmtPct(p.realizedPct)})\n`+
-        `Target: ${p.targetPct}%\n`+
-        `Next Sell Target: <span class="hl">${fmtP(p.sellTarget)}</span>`+warn+
+        `Realized Gross: <span class="${n(p.realizedGross)>=0?'pos':'neg'}">${fmtU(p.realizedGross)} USDT</span>\n`+
+        (n(p.feeEstimate)>0?`Est. Fee: ${fmtU(p.feeEstimate)} · Net (est.): ${fmtU(p.realizedNet)}\n`:'')+
+        `Realized % (on sold basis): ${fmtPct(p.realizedPct_onSold)}\n`+
+        `Session Return: ${fmtPct(p.sessionReturnPct)} · Target: ${p.targetPct}%\n`+
+        (p.targetSecured?`Next Sell Target: <span class="pos">secured</span>`
+                        :`Next Sell Target: <span class="hl">${fmtP(p.sellTarget)}</span>`)+warn+
         `\n\nপরবর্তী পদক্ষেপ?`;
     },
     placeholder:'buy / sell / done',
@@ -1004,7 +1113,10 @@ const STATES = {
     },
     next:(v)=>{
       if(sessionTargetHit()) return 'sessionComplete';
-      if(v==='buy') return 'askBuyPrice';
+      if(v==='buy'){
+        if(session.orders.some(o=>o.status==='pending')) return 'afterPending';
+        return 'askBuyPrice';
+      }
       if(v==='sell'){ return sellBlocked().blocked ? 'afterBuyFilled' : 'askSellPrice'; }
       return 'done';
     }
@@ -1014,11 +1126,10 @@ const STATES = {
       const p = computePosition();
       return `🎉 <b>TARGET ACHIEVED!</b>\n\n`+
         `Total Cost: ${fmtU(p.totalBuyCost)} USDT\n`+
-        `Total Sell Proceeds: ${fmtU(p.totalSellProceeds)} USDT\n`+
-        `Realized Net Profit: <span class="pos">${fmtU(p.realizedNet)} USDT</span>\n`+
-        `Realized P/L: <span class="pos">${fmtPct(p.realizedPct)}</span> (Target ${p.targetPct}%)\n\n`+
-        `আপনার Trading Session সফলভাবে সম্পন্ন হয়েছে। ✅\n`+
-        `নতুন Session শুরু করতে <b>Reset</b> ব্যবহার করুন।`;
+        `Total Sell Proceeds (gross): ${fmtU(p.totalSellProceeds)} USDT\n`+
+        `Realized Gross: <span class="pos">${fmtU(p.realizedGross)} USDT</span>\n`+
+        `Session Return: <span class="pos">${fmtPct(p.sessionReturnPct)}</span> (Target ${p.targetPct}%)\n\n`+
+        `Session সম্পন্ন ✅ — Reset করুন।`;
     },
     end:true,
     placeholder:'Session সম্পন্ন — Reset করুন'
@@ -1026,14 +1137,19 @@ const STATES = {
   done: { say:'ধন্যবাদ! Dashboard থেকে যেকোনো সময় নতুন Buy বা Sell plan করতে পারেন।', end:true }
 };
 
-/* ---------- parsers ---------- */
+/* ---------------- parsers ---------------- */
 function parsePEPEPrice(v){
   v=String(v==null?'':v).trim().replace(/,/g,'');
   if(!/^\d*\.?\d+(e-?\d+)?$/i.test(v)) return null;
-  const num = Number(v);
+  let s = v;
+  if(/e/i.test(s)){
+    const num=Number(s);
+    if(!isFinite(num)||num<=0) return null;
+    s = num.toFixed(18).replace(/0+$/,'').replace(/\.$/,'');
+  }
+  const num=Number(s);
   if(!isFinite(num) || num<=0 || num>1) return null;
-  if(v.includes('e')||v.includes('E')){ return Number(v).toFixed(11).replace(/0+$/,'').replace(/\.$/,''); }
-  return v;
+  return s;
 }
 function parseUSDT(v){
   v=String(v==null?'':v).trim().replace(/,/g,'');
@@ -1043,553 +1159,479 @@ function parseUSDT(v){
   return v;
 }
 
-/* ============================================================
-   CHAT RENDERING (persisted) + SMART AUTO-SCROLL
-   ============================================================ */
-let userScrolledUp = false;
-const SCROLL_THRESHOLD = 60;
+/* ---------------- chat rendering ---------------- */
+let userScrolledUp=false;
+const SCROLL_THRESHOLD=60;
+function isNearBottom(){ return (chatBox.scrollHeight-chatBox.scrollTop-chatBox.clientHeight)<SCROLL_THRESHOLD; }
+function scrollChatSmart(){ if(!userScrolledUp||isNearBottom()){ requestAnimationFrame(()=>{ chatBox.scrollTop=chatBox.scrollHeight; }); } }
+chatBox.addEventListener('scroll',()=>{ userScrolledUp=!isNearBottom(); },{passive:true});
 
-function isNearBottom(){
-  return (chatBox.scrollHeight - chatBox.scrollTop - chatBox.clientHeight) < SCROLL_THRESHOLD;
-}
-function scrollChatSmart(){
-  if(!userScrolledUp || isNearBottom()){
-    requestAnimationFrame(()=>{ chatBox.scrollTop = chatBox.scrollHeight; });
-  }
-}
-chatBox.addEventListener('scroll', ()=>{ userScrolledUp = !isNearBottom(); }, {passive:true});
-
-/* Low-level renderer — appends a DOM node */
 function appendMsgNode(who, htmlOrText, isHtml){
   const d=document.createElement('div');
   d.className='msg '+(who==='user'?'user':'bot');
-  const bubble = document.createElement('div');
-  bubble.className='bubble';
-  if(isHtml) bubble.innerHTML = htmlOrText;
+  const bubble=document.createElement('div'); bubble.className='bubble';
+  if(isHtml) bubble.innerHTML = sanitizeHTML(htmlOrText);
   else bubble.textContent = htmlOrText;
-  d.innerHTML = who==='user'
-    ? '<div class="avatar">👤</div>'
-    : '<div class="avatar">🐸</div>';
+  d.innerHTML = who==='user' ? '<div class="avatar">👤</div>' : '<div class="avatar">🐸</div>';
   d.appendChild(bubble);
-  chatBox.appendChild(d);
-  scrollChatSmart();
+  chatBox.appendChild(d); scrollChatSmart();
 }
-
-/* Public: bot message (HTML), persisted */
-function botSay(html){
-  appendMsgNode('bot', html, true);
-  chatHistory.push({who:'bot', html, ts:Date.now()});
-  persistChat();
-}
-
-/* Public: user message (plain text), persisted */
-function userSay(text){
-  appendMsgNode('user', String(text), false);
-  chatHistory.push({who:'user', text:String(text), ts:Date.now()});
-  persistChat();
-}
-
-/* Rebuild the entire chat DOM from chatHistory (no persistence side-effects) */
+function botSay(html){ appendMsgNode('bot',html,true); chatHistory.push({who:'bot',html,ts:Date.now()}); persistChat(); }
+function userSay(text){ appendMsgNode('user',String(text),false); chatHistory.push({who:'user',text:String(text),ts:Date.now()}); persistChat(); }
 function replayChat(){
   chatBox.innerHTML='';
   for(const m of chatHistory){
-    if(m.who==='user') appendMsgNode('user', m.text || '', false);
-    else appendMsgNode('bot', m.html || '', true);
+    if(m.who==='user') appendMsgNode('user',m.text||'',false);
+    else appendMsgNode('bot',m.html||'',true);
   }
-  // Always scroll to bottom after restore
-  requestAnimationFrame(()=>{ chatBox.scrollTop = chatBox.scrollHeight; });
+  requestAnimationFrame(()=>{ chatBox.scrollTop=chatBox.scrollHeight; });
 }
 
-/* Wipe the visible chat AND persisted history (used by Reset) */
-async function wipeChat(){
-  chatBox.innerHTML='';
-  await clearChat();
-}
-
-/* ---------- input/quick controls ---------- */
+/* ---------------- input controls ---------------- */
 function setInputEnabled(on, placeholder, quick){
   input.disabled=!on; sendBtn.disabled=!on;
   input.placeholder = placeholder||(on?'উত্তর লিখুন...':'অপেক্ষা করুন...');
-  if(on) setTimeout(()=>{ try{ input.focus({preventScroll:true}); }catch(e){} }, 80);
+  if(on) setTimeout(()=>{ try{ input.focus({preventScroll:true}); }catch(e){} },80);
   quickBox.innerHTML='';
-  if(quick && quick.length){
+  if(quick&&quick.length){
     quick.forEach(q=>{
-      const b=document.createElement('button');
-      b.type='button';
-      b.textContent=q.label;
-      b.onclick=()=>{ if(input.disabled) return; input.value=q.value; handleSubmit(); };
+      const b=document.createElement('button'); b.type='button'; b.textContent=q.label;
+      b.onclick=()=>{ if(input.disabled||submitLock) return; input.value=q.value; handleSubmit(); };
       quickBox.appendChild(b);
     });
   }
 }
 
-/* ---------- state machine navigation ---------- */
+/* ---------------- state machine ---------------- */
 function goToState(name){
-  const sellStates = ['askSellPrice','askSellQty','confirmSell','afterSellPending'];
+  const sellStates=['askSellPrice','askSellQty','confirmSell','afterSellPending'];
   if(sellStates.includes(name)){
-    const p = computePosition();
+    const p=computePosition();
     if(!D.gt(p.remainingQty,'0')){
-      if(sessionTargetHit()){ name = 'sessionComplete'; }
-      else{ botSay('⚠️ কোনো PEPE নেই — Sell করা সম্ভব নয়। নতুন Buy করুন।'); name = 'afterBuyFilled'; }
-    }else if(sessionTargetHit()){ name = 'sessionComplete'; }
+      if(sessionTargetHit()) name='sessionComplete';
+      else{ botSay('⚠️ কোনো PEPE নেই — Sell করা সম্ভব নয়। নতুন Buy করুন।'); name='afterBuyFilled'; }
+    } else if(sessionTargetHit()) name='sessionComplete';
   }
-
-  if(!name || name==='done'){
-    const st = STATES.done;
-    session.conversation = {state:'done', data:{}};
-    persist();
-    setTimeout(()=>{ botSay(st.say); setInputEnabled(false); },120);
-    return;
-  }
-
-  const st = STATES[name];
-  if(!st){ setInputEnabled(false); return; }
-  session.conversation.state = name;
-  persist();
-
-  if(name==='sessionComplete'){
-    const say = typeof st.say==='function' ? st.say() : st.say;
-    setTimeout(()=>{
-      botSay(say);
-      setInputEnabled(false, 'Session সম্পন্ন — Reset করুন', null);
-    },120);
-    return;
-  }
-
-  const say = typeof st.say==='function' ? st.say(session.conversation.data) : st.say;
-  setTimeout(()=>{
-    botSay(say);
-    if(st.end){ setInputEnabled(false); return; }
-    const q = typeof st.quick==='function' ? st.quick(session.conversation.data) : st.quick;
-    setInputEnabled(true, st.placeholder, q);
-  }, 120);
-}
-
-/* ---------- submit ---------- */
-let submitLock = false;
-
-function handleSubmit(){
-  if(submitLock) return;
-  const raw = input.value.trim();
-  if(!raw) return;
-  const stateName = session.conversation.state;
-
-  if(stateName==='sessionComplete'){ input.value=''; return; }
-
-  if(['askSellPrice','askSellQty','confirmSell','afterSellPending'].includes(stateName)){
-    const p = computePosition();
-    if(!D.gt(p.remainingQty,'0') || sessionTargetHit()){
-      input.value='';
-      userSay(raw);
-      if(sessionTargetHit()){ goToState('sessionComplete'); }
-      else{ botSay('⚠️ কোনো PEPE নেই — Sell করা সম্ভব নয়।'); goToState('afterBuyFilled'); }
+  if(['askBuyPrice','askInvest','askTargetPct','confirmBuy'].includes(name)){
+    if(session.orders.some(o=>o.status==='pending') && name!=='afterPending'){
+      const pend = session.orders.find(o=>o.status==='pending');
+      session.conversation = { state: pend.side==='buy'?'afterPending':'afterSellPending', data:{ pendingOrderId: pend.id } };
+      persist();
+      const st = STATES[session.conversation.state];
+      setTimeout(()=>{ botSay('⚠️ একটি pending order আছে — আগে সেটি Fill/Cancel করুন।'); setInputEnabled(true, st.placeholder, st.quick); },120);
       return;
     }
   }
 
-  const st = STATES[stateName];
+  if(!name || name==='done'){
+    const st=STATES.done;
+    session.conversation={state:'done',data:{}}; persist();
+    setTimeout(()=>{ botSay(st.say); setInputEnabled(false); },120);
+    return;
+  }
+  const st=STATES[name];
+  if(!st){ setInputEnabled(false); return; }
+  session.conversation.state=name;
+  if(!session.conversation.data) session.conversation.data={};
+  persist();
+
+  if(name==='sessionComplete'){
+    const say = typeof st.say==='function'?st.say():st.say;
+    setTimeout(()=>{ botSay(say); setInputEnabled(false,'Session সম্পন্ন — Reset করুন',null); },120);
+    return;
+  }
+  const say = typeof st.say==='function'?st.say(session.conversation.data):st.say;
+  setTimeout(()=>{
+    botSay(say);
+    if(st.end){ setInputEnabled(false); return; }
+    const q = typeof st.quick==='function'?st.quick(session.conversation.data):st.quick;
+    setInputEnabled(true, st.placeholder, q);
+  },120);
+}
+
+/* ---------------- submit ---------------- */
+let submitLock=false;
+function handleSubmit(){
+  if(submitLock) return;
+  const raw=input.value.trim();
+  if(!raw) return;
+  const stateName=session.conversation.state;
+
+  if(stateName==='sessionComplete'){ input.value=''; return; }
+
+  if(['askSellPrice','askSellQty','confirmSell','afterSellPending'].includes(stateName)){
+    const p=computePosition();
+    if(!D.gt(p.remainingQty,'0')||sessionTargetHit()){
+      input.value=''; userSay(raw);
+      if(sessionTargetHit()) goToState('sessionComplete');
+      else{ botSay('⚠️ কোনো PEPE নেই — Sell করা সম্ভব নয়।'); goToState('afterBuyFilled'); }
+      return;
+    }
+  }
+  const st=STATES[stateName];
   if(!st){ botSay('⚠️ Conversation state অজানা। Reset করুন।'); setInputEnabled(false); return; }
 
-  const result = st.validate(raw, session.conversation.data);
+  const result=st.validate(raw, session.conversation.data);
   if(!result.ok){
-    userSay(raw);
-    botSay('❌ '+result.msg);
-    input.value='';
-    const q = typeof st.quick==='function' ? st.quick(session.conversation.data) : st.quick;
+    userSay(raw); botSay('❌ '+result.msg); input.value='';
+    const q=typeof st.quick==='function'?st.quick(session.conversation.data):st.quick;
     setInputEnabled(true, st.placeholder, q);
     return;
   }
-
-  submitLock = true;
+  submitLock=true;
+  input.disabled=true; sendBtn.disabled=true;
   try{
     input.value='';
     userSay(raw);
-    session.conversation.data[st.field] = result.value;
-    let next = st.next;
-    if(typeof next==='function') next = next(result.value, session.conversation.data, result);
-    session.conversation.data = session.conversation.data || {};
+    session.conversation.data[st.field]=result.value;
+    let next=st.next;
+    if(typeof next==='function') next=next(result.value, session.conversation.data, result);
+    if(!session.conversation.data) session.conversation.data={};
     goToState(next);
   } finally {
-    setTimeout(()=>{ submitLock=false; }, 60);
+    setTimeout(()=>{ submitLock=false; },120);
   }
 }
 
-/* ---------- boot conversation ----------
-   IMPORTANT: If chatHistory already has messages (reload), we replay them
-   instead of regenerating a fresh greeting. Only when history is empty do
-   we start a new conversation.
---------------------------------------------------------- */
+/* ---------------- boot conversation ---------------- */
 function startConversation(){
-  if(chatHistory.length > 0){
+  if(chatHistory.length>0){
     replayChat();
-    // Restore input state from saved conversation
-    const stateName = session.conversation.state;
-    const st = STATES[stateName];
-    if(!st || st.end || stateName==='sessionComplete' || stateName==='done'){
-      setInputEnabled(false, st && st.placeholder ? st.placeholder : 'অপেক্ষা করুন...', null);
+    const stateName=session.conversation.state;
+    const st=STATES[stateName];
+    if(!st||st.end||stateName==='sessionComplete'||stateName==='done'){
+      setInputEnabled(false, st&&st.placeholder?st.placeholder:'অপেক্ষা করুন...', null);
     } else {
-      const q = typeof st.quick==='function' ? st.quick(session.conversation.data) : st.quick;
+      const q=typeof st.quick==='function'?st.quick(session.conversation.data):st.quick;
       setInputEnabled(true, st.placeholder, q);
     }
     return;
   }
-
-  // Fresh start — empty history, generate the opening greeting
-  chatBox.innerHTML='';
-  userScrolledUp = false;
-  const {kind, p} = getTradeState();
+  chatBox.innerHTML=''; userScrolledUp=false;
+  const {kind,p}=getTradeState();
 
   if(kind==='targetHit'){
-    session.conversation = {state:'sessionComplete', data:{}};
-    persist();
-    botSay(
-      `🎉 <b>TARGET ACHIEVED!</b>\n\n`+
+    session.conversation={state:'sessionComplete',data:{}}; persist();
+    botSay(`🎉 <b>TARGET ACHIEVED!</b>\n\n`+
       `Total Cost: ${fmtU(p.totalBuyCost)} USDT\n`+
-      `Total Sell Proceeds: ${fmtU(p.totalSellProceeds)} USDT\n`+
-      `Realized Net Profit: <span class="pos">${fmtU(p.realizedNet)} USDT</span>\n`+
-      `Realized P/L: <span class="pos">${fmtPct(p.realizedPct)}</span> (Target ${p.targetPct}%)\n\n`+
-      `আপনার Trading Session সফলভাবে সম্পন্ন হয়েছে। ✅\n`+
-      `নতুন Session শুরু করতে <b>Reset</b> ব্যবহার করুন।`);
-    setInputEnabled(false, 'Session সম্পন্ন — Reset করুন', null);
+      `Total Sell Proceeds (gross): ${fmtU(p.totalSellProceeds)} USDT\n`+
+      `Realized Gross: <span class="pos">${fmtU(p.realizedGross)} USDT</span>\n`+
+      `Session Return: <span class="pos">${fmtPct(p.sessionReturnPct)}</span> (Target ${p.targetPct}%)\n\n`+
+      `Session সম্পন্ন ✅ — Reset করুন।`);
+    setInputEnabled(false,'Session সম্পন্ন — Reset করুন',null);
     return;
   }
-
   if(kind==='zeroNoTarget'){
-    session.conversation = {state:'afterBuyFilled', data:{}};
-    persist();
-    botSay(
-      `👋 Welcome back! Session #${session.id} active.\n\n`+
+    session.conversation={state:'afterBuyFilled',data:{}}; persist();
+    botSay(`👋 Welcome back! Session #${session.id} (${session.code||''}) active.\n\n`+
       `Total Cost: <b>${fmtU(p.totalBuyCost)} USDT</b>\n`+
       `PEPE: <b>0</b>\n`+
-      `Realized P/L: <span class="${n(p.realizedNet)>=0?'pos':'neg'}">${fmtU(p.realizedNet)} USDT</span> (${fmtPct(p.realizedPct)})\n`+
-      `Target: ${p.targetPct}%\n\n`+
+      `Realized Gross: <span class="${n(p.realizedGross)>=0?'pos':'neg'}">${fmtU(p.realizedGross)} USDT</span>\n`+
+      `Session Return: ${fmtPct(p.sessionReturnPct)} · Target: ${p.targetPct}%\n\n`+
       `⚠️ সব PEPE বিক্রি হয়েছে কিন্তু Target পূরণ হয়নি।\n`+
       `নতুন Buy দিয়ে Recovery শুরু করুন।`);
-    setInputEnabled(true, 'buy / done', [
-      {label:'📉 নতুন Buy',value:'buy'},
-      {label:'✅ শেষ',value:'done'}
-    ]);
+    setInputEnabled(true,'buy / done',[{label:'📉 নতুন Buy',value:'buy'},{label:'✅ শেষ',value:'done'}]);
     return;
   }
-
   if(kind==='pending'){
-    session.conversation = {state:'afterPending', data:{}};
-    persist();
-    const last = [...session.orders].reverse().find(o=>o.status==='pending');
-    botSay(
-      `⏳ Pending Order আছে (${last?last.side.toUpperCase():''} @ ${last?fmtP(last.price):''}).\n\n`+
-      `Fill হলে জানান অথবা Cancel করুন।`);
-    const st = STATES.afterPending;
+    const pend = session.orders.find(o=>o.status==='pending');
+    const stateName = pend && pend.side==='sell' ? 'afterSellPending' : 'afterPending';
+    session.conversation={state:stateName,data:{ pendingOrderId: pend?pend.id:null }}; persist();
+    const st=STATES[stateName];
+    const say = typeof st.say==='function'?st.say(session.conversation.data):st.say;
+    botSay(say);
     setInputEnabled(true, st.placeholder, st.quick);
     return;
   }
-
   if(kind==='inPosition'){
-    session.conversation = {state:'afterBuyFilled', data:{}};
-    persist();
-    botSay(
-      `👋 Welcome back! Session #${session.id} active.\n\n`+
+    session.conversation={state:'afterBuyFilled',data:{}}; persist();
+    botSay(`👋 Welcome back! Session #${session.id} (${session.code||''}) active.\n\n`+
       `Cost: <b>${fmtU(p.totalBuyCost)} USDT</b>\n`+
       `PEPE: <b>${fmtQ(p.remainingQty)}</b>\n`+
-      `WAP: ${fmtP(p.avgBuy)}\n`+
-      `Target: ${p.targetPct}%\n`+
-      `Sell Target: <span class="hl">${fmtP(p.sellTarget)}</span>\n\n`+
-      `পরবর্তী পদক্ষেপ?`);
-    const st = STATES.afterBuyFilled;
+      `WAP: ${fmtP(p.avgBuy)} · BE: ${fmtP(p.breakEven)}\n`+
+      `Session Return: ${fmtPct(p.sessionReturnPct)} · Target: ${p.targetPct}%\n`+
+      (p.targetSecured?`Sell Target: <span class="pos">secured</span>`
+                      :`Sell Target: <span class="hl">${fmtP(p.sellTarget)}</span>`)+
+      `\n\nপরবর্তী পদক্ষেপ?`);
+    const st=STATES.afterBuyFilled;
     setInputEnabled(true, st.placeholder, st.quick);
     return;
   }
-
-  session.conversation = {state:'askBuyPrice', data:{}};
-  goToState('askBuyPrice');
-  persist();
+  session.conversation={state:'askBuyPrice',data:{}};
+  goToState('askBuyPrice'); persist();
 }
 
-/* ---------- dashboard / orders render ---------- */
-function renderAll(){ renderDashboard(); renderOrders(); el('sessionTag').textContent = 'Session #'+session.id; }
+/* ---------------- dashboard / orders render ---------------- */
+function renderAll(){
+  renderDashboard(); renderOrders();
+  el('sessionTag').textContent = 'Session #'+session.id+(session.code?' · '+session.code:'');
+}
 
 function renderDashboard(){
-  const p = computePosition();
-  const tState = getTradeState();
-  const badge = el('statusBadge');
+  const p=computePosition();
+  const tState=getTradeState();
+  const badge=el('statusBadge');
   let status='Ready to Start', cls='b-ready';
   if(tState.kind==='targetHit'){ status='Target Achieved'; cls='b-done'; }
   else if(tState.kind==='pending'){ status='Order Pending'; cls='b-pend'; }
   else if(tState.kind==='zeroNoTarget'){ status='Loss Recovery'; cls='b-rec'; }
   else if(tState.kind==='inPosition'){
-    if(n(p.realizedNet)<0 && n(p.realizedPct)<0){ status='Recovery Mode'; cls='b-rec'; }
+    if(n(p.realizedGross)<0) { status='Recovery Mode'; cls='b-rec'; }
     else { status='In Position'; cls='b-buy'; }
   }
   badge.textContent=status; badge.className='badge '+cls;
 
-  el('sSellTarget').textContent = D.gt(p.remainingQty,'0') ? fmtP(p.sellTarget)+' USDT' : '—';
-  el('sCost').textContent = fmtU(p.totalBuyCost);
-  el('sQty').textContent = fmtQFull(p.remainingQty);
-  el('sWap').textContent = D.gt(p.avgBuy,'0') ? fmtP(p.avgBuy) : '—';
-  el('sBe').textContent = D.gt(p.breakEven,'0') ? fmtP(p.breakEven) : '—';
+  el('sSellTarget').textContent = !D.gt(p.remainingQty,'0') ? '—'
+    : p.targetSecured ? 'Secured ✅' : fmtP(p.sellTarget)+' USDT';
+  el('sCost').textContent=fmtU(p.totalBuyCost);
+  el('sQty').textContent=fmtQFull(p.remainingQty);
+  el('sWap').textContent=D.gt(p.avgBuy,'0')?fmtP(p.avgBuy):'—';
+  el('sBe').textContent=D.gt(p.breakEven,'0')?fmtP(p.breakEven):'—';
 
-  const upl = el('sUpl');
+  const upl=el('sUpl');
   if(p.hasPrice && D.gt(p.remainingQty,'0')){
-    upl.textContent = (n(p.unrealized)>=0?'+':'')+fmtU(p.unrealized)+' USDT';
-    upl.className = 'v '+(n(p.unrealized)>=0?'pos':'neg');
+    upl.textContent=(n(p.unrealized)>=0?'+':'')+fmtU(p.unrealized)+' USDT';
+    upl.className='v '+(n(p.unrealized)>=0?'pos':'neg');
   }else{ upl.textContent='—'; upl.className='v'; }
 
-  const rpl = el('sRpl');
-  rpl.textContent = fmtU(p.realizedNet);
-  rpl.className = 'v '+(n(p.realizedNet)>=0?'pos':'neg');
+  const rpl=el('sRpl');
+  rpl.textContent=fmtU(p.realizedGross);
+  rpl.className='v '+(n(p.realizedGross)>=0?'pos':'neg');
 
-  el('sTargetPct').textContent = p.targetPct+'%';
-  const rpp = el('sRplPct');
-  rpp.textContent = fmtPct(p.realizedPct);
-  rpp.className = 'v '+(n(p.realizedPct)>=0?'pos':'neg');
+  el('sTargetPct').textContent=p.targetPct+'%';
+  const rpp=el('sRplPct');
+  rpp.textContent=fmtPct(p.realizedPct_onSold);
+  rpp.className='v '+(n(p.realizedPct_onSold)>=0?'pos':'neg');
 
-  el('sRecovery').textContent = D.gt(p.targetReturnTotal,'0')
-    ? `${p.progress.toFixed(1)}% (${fmtU(p.totalSellProceeds)} / ${fmtU(p.targetReturnTotal)})` : '—';
-  el('recBar').style.width = Math.min(100,p.progress)+'%';
+  el('sRecovery').textContent=D.gt(p.targetReturnTotal,'0')
+    ?`${p.progress.toFixed(1)}% (${fmtU(p.totalSellProceeds)} / ${fmtU(p.targetReturnTotal)})`:'—';
+  el('recBar').style.width=Math.min(100,p.progress)+'%';
 
-  const wa = el('warnArea');
-  let html='';
-  if(tState.kind === 'zeroNoTarget'){ html += '<div class="danger-msg">⚠️ Position শূন্য কিন্তু Target পূরণ হয়নি। নতুন Buy plan করুন।</div>'; }
-  if(tState.kind === 'targetHit'){ html += '<div class="warn" style="background:#123a24;border-left-color:#22c55e;color:#4ade80">🎉 Target Achieved! Session সম্পন্ন হয়েছে। Reset করে নতুন Session শুরু করুন।</div>'; }
-  if(settings.maxInv>0 && n(p.totalBuyCost) >= settings.maxInv*0.95){ html += '<div class="warn">⚠️ Max Investment সীমার কাছাকাছি ('+fmtU(settings.maxInv)+' USDT)।</div>'; }
+  const wa=el('warnArea'); let html='';
+  if(tState.kind==='zeroNoTarget') html+='<div class="danger-msg">⚠️ Position শূন্য কিন্তু Target পূরণ হয়নি। নতুন Buy plan করুন।</div>';
+  if(tState.kind==='targetHit') html+='<div class="warn" style="background:#123a24;border-left-color:#22c55e;color:#4ade80">🎉 Target Achieved! Reset করে নতুন Session শুরু করুন।</div>';
+  if(settings.maxInv>0 && n(p.totalBuyCost)>=settings.maxInv*0.95) html+='<div class="warn">⚠️ Max Investment সীমার কাছাকাছি ('+fmtU(settings.maxInv)+' USDT)।</div>';
   if(settings.maxBuys>0){
-    const cnt = session.orders.filter(o=>o.side==='buy'&&(o.status==='filled'||o.status==='partial')).length;
-    if(cnt>=settings.maxBuys) html += '<div class="warn">⚠️ Max Buy Orders সীমায় পৌঁছেছেন ('+settings.maxBuys+')।</div>';
+    const cnt=session.orders.filter(o=>o.side==='buy'&&(o.status==='filled'||o.status==='partial')).length;
+    if(cnt>=settings.maxBuys) html+='<div class="warn">⚠️ Max Buy Orders সীমায় পৌঁছেছেন ('+settings.maxBuys+')।</div>';
   }
-  wa.innerHTML = html;
+  if(market.tickSize||market.stepSize){
+    html+='<div class="warn" style="background:#0d1a2e;border-left-color:#3b82f6;color:#93c5fd">ℹ️ Binance tick='+(market.tickSize||'—')+' · step='+(market.stepSize||'—')+' প্রয়োগ করা হচ্ছে।</div>';
+  }
+  wa.innerHTML=html;
 }
 
 function renderOrders(){
-  const box = el('ordersList');
-  el('orderCount').textContent = session.orders.length;
+  const box=el('ordersList');
+  el('orderCount').textContent=session.orders.length;
   if(session.orders.length===0){ box.innerHTML='<div class="empty">এখনো কোনো order নেই</div>'; return; }
   box.innerHTML='';
   [...session.orders].reverse().forEach(o=>{
-    const d=document.createElement('div');
-    d.className='hist-item';
-    const side = o.side==='buy'?'🟢 BUY':'🔴 SELL';
-    const st = o.status;
+    const d=document.createElement('div'); d.className='hist-item';
+    const side=o.side==='buy'?'🟢 BUY':'🔴 SELL';
+    const st=o.status;
     const badgeCls = st==='filled'?'b-win':st==='pending'?'b-pend':st==='cancelled'?'b-rec':st==='partial'?'b-buy':'b-ready';
     let actions='';
     if(o.status==='pending'){
-      actions = `<button data-fill="${o.id}" style="font-size:10px;padding:4px 8px;border-radius:8px;border:1px solid #14301f;background:#0c1c13;color:#86efac;cursor:pointer;margin-right:4px">Fill</button>
+      actions = `<button data-fill="${o.id}" style="font-size:10px;padding:4px 8px;border-radius:8px;border:1px solid #14301f;background:#0c1c13;color:#86efac;cursor:pointer;margin-right:4px">Fill…</button>
                  <button data-cancel="${o.id}" style="font-size:10px;padding:4px 8px;border-radius:8px;border:1px solid #3a1a1a;background:#1c0f0f;color:#fca5a5;cursor:pointer">Cancel</button>`;
+    } else if(o.status==='partial'){
+      actions = `<button data-fill="${o.id}" style="font-size:10px;padding:4px 8px;border-radius:8px;border:1px solid #14301f;background:#0c1c13;color:#86efac;cursor:pointer">Add fill…</button>`;
     }
-    const filledRow = (o.status==='filled'||o.status==='partial')
-      ? `<div class="t">Filled: ${fmtU(o.filledUsdt)} USDT · ${fmtQFull(o.filledQty)} PEPE</div>` : '';
-    d.innerHTML = `<div style="flex:1;min-width:0">
+    const filledRow=(o.status==='filled'||o.status==='partial')
+      ?`<div class="t">Filled: ${fmtU(o.filledUsdt)} USDT · ${fmtQFull(o.filledQty)} PEPE @ ${fmtP(o.fillPrice)}</div>`:'';
+    d.innerHTML=`<div style="flex:1;min-width:0">
       <div><b>${side}</b> @ ${fmtP(o.price)} <span class="badge ${badgeCls}">${st}</span></div>
       <div class="t">Plan: ${fmtU(o.usdt)} USDT · ${fmtQFull(o.qty)} PEPE</div>
       ${filledRow}
     </div>
-    <div style="display:flex;flex-direction:column;gap:4px;align-items:flex-end;flex-shrink:0">
-      ${actions}
-    </div>`;
+    <div style="display:flex;flex-direction:column;gap:4px;align-items:flex-end;flex-shrink:0">${actions}</div>`;
     box.appendChild(d);
   });
-  box.querySelectorAll('[data-fill]').forEach(b=>{ b.onclick=()=>fillOrder(b.getAttribute('data-fill')); });
+  box.querySelectorAll('[data-fill]').forEach(b=>{ b.onclick=()=>openFillModal(b.getAttribute('data-fill')); });
   box.querySelectorAll('[data-cancel]').forEach(b=>{ b.onclick=()=>cancelOrder(b.getAttribute('data-cancel')); });
 }
 
-/* ---------- toast / confirm ---------- */
+/* ---------------- toast / confirm ---------------- */
 let toastT;
 function toast(msg){
-  const t=el('toast');
-  t.textContent=msg; t.classList.add('show');
-  clearTimeout(toastT);
-  toastT=setTimeout(()=>t.classList.remove('show'),2200);
+  const t=el('toast'); t.textContent=msg; t.classList.add('show');
+  clearTimeout(toastT); toastT=setTimeout(()=>t.classList.remove('show'),2200);
 }
 function confirmDialog(title,msg,onOk){
-  el('cfTitle').textContent=title;
-  el('cfMsg').textContent=msg;
-  const modal=el('confirmModal');
-  modal.classList.add('show');
+  el('cfTitle').textContent=title; el('cfMsg').textContent=msg;
+  const modal=el('confirmModal'); modal.classList.add('show');
   const ok=el('cfOk'), cancel=el('cfCancel');
   const cleanup=()=>{ modal.classList.remove('show'); ok.onclick=null; cancel.onclick=null; };
-  ok.onclick=()=>{ cleanup(); onOk(); };
-  cancel.onclick=cleanup;
+  ok.onclick=()=>{ cleanup(); onOk(); }; cancel.onclick=cleanup;
 }
 
-/* ---------- wire send controls ---------- */
-sendBtn.addEventListener('click', handleSubmit);
-input.addEventListener('keydown', e=>{
-  if(e.key==='Enter' && !e.isComposing){ e.preventDefault(); handleSubmit(); }
+/* ---------------- Partial-fill modal (ক) ---------------- */
+let fillModalOrderId = null;
+function openFillModal(orderId){
+  const o = session.orders.find(x=>x.id===orderId);
+  if(!o){ return; }
+  fillModalOrderId = orderId;
+  el('fmTitle').textContent = (o.status==='partial'?'Add fill — ':'Fill — ')+o.id;
+  el('fmInfo').innerHTML = `${o.side==='buy'?'🟢 BUY':'🔴 SELL'} @ ${fmtP(o.price)}\nPlan: ${fmtU(o.usdt)} USDT · ${fmtQFull(o.qty)} PEPE`
+    + (o.status==='partial'?`\nAlready filled: ${fmtU(o.filledUsdt)} USDT · ${fmtQFull(o.filledQty)} PEPE`:'');
+  // Compute suggested values
+  let planQtyLeft, planUsdtLeft;
+  if(o.status==='partial'){
+    planQtyLeft = D.sub(o.qty||'0', o.filledQty||'0');
+    planUsdtLeft = D.sub(o.usdt||'0', o.filledUsdt||'0');
+  } else {
+    planQtyLeft = o.qty||'0';
+    planUsdtLeft = o.usdt||'0';
+  }
+  el('fmQty').value = planQtyLeft;
+  el('fmUsdt').value = planUsdtLeft;
+  el('fmQtyHint').textContent = 'Plan baki: '+fmtQFull(planQtyLeft)+' PEPE';
+  el('fmUsdtHint').textContent = 'Plan baki: '+fmtU(planUsdtLeft)+' USDT';
+  el('fillModal').classList.add('show');
+}
+el('fmCancel').addEventListener('click', ()=>{ el('fillModal').classList.remove('show'); fillModalOrderId=null; });
+el('fmSave').addEventListener('click', ()=>{
+  if(!fillModalOrderId) { el('fillModal').classList.remove('show'); return; }
+  const q = String(el('fmQty').value||'').trim();
+  const u = String(el('fmUsdt').value||'').trim();
+  if(parseUSDT(q)===null || n(q)<=0){ toast('⚠️ সঠিক filled quantity দিন'); return; }
+  if(parseUSDT(u)===null || n(u)<0){ toast('⚠️ সঠিক USDT দিন'); return; }
+  const id = fillModalOrderId;
+  fillModalOrderId = null;
+  el('fillModal').classList.remove('show');
+  fillOrder(id, q, u);
 });
 
-/* ---------- Sell / Settings / Reset ---------- */
-el('btnSell').addEventListener('click', ()=>{
-  const p = computePosition();
-  const tState = getTradeState();
+/* ---------------- wire send ---------------- */
+sendBtn.addEventListener('click', handleSubmit);
+input.addEventListener('keydown', e=>{ if(e.key==='Enter'&&!e.isComposing){ e.preventDefault(); handleSubmit(); } });
 
-  if(tState.kind === 'targetHit'){
+/* ---------------- Sell / Settings / Reset ---------------- */
+el('btnSell').addEventListener('click', ()=>{
+  const p=computePosition();
+  const tState=getTradeState();
+
+  if(tState.kind==='pending'){
+    toast('⚠️ Pending order আছে — আগে Fill/Cancel করুন');
     openChat();
-    chatBox.innerHTML='';        // clear for fresh context
-    userScrolledUp = false;
-    botSay(
-      `🎉 <b>TARGET ACHIEVED!</b>\n\n`+
-      `Total Cost: ${fmtU(p.totalBuyCost)} USDT\n`+
-      `Total Sell Proceeds: ${fmtU(p.totalSellProceeds)} USDT\n`+
-      `Realized Net Profit: <span class="pos">${fmtU(p.realizedNet)} USDT</span>\n`+
-      `Realized P/L: <span class="pos">${fmtPct(p.realizedPct)}</span> (Target ${p.targetPct}%)\n\n`+
-      `Session সম্পন্ন — নতুন Sell শুরু করা যাবে না।\n`+
-      `নতুন Session শুরু করতে <b>Reset</b> ব্যবহার করুন।`);
-    session.conversation = {state:'sessionComplete', data:{}};
+    const pend = session.orders.find(o=>o.status==='pending');
+    const stateName = pend.side==='sell' ? 'afterSellPending' : 'afterPending';
+    session.conversation = { state:stateName, data:{ pendingOrderId: pend.id } };
     persist();
-    setInputEnabled(false, 'Session সম্পন্ন — Reset করুন', null);
+    const st=STATES[stateName];
+    const say = typeof st.say==='function'?st.say(session.conversation.data):st.say;
+    botSay(say);
+    setInputEnabled(true, st.placeholder, st.quick);
     return;
   }
-
+  if(tState.kind==='targetHit'){
+    openChat(); userScrolledUp=false;
+    botSay(`🎉 <b>TARGET ACHIEVED!</b>\n\nTotal Cost: ${fmtU(p.totalBuyCost)} USDT\nRealized Gross: <span class="pos">${fmtU(p.realizedGross)} USDT</span>\nSession Return: <span class="pos">${fmtPct(p.sessionReturnPct)}</span> (Target ${p.targetPct}%)\n\nSession সম্পন্ন — নতুন Sell শুরু করা যাবে না। Reset করুন।`);
+    session.conversation={state:'sessionComplete',data:{}}; persist();
+    setInputEnabled(false,'Session সম্পন্ন — Reset করুন',null);
+    return;
+  }
   if(!D.gt(p.remainingQty,'0')){
     toast('⚠️ কোনো PEPE নেই — Sell করা সম্ভব নয়');
-    openChat();
-    chatBox.innerHTML='';
-    userScrolledUp = false;
-    botSay(
-      `⚠️ বর্তমানে কোনো PEPE নেই।\n\n`+
-      `Total Cost: ${fmtU(p.totalBuyCost)} USDT\n`+
-      `Realized P/L: ${fmtU(p.realizedNet)} USDT (${fmtPct(p.realizedPct)})\n`+
-      `Target: ${p.targetPct}%\n\n`+
-      `নতুন Sell করতে হলে প্রথমে Buy করুন।`);
-    session.conversation = {state:'afterBuyFilled', data:{}};
-    persist();
-    setInputEnabled(true, 'buy / done', [
-      {label:'📉 নতুন Buy',value:'buy'},
-      {label:'✅ শেষ',value:'done'}
-    ]);
+    openChat(); userScrolledUp=false;
+    botSay(`⚠️ বর্তমানে কোনো PEPE নেই।\n\nTotal Cost: ${fmtU(p.totalBuyCost)} USDT\nRealized Gross: ${fmtU(p.realizedGross)} USDT (${fmtPct(p.sessionReturnPct)})\nTarget: ${p.targetPct}%\n\nনতুন Sell করতে হলে প্রথমে Buy করুন।`);
+    session.conversation={state:'afterBuyFilled',data:{}}; persist();
+    setInputEnabled(true,'buy / done',[{label:'📉 নতুন Buy',value:'buy'},{label:'✅ শেষ',value:'done'}]);
     return;
   }
-
-  openChat();
-  chatBox.innerHTML='';
-  userScrolledUp = false;
+  openChat(); userScrolledUp=false;
   botSay(`💱 <b>Sell / Record Sell</b>\n\n`+
     `Remaining: <b>${fmtQFull(p.remainingQty)} PEPE</b>\n`+
-    `Suggested Sell Target: <span class="hl">${fmtP(p.sellTarget)} USDT</span>\n`+
-    `Target: ${p.targetPct}% · Break-even: ${fmtP(p.breakEven)}\n\n`+
+    `Break-even: ${fmtP(p.breakEven)}\n`+
+    (p.targetSecured?`Target: <span class="pos">secured</span> — যেকোনো valid price দিন।`
+                    :`Suggested Sell Target: <span class="hl">${fmtP(p.sellTarget)} USDT</span>`) +
+    `\nTarget: ${p.targetPct}% · Fee: ${settings.feePct||0}%\n\n`+
     `Binance-এ যেই price-এ sell করেছেন সেটি দিন।`);
-  session.conversation = {state:'askSellPrice', data:{}};
-  persist();
+  session.conversation={state:'askSellPrice',data:{}}; persist();
   goToState('askSellPrice');
 });
 
 el('btnReset').addEventListener('click', ()=>{
   confirmDialog('সব ডেটা রিসেট করবেন?',
-    'বর্তমান Session-এর সব order, holdings, P/L, target এবং সম্পূর্ণ চ্যাট হিস্ট্রি মুছে যাবে। এটি আর ফিরিয়ে আনা যাবে না।',
+    'বর্তমান Session-এর সব order, holdings, P/L, target এবং সম্পূর্ণ চ্যাট হিস্ট্রি মুছে যাবে। নতুন Session #'+(session.id+1)+' শুরু হবে। এটি আর ফিরিয়ে আনা যাবে না।',
     async ()=>{
-      await store.del('session');
-      await clearChat();
-      session = newSession(1);
+      const nextSeq = (Number(session.id)||1)+1;
+      await store.del('session'); await clearChat();
+      session = newSession(nextSeq);
       orderSeq = 1;
       await persist();
-      chatBox.innerHTML='';
-      userScrolledUp = false;
-      renderAll();
-      startConversation();
-      toast('✅ Reset সম্পন্ন — নতুন Session');
+      chatBox.innerHTML=''; userScrolledUp=false;
+      renderAll(); startConversation();
+      toast('✅ Reset সম্পন্ন — Session #'+session.id);
     });
 });
 
 el('btnSettings').addEventListener('click', ()=>{
-  el('setMaxInv').value = settings.maxInv||'';
-  el('setMaxBuys').value = settings.maxBuys||'';
+  el('setMaxInv').value=settings.maxInv||'';
+  el('setMaxBuys').value=settings.maxBuys||'';
+  el('setFee').value=settings.feePct||'';
   el('settingsModal').classList.add('show');
 });
-el('setCancel').addEventListener('click', ()=>el('settingsModal').classList.remove('show'));
+el('setCancel').addEventListener('click',()=>el('settingsModal').classList.remove('show'));
 el('setSave').addEventListener('click', async ()=>{
-  const mi = Number(el('setMaxInv').value)||0;
-  const mb = Number(el('setMaxBuys').value)||0;
-  settings.maxInv = Math.max(0,mi);
-  settings.maxBuys = Math.max(0,Math.floor(mb));
+  const mi=Number(el('setMaxInv').value)||0;
+  const mb=Number(el('setMaxBuys').value)||0;
+  const fp=Number(el('setFee').value)||0;
+  settings.maxInv=Math.max(0,mi);
+  settings.maxBuys=Math.max(0,Math.floor(mb));
+  settings.feePct=Math.max(0,Math.min(10,fp));
   await persist();
   el('settingsModal').classList.remove('show');
-  renderDashboard();
-  toast('✅ Settings সেভ হয়েছে');
+  renderDashboard(); toast('✅ Settings সেভ হয়েছে');
 });
 
-/* ============================================================
-   FLOATING WIDGET — position, drag, keyboard, open/close
-   FAB is hidden while chat is open.
-   ============================================================ */
-const fab = el('fab');
-const chatwin = el('chatwin');
-let isOpen = false;
-let dragState = null;
-let suppressClickUntil = 0;
+/* ---------------- Floating widget ---------------- */
+const fab=el('fab'), chatwin=el('chatwin');
+let isOpen=false, dragState=null, suppressClickUntil=0;
 
 function getViewport(){
-  const vv = window.visualViewport;
-  return {
-    w: vv ? vv.width  : window.innerWidth,
-    h: vv ? vv.height : window.innerHeight,
-    offsetTop: vv ? vv.offsetTop : 0,
-    offsetLeft: vv ? vv.offsetLeft : 0
-  };
+  const vv=window.visualViewport;
+  return { w:vv?vv.width:window.innerWidth, h:vv?vv.height:window.innerHeight,
+           offsetTop:vv?vv.offsetTop:0, offsetLeft:vv?vv.offsetLeft:0 };
 }
-
 function setFabPos(x,y){
-  const w = fab.offsetWidth || 56, h = fab.offsetHeight || 56;
-  const vp = getViewport();
-  const maxX = vp.w - w - 4;
-  const maxY = vp.h - h - 4;
-  x = Math.max(4, Math.min(maxX, x));
-  y = Math.max(4, Math.min(maxY, y));
-  fab.style.left = x+'px';
-  fab.style.top  = (y + vp.offsetTop)+'px';
-  fab.style.right = 'auto';
-  fab.style.bottom = 'auto';
+  const w=fab.offsetWidth||56, h=fab.offsetHeight||56;
+  const vp=getViewport();
+  x=Math.max(4,Math.min(vp.w-w-4,x)); y=Math.max(4,Math.min(vp.h-h-4,y));
+  fab.style.left=x+'px'; fab.style.top=(y+vp.offsetTop)+'px';
+  fab.style.right='auto'; fab.style.bottom='auto';
 }
-
-function resetFabToDefault(){
-  fab.style.left='';
-  fab.style.top='';
-  fab.style.right='20px';
-  fab.style.bottom='calc(20px + var(--safe-bottom))';
-}
-
+function resetFabToDefault(){ fab.style.left=''; fab.style.top=''; fab.style.right='20px'; fab.style.bottom='calc(20px + var(--safe-bottom))'; }
 function initFabPosition(){ resetFabToDefault(); }
 
-/* ----- drag handling ----- */
 function dragStart(e){
-  if(isOpen) return;                 // no drag while chat is open
-  if(e.button !== undefined && e.button !== 0) return;
-  const p = e.touches ? e.touches[0] : e;
-  const rect = fab.getBoundingClientRect();
-  dragState = {
-    startX: p.clientX, startY: p.clientY,
-    offX: p.clientX - rect.left,
-    offY: p.clientY - rect.top,
-    moved: false
-  };
+  if(isOpen) return;
+  if(e.button!==undefined && e.button!==0) return;
+  const p=e.touches?e.touches[0]:e;
+  const r=fab.getBoundingClientRect();
+  dragState={ startX:p.clientX, startY:p.clientY, offX:p.clientX-r.left, offY:p.clientY-r.top, moved:false };
 }
 function dragMove(e){
   if(!dragState) return;
-  const p = e.touches ? e.touches[0] : e;
-  const dx = p.clientX - dragState.startX;
-  const dy = p.clientY - dragState.startY;
-  if(!dragState.moved && (Math.abs(dx)>5 || Math.abs(dy)>5)){
-    dragState.moved = true;
-    fab.style.transition = 'none';
-  }
+  const p=e.touches?e.touches[0]:e;
+  const dx=p.clientX-dragState.startX, dy=p.clientY-dragState.startY;
+  if(!dragState.moved && (Math.abs(dx)>5||Math.abs(dy)>5)){ dragState.moved=true; fab.style.transition='none'; }
   if(dragState.moved){
     if(e.cancelable) e.preventDefault();
-    const vp = getViewport();
-    setFabPos(p.clientX - dragState.offX - vp.offsetLeft, p.clientY - dragState.offY - vp.offsetTop);
+    const vp=getViewport();
+    setFabPos(p.clientX-dragState.offX-vp.offsetLeft, p.clientY-dragState.offY-vp.offsetTop);
   }
 }
 function dragEnd(){
   if(!dragState) return;
   if(dragState.moved){
-    suppressClickUntil = Date.now() + 350;
-    const rect = fab.getBoundingClientRect();
-    const vp = getViewport();
-    const margin = 12;
-    if(rect.left < margin || rect.top < margin ||
-       rect.right > vp.w - margin || rect.bottom > vp.h - margin){
-      resetFabToDefault();
-    }
-    fab.style.transition = '';
+    suppressClickUntil=Date.now()+350;
+    const r=fab.getBoundingClientRect(), vp=getViewport(), m=12;
+    if(r.left<m||r.top<m||r.right>vp.w-m||r.bottom>vp.h-m) resetFabToDefault();
+    fab.style.transition='';
   }
-  dragState = null;
+  dragState=null;
 }
 fab.addEventListener('mousedown', dragStart);
 window.addEventListener('mousemove', dragMove);
@@ -1599,137 +1641,83 @@ window.addEventListener('touchmove', dragMove, {passive:false});
 window.addEventListener('touchend', dragEnd);
 window.addEventListener('touchcancel', dragEnd);
 
-/* ----- open / close ----- */
 function openChat(){
   if(isOpen) return;
-  isOpen = true;
-  chatwin.classList.add('open');
-  fab.classList.add('hidden');        // hide FAB while open
-  fab.classList.remove('has-msg');
-  setTimeout(()=>{
-    if(input.disabled) return;
-    try{ input.focus({preventScroll:true}); }catch(e){}
-  }, 240);
+  isOpen=true; chatwin.classList.add('open'); fab.classList.add('hidden'); fab.classList.remove('has-msg');
+  setTimeout(()=>{ if(input.disabled) return; try{ input.focus({preventScroll:true}); }catch(e){} },240);
 }
 function closeChat(){
   if(!isOpen) return;
-  isOpen = false;
-  chatwin.classList.remove('open');
-  fab.classList.remove('hidden');     // restore FAB
+  isOpen=false; chatwin.classList.remove('open'); fab.classList.remove('hidden');
   try{ if(document.activeElement && chatwin.contains(document.activeElement)) document.activeElement.blur(); }catch(e){}
 }
 fab.addEventListener('click', (e)=>{
-  if(Date.now() < suppressClickUntil){ e.preventDefault(); e.stopPropagation(); return; }
+  if(Date.now()<suppressClickUntil){ e.preventDefault(); e.stopPropagation(); return; }
   if(isOpen) closeChat(); else openChat();
 });
- /* ------------------------------------------------------------
-   Double-click / double-tap anywhere inside chat window → close
-   ------------------------------------------------------------ */
+
 (function enableDoubleTapClose(){
-  const DOUBLE_MS = 320;   // max gap between two taps/clicks
-  let lastTap = 0;
-
+  const DOUBLE_MS=320; let lastTap=0;
   function handleDouble(ev){
-    const t = ev.target;
-    // Interactive controls-এ ডাবল-ট্যাপ উপেক্ষা করুন
+    const t=ev.target;
     if(t.closest && t.closest('input, button, a, textarea, select')) return;
-
-    const now = Date.now();
-    if(now - lastTap < DOUBLE_MS){
-      lastTap = 0;
-      ev.preventDefault();
-      ev.stopPropagation();
-      closeChat();
-      return;
-    }
-    lastTap = now;
+    const now=Date.now();
+    if(now-lastTap<DOUBLE_MS){ lastTap=0; ev.preventDefault(); ev.stopPropagation(); closeChat(); return; }
+    lastTap=now;
   }
-
-  // Desktop double click
-  chatwin.addEventListener('dblclick', (e)=>{
+  chatwin.addEventListener('dblclick',(e)=>{
     if(!isOpen) return;
-    const t = e.target;
+    const t=e.target;
     if(t.closest && t.closest('input, button, a')) return;
-    e.preventDefault();
-    e.stopPropagation();
-    closeChat();
+    e.preventDefault(); e.stopPropagation(); closeChat();
   });
-
-  // Mobile double tap (touch devices don't reliably fire dblclick)
-  chatwin.addEventListener('touchend', (e)=>{
+  chatwin.addEventListener('touchend',(e)=>{
     if(!isOpen) return;
-    const t = e.target;
+    const t=e.target;
     if(t.closest && t.closest('input, button, a')) return;
     handleDouble(e);
-  }, {passive:false});
+  },{passive:false});
 })();
 
-/* tap outside chat → close (never close for FAB or chat-internal taps) */
 document.addEventListener('pointerdown', (e)=>{
   if(!isOpen) return;
-  const t = e.target;
-  if(chatwin.contains(t) || fab.contains(t)) return;
+  const t=e.target;
+  if(chatwin.contains(t)||fab.contains(t)) return;
   if(t.closest && t.closest('.modal.show')) return;
   closeChat();
-}, {passive:true});
+},{passive:true});
 
-/* Esc closes on desktop */
-document.addEventListener('keydown', (e)=>{
-  if(e.key === 'Escape' && isOpen) closeChat();
-});
+document.addEventListener('keydown',(e)=>{ if(e.key==='Escape'&&isOpen) closeChat(); });
 
-/* ----- resize / orientation ----- */
 function onResizeOrViewportChange(){
-  if(!fab.style.left){ resetFabToDefault(); }
+  if(!fab.style.left) resetFabToDefault();
   else {
-    const rect = fab.getBoundingClientRect();
-    const vp = getViewport();
-    if(rect.left < 0 || rect.top < 0 || rect.right > vp.w || rect.bottom > vp.h){
-      resetFabToDefault();
-    }
+    const r=fab.getBoundingClientRect(), vp=getViewport();
+    if(r.left<0||r.top<0||r.right>vp.w||r.bottom>vp.h) resetFabToDefault();
   }
 }
 window.addEventListener('resize', onResizeOrViewportChange);
-window.addEventListener('orientationchange', ()=>setTimeout(onResizeOrViewportChange, 120));
+window.addEventListener('orientationchange', ()=>setTimeout(onResizeOrViewportChange,120));
 
-/* ----- keyboard handling ----- */
 (function keyboardHandler(){
-  const vv = window.visualViewport;
-  if(!vv) return;
-  let kbOpen = false;
+  const vv=window.visualViewport; if(!vv) return;
+  let kbOpen=false;
   function apply(){
-    const layoutH = window.innerHeight;
-    const visualH = vv.height;
-    const diff = layoutH - visualH;
-    if(diff > 140){
-      if(!kbOpen){
-        kbOpen = true;
-        document.body.classList.add('kb-open');
-      }
+    const layoutH=window.innerHeight, visualH=vv.height, diff=layoutH-visualH;
+    if(diff>140){
+      if(!kbOpen){ kbOpen=true; document.body.classList.add('kb-open'); }
       document.documentElement.style.setProperty('--kb-height', visualH+'px');
-      if(document.activeElement === input){
-        requestAnimationFrame(()=>{ chatBox.scrollTop = chatBox.scrollHeight; });
-      }
+      if(document.activeElement===input) requestAnimationFrame(()=>{ chatBox.scrollTop=chatBox.scrollHeight; });
     } else {
-      if(kbOpen){
-        kbOpen = false;
-        document.body.classList.remove('kb-open');
-        document.documentElement.style.removeProperty('--kb-height');
-      }
+      if(kbOpen){ kbOpen=false; document.body.classList.remove('kb-open'); document.documentElement.style.removeProperty('--kb-height'); }
     }
   }
   vv.addEventListener('resize', apply);
   vv.addEventListener('scroll', apply);
-  input.addEventListener('focus', ()=>{
-    setTimeout(()=>{
-      if(isOpen){ requestAnimationFrame(()=>{ chatBox.scrollTop = chatBox.scrollHeight; }); }
-    }, 300);
-  });
+  input.addEventListener('focus', ()=>{ setTimeout(()=>{ if(isOpen) requestAnimationFrame(()=>{ chatBox.scrollTop=chatBox.scrollHeight; }); },300); });
 })();
 
-/* ============================================================
-   PWA icons + manifest
-   ============================================================ */
+/* ---------------- PWA manifest ---------------- */
 (function buildPWA(){
   const svg=`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
     <rect width="512" height="512" rx="96" fill="#0a0f1e"/>
@@ -1744,15 +1732,10 @@ window.addEventListener('orientationchange', ()=>setTimeout(onResizeOrViewportCh
   function toPng(size){
     return new Promise(res=>{
       const img=new Image();
-      img.onload=()=>{
-        const c=document.createElement('canvas');c.width=size;c.height=size;
-        const ctx=c.getContext('2d');
-        ctx.fillStyle='#0a0f1e';ctx.fillRect(0,0,size,size);
-        ctx.drawImage(img,0,0,size,size);
-        res(c.toDataURL('image/png'));
-      };
-      img.onerror=()=>res(uri);
-      img.src=uri;
+      img.onload=()=>{ const c=document.createElement('canvas');c.width=size;c.height=size;
+        const ctx=c.getContext('2d');ctx.fillStyle='#0a0f1e';ctx.fillRect(0,0,size,size);
+        ctx.drawImage(img,0,0,size,size); res(c.toDataURL('image/png')); };
+      img.onerror=()=>res(uri); img.src=uri;
     });
   }
   const manifest={name:'PEPE Smart Trader',short_name:'PEPE Trader',
@@ -1761,58 +1744,43 @@ window.addEventListener('orientationchange', ()=>setTimeout(onResizeOrViewportCh
     background_color:'#0a0f1e',theme_color:'#0a0f1e',lang:'bn',icons:[]};
   (async()=>{
     const [a,b]=await Promise.all([toPng(192),toPng(512)]);
-    manifest.icons=[
-      {src:a,sizes:'192x192',type:'image/png',purpose:'any'},
-      {src:b,sizes:'512x512',type:'image/png',purpose:'any'}
-    ];
+    manifest.icons=[{src:a,sizes:'192x192',type:'image/png',purpose:'any'},
+                    {src:b,sizes:'512x512',type:'image/png',purpose:'any'}];
     const blob=new Blob([JSON.stringify(manifest)],{type:'application/manifest+json'});
-    el('appManifest').href=URL.createObjectURL(blob);
+    try{ el('appManifest').href=URL.createObjectURL(blob); }catch(e){}
   })();
 })();
 
-/* ---------- service worker ---------- */
+/* ---------------- Service worker (গ): register same-origin sw.js ---------------- */
 (function sw(){
   if(!('serviceWorker' in navigator)) return;
   if(location.protocol!=='http:' && location.protocol!=='https:') return;
-  const code=`const C='pepe-v6';
-  self.addEventListener('install',e=>self.skipWaiting());
-  self.addEventListener('activate',e=>e.waitUntil(self.clients.claim()));
-  self.addEventListener('fetch',e=>{
-    if(e.request.method!=='GET')return;
-    e.respondWith(caches.match(e.request).then(c=>c||fetch(e.request).then(r=>{
-      const cp=r.clone();caches.open(C).then(cc=>cc.put(e.request,cp)).catch(()=>{});return r;
-    }).catch(()=>c)));
-  });`;
-  try{
-    const blob=new Blob([code],{type:'application/javascript'});
-    navigator.serviceWorker.register(URL.createObjectURL(blob)).catch(()=>{});
-  }catch(e){}
+  navigator.serviceWorker.register('sw.js', {scope:'./'}).catch(err=>{
+    // registration fails if sw.js missing or scope mismatch - inform once
+    console.warn('SW registration failed (offline disabled):', err && err.message);
+  });
 })();
 
-/* ---------- google translate killer ---------- */
+/* Translate killer (scoped, minimal) */
 (function killTranslate(){
   const kill=()=>{
-    document.querySelectorAll('.goog-te-banner-frame,.skiptranslate>iframe,iframe.goog-te-banner-frame,#goog-gt-tt,.goog-te-balloon-frame').forEach(el=>el.remove());
+    document.querySelectorAll('.goog-te-banner-frame,.skiptranslate>iframe,iframe.goog-te-banner-frame,#goog-gt-tt,.goog-te-balloon-frame').forEach(e=>e.remove());
     if(document.body) document.body.style.top='0px';
     document.documentElement.style.marginTop='0px';
   };
-  kill();
-  try{ new MutationObserver(kill).observe(document.documentElement,{childList:true,subtree:true}); }catch(e){}
-  setTimeout(kill,500); setTimeout(kill,1500);
+  kill(); setTimeout(kill,500); setTimeout(kill,1500);
 })();
 
-/* ---------- boot ---------- */
+/* ---------------- boot ---------------- */
 (async function boot(){
   await loadAll();
   renderAll();
   initFabPosition();
   startConversation();
-
   await fetchExchangeInfo();
   fetchLivePrice();
   setInterval(fetchLivePrice, 15000);
   setInterval(renderTicker, 1000);
-
   document.addEventListener('visibilitychange', ()=>{ if(document.hidden){ persist(); persistChat(); } });
   window.addEventListener('beforeunload', ()=>{ persist(); persistChat(); });
 })();
