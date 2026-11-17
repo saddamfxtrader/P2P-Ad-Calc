@@ -1644,8 +1644,8 @@ fab.addEventListener('click', (e)=>{
 
 
 
-  (function enableTripleTapClose(){
-  const TRIPLE_MS = 600;        // ৩টি ক্লিক এই সময়ের মধ্যে হতে হবে (ms)
+ (function enableTripleTapClose(){
+  const TRIPLE_MS = 600;
   let tapCount = 0;
   let firstTapTime = 0;
   let resetTimer = null;
@@ -1658,13 +1658,13 @@ fab.addEventListener('click', (e)=>{
 
   function registerTap(ev, isTouch){
     const t = ev.target;
-    // ইনপুট/বাটন/লিংকে ক্লিক হলে গোনা হবে না
-    const blockSel = isTouch ? 'input, button, a, textarea, select' : 'input, button, a';
+    const blockSel = isTouch
+      ? 'input, button, a, textarea, select'
+      : 'input, button, a';
     if(t.closest && t.closest(blockSel)) return;
 
     const now = Date.now();
 
-    // প্রথম ট্যাপ অথবা আগের সিরিজ টাইমআউট হয়ে গেছে
     if(tapCount === 0 || now - firstTapTime > TRIPLE_MS){
       resetCounter();
       tapCount = 1;
@@ -1673,7 +1673,6 @@ fab.addEventListener('click', (e)=>{
       tapCount++;
     }
 
-    // টাইমআউট রিসেট (৩ ক্লিক না হলে কাউন্টার রিসেট)
     if(resetTimer) clearTimeout(resetTimer);
     resetTimer = setTimeout(resetCounter, TRIPLE_MS);
 
@@ -1685,17 +1684,30 @@ fab.addEventListener('click', (e)=>{
     }
   }
 
-  // ডেস্কটপ: সাধারণ click ইভেন্ট ব্যবহার করি (dblclick নয়)
+  // ডেস্কটপ: click ইভেন্ট
   chatwin.addEventListener('click', (e)=>{
     if(!isOpen) return;
     registerTap(e, false);
   });
 
-  // মোবাইল: touchend দিয়ে ট্যাপ গোনা
+  // মোবাইল: touchend ইভেন্ট
   chatwin.addEventListener('touchend', (e)=>{
     if(!isOpen) return;
     registerTap(e, true);
   }, {passive:false});
+
+  // ⚠️ গুরুত্বপূর্ণ: মোবাইলে dblclick ব্লক করুন (এটাই মূল সমস্যা ছিল)
+  chatwin.addEventListener('dblclick', (e)=>{
+    e.preventDefault();
+    e.stopPropagation();
+    // কিছুই করব না — শুধু ব্রাউজারের ডিফল্ট ডাবল-ট্যাপ ব্লক
+  }, {passive:false});
+
+  // iOS Safari-এর জন্য: ডাবল-ট্যাপ জুম বন্ধ (ঐচ্ছিক কিন্তু উপকারী)
+  chatwin.addEventListener('touchstart', (e)=>{
+    if(e.touches.length > 1) return;
+    // শুধু চ্যাট বক্সের ভিতরে ডাবল-ট্যাপ জুম প্রতিরোধ
+  }, {passive:true});
 })();
 
 document.addEventListener('pointerdown', (e)=>{
