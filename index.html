@@ -1642,27 +1642,60 @@ fab.addEventListener('click', (e)=>{
   if(isOpen) closeChat(); else openChat();
 });
 
-(function enableDoubleTapClose(){
-  const DOUBLE_MS=320; let lastTap=0;
-  function handleDouble(ev){
-    const t=ev.target;
-    if(t.closest && t.closest('input, button, a, textarea, select')) return;
-    const now=Date.now();
-    if(now-lastTap<DOUBLE_MS){ lastTap=0; ev.preventDefault(); ev.stopPropagation(); closeChat(); return; }
-    lastTap=now;
+
+
+  (function enableTripleTapClose(){
+  const TRIPLE_MS = 600;        // ৩টি ক্লিক এই সময়ের মধ্যে হতে হবে (ms)
+  let tapCount = 0;
+  let firstTapTime = 0;
+  let resetTimer = null;
+
+  function resetCounter(){
+    tapCount = 0;
+    firstTapTime = 0;
+    if(resetTimer){ clearTimeout(resetTimer); resetTimer = null; }
   }
-  chatwin.addEventListener('dblclick',(e)=>{
+
+  function registerTap(ev, isTouch){
+    const t = ev.target;
+    // ইনপুট/বাটন/লিংকে ক্লিক হলে গোনা হবে না
+    const blockSel = isTouch ? 'input, button, a, textarea, select' : 'input, button, a';
+    if(t.closest && t.closest(blockSel)) return;
+
+    const now = Date.now();
+
+    // প্রথম ট্যাপ অথবা আগের সিরিজ টাইমআউট হয়ে গেছে
+    if(tapCount === 0 || now - firstTapTime > TRIPLE_MS){
+      resetCounter();
+      tapCount = 1;
+      firstTapTime = now;
+    } else {
+      tapCount++;
+    }
+
+    // টাইমআউট রিসেট (৩ ক্লিক না হলে কাউন্টার রিসেট)
+    if(resetTimer) clearTimeout(resetTimer);
+    resetTimer = setTimeout(resetCounter, TRIPLE_MS);
+
+    if(tapCount >= 3){
+      resetCounter();
+      ev.preventDefault();
+      ev.stopPropagation();
+      closeChat();
+    }
+  }
+
+  // ডেস্কটপ: সাধারণ click ইভেন্ট ব্যবহার করি (dblclick নয়)
+  chatwin.addEventListener('click', (e)=>{
     if(!isOpen) return;
-    const t=e.target;
-    if(t.closest && t.closest('input, button, a')) return;
-    e.preventDefault(); e.stopPropagation(); closeChat();
+    registerTap(e, false);
   });
-  chatwin.addEventListener('touchend',(e)=>{
+
+  // মোবাইল: touchend দিয়ে ট্যাপ গোনা
+  chatwin.addEventListener('touchend', (e)=>{
     if(!isOpen) return;
-    const t=e.target;
-    if(t.closest && t.closest('input, button, a')) return;
-    handleDouble(e);
-  },{passive:false});
+    registerTap(e, true);
+  }, {passive:false});
 })();
 
 document.addEventListener('pointerdown', (e)=>{
