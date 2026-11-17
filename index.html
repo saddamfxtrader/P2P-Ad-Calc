@@ -1630,7 +1630,6 @@ window.addEventListener('touchcancel', dragEnd);
 function openChat(){
   if(isOpen) return;
   isOpen=true; chatwin.classList.add('open'); fab.classList.add('hidden'); fab.classList.remove('has-msg');
-  setTimeout(()=>{ if(input.disabled) return; try{ input.focus({preventScroll:true}); }catch(e){} },240);
 }
 function closeChat(){
   if(!isOpen) return;
