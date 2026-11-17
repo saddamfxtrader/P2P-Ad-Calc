@@ -1,9 +1,11 @@
-/* Binance Spot Calculator — Service Worker (v8)
-   - Offline app shell cache
-   - Never cache Binance API responses
-   - Cleanup old caches
+/* PEPE Smart Trader - Service Worker (offline-first app shell)
+   Place this file next to index.html.
+   Strategy:
+     - Cache same-origin static app shell (index.html, sw.js).
+     - Do NOT cache Binance API (always network) so live prices stay fresh.
+     - Fallback to cached index.html for navigation requests when offline.
 */
-const CACHE = 'spot-shell-v8';
+const CACHE = 'pepe-shell-v1';
 const SHELL = ['./', './index.html', './sw.js'];
 
 self.addEventListener('install', (e) => {
@@ -24,13 +26,13 @@ self.addEventListener('fetch', (e) => {
   const req = e.request;
   const url = new URL(req.url);
 
-  // Never cache Binance API — live data must be fresh
+  // Always network for Binance API (live data must be fresh)
   if (url.hostname.endsWith('binance.com')) {
     e.respondWith(fetch(req).catch(() => new Response('', {status:503})));
     return;
   }
 
-  // Navigation: network-first, fallback cached shell
+  // For navigation requests: network first, fallback to cached shell
   if (req.mode === 'navigate') {
     e.respondWith(
       fetch(req).then(res => {
@@ -42,7 +44,7 @@ self.addEventListener('fetch', (e) => {
     return;
   }
 
-  // Same-origin GET: cache-first
+  // For other GETs: cache-first, then network
   if (req.method === 'GET' && url.origin === location.origin) {
     e.respondWith(
       caches.match(req).then(hit => hit || fetch(req).then(res => {
@@ -53,4 +55,6 @@ self.addEventListener('fetch', (e) => {
     );
     return;
   }
+
+  // Default: pass-through
 });
