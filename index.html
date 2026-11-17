@@ -1656,11 +1656,9 @@ fab.addEventListener('click', (e)=>{
     if(resetTimer){ clearTimeout(resetTimer); resetTimer = null; }
   }
 
-  function registerTap(ev, isTouch){
+  function registerTap(ev){
     const t = ev.target;
-    const blockSel = isTouch
-      ? 'input, button, a, textarea, select'
-      : 'input, button, a';
+    const blockSel = 'input, button, a, textarea, select';
     if(t.closest && t.closest(blockSel)) return;
 
     const now = Date.now();
@@ -1684,16 +1682,11 @@ fab.addEventListener('click', (e)=>{
     }
   }
 
-  // ডেস্কটপ: click ইভেন্ট
-  chatwin.addEventListener('click', (e)=>{
+  // একটি pointerup event-ই ব্যবহার করুন। মোবাইলে touchend-এর পর synthetic
+  // click আসে; দুটো listener থাকলে একটি tap দুইবার গণনা হতো।
+  chatwin.addEventListener('pointerup', (e)=>{
     if(!isOpen) return;
-    registerTap(e, false);
-  });
-
-  // মোবাইল: touchend ইভেন্ট
-  chatwin.addEventListener('touchend', (e)=>{
-    if(!isOpen) return;
-    registerTap(e, true);
+    registerTap(e);
   }, {passive:false});
 
   // ⚠️ গুরুত্বপূর্ণ: মোবাইলে dblclick ব্লক করুন (এটাই মূল সমস্যা ছিল)
