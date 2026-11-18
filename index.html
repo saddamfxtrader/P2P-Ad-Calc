@@ -409,12 +409,18 @@ body.kb-open .chatwin{
 
 <script>
 /* =====================================================================
-   PEPE Smart Trader — v7.3 (Target Review before Sell)
-   Change from v7.2:
-     - NEW state: confirmSellTarget — before entering askSellPrice, bot
-       asks whether to use current target, change it, or sell at market.
-     - Only Tier 1 added (no quick preset buttons for target %).
-     - All existing functionality untouched.
+   PEPE Smart Trader — v7.4 FINAL
+   Fixes since v7.3:
+     1) "টার্গেট বদলান" এর পর quick buttons stale থাকত
+        → askNewTargetPct.next থেকে অপ্রয়োজনীয় botSay সরানো
+     2) "TARGET ACHIEVED" দুইবার আসত
+        → afterSellFilled.say আর TARGET ব্লক দেখাবে না
+        → target hit হলে next সরাসরি sessionComplete-এ যাবে
+     3) confirmSellTarget → askSellQty-তে target secured হলে
+        sellPrice হারানোর ঝুঁকি
+        → target secured হলে askSellPrice-এ, non-secured হলে
+          sellPrice সেট করে askSellQty-তে
+   সব অন্যান্য ফাংশনালিটি v7.3-এর মতোই অপরিবর্তিত।
    ===================================================================== */
 (function(){
 'use strict';
@@ -635,7 +641,7 @@ async function loadAll(){
   orderSeq = maxId+1;
   if(!session.conversation) session.conversation = {state:'askBuyPrice', data:{}};
 
-  const sellStates=['askSellPrice','askSellQty','confirmSell','afterSellPending','confirmSellTarget'];
+  const sellStates=['askSellPrice','askSellQty','confirmSell','afterSellPending','confirmSellTarget','askNewTargetPct'];
   if(session.conversation && sellStates.includes(session.conversation.state)){
     const p = computePosition();
     if(!D.gt(p.remainingQty,'0') || sessionTargetHit()){
@@ -961,7 +967,7 @@ const STATES = {
       return 'done';
     }
   },
-  /* ===== NEW (Tier 1): Target Review before Sell ===== */
+  /* ===== Tier 1: Target Review before Sell ===== */
   confirmSellTarget: {
     field:'sellTargetChoice',
     say:()=>{
@@ -998,22 +1004,34 @@ const STATES = {
       const p = computePosition();
       if(v==='this'){
         if(p.targetSecured){
-          /* target already secured → sell price manually needed */
+          /* target already secured → price must be entered manually */
+          delete d.sellPrice;
           return 'askSellPrice';
         }
-        /* Use current suggested target as the sell price */
         d.sellPrice = roundPrice(p.sellTarget);
+        if(n(d.sellPrice) <= 0){
+          botSay('⚠️ Suggested target price ঠিকভাবে হিসাব হয়নি — নিজে price দিন।');
+          delete d.sellPrice;
+          return 'askSellPrice';
+        }
         return 'askSellQty';
       }
       if(v==='market'){
         if(!market.price){
           botSay('⚠️ Market price এখনো লোড হয়নি — নিজে price দিন।');
+          delete d.sellPrice;
           return 'askSellPrice';
         }
         d.sellPrice = roundPrice(market.price);
+        if(n(d.sellPrice) <= 0){
+          botSay('⚠️ Market price সঠিক নয় — নিজে price দিন।');
+          delete d.sellPrice;
+          return 'askSellPrice';
+        }
         return 'askSellQty';
       }
       /* change → ask new target % */
+      delete d.sellPrice;
       return 'askNewTargetPct';
     }
   },
@@ -1034,11 +1052,14 @@ const STATES = {
       if(n(x)>1000) return {ok:false,msg:'অবাস্তব মনে হচ্ছে'};
       return {ok:true,value:x};
     },
-    next:(v)=>{
+    next:(v,d)=>{
+      /* FIX: no botSay here — let goToState(confirmSellTarget) handle
+         say + quick buttons cleanly so stale quick buttons are gone. */
       session.targetPct = String(v);
       persist();
-      const p = computePosition();
-      botSay(`✅ Target আপডেট হয়েছে: <b>${p.targetPct}%</b>\nনতুন Suggested Sell Target: <span class="hl">${fmtP(p.sellTarget)} USDT</span>\n\nএখন টার্গেট নিশ্চিত করুন।`);
+      delete d.newTargetPct;
+      delete d.sellPrice;
+      delete d.sellTargetChoice;
       return 'confirmSellTarget';
     }
   },
@@ -1155,16 +1176,15 @@ const STATES = {
     field:'_go',
     say:()=>{
       const p = computePosition();
-      const done = sessionTargetHit();
-      if(done){
-        return `🎉 <b>TARGET ACHIEVED!</b>\n\n`+
-          `Total Cost: ${fmtU(p.totalBuyCost)} USDT\n`+
-          `Total Sell Proceeds (gross): ${fmtU(p.totalSellProceeds)} USDT\n`+
-          `Realized Gross: <span class="pos">${fmtU(p.realizedGross)} USDT</span>\n`+
-          (n(p.feeEstimate)>0?`Est. Fee: ${fmtU(p.feeEstimate)} USDT\nRealized Net (est.): <span class="pos">${fmtU(p.realizedNet)} USDT</span>\n`:'')+
-          `Session Return: <span class="pos">${fmtPct(p.sessionReturnPct)}</span> (Target ${p.targetPct}%)\n`+
-          `Realized % (on sold basis): ${fmtPct(p.realizedPct_onSold)}\n\n`+
-          `Session সফলভাবে সম্পন্ন ✅ — Reset করে নতুন Session শুরু করুন।`;
+      const hit = sessionTargetHit();
+      /* FIX: never show the TARGET ACHIEVED block here.
+         If target is hit, next() routes to sessionComplete which shows it ONCE. */
+      if(hit){
+        return `✅ Sell fill হয়েছে।\n\n`+
+          `Remaining PEPE: <b>${fmtQ(p.remainingQty)}</b>\n`+
+          `Realized Gross: <span class="${n(p.realizedGross)>=0?'pos':'neg'}">${fmtU(p.realizedGross)} USDT</span>\n`+
+          `Session Return: ${fmtPct(p.sessionReturnPct)} · Target: ${p.targetPct}%\n\n`+
+          `Target হিট হয়েছে — চূড়ান্ত summary দেখানো হচ্ছে…`;
       }
       const warn = !D.gt(p.remainingQty,'0') && n(p.sessionReturnPct)<n(p.targetPct)
         ? `\n\n⚠️ সব PEPE বিক্রি হয়েছে কিন্তু Target পূরণ হয়নি — Loss Recovery Mode.` : '';
@@ -1188,6 +1208,8 @@ const STATES = {
       return {ok:false,msg:'"buy", "sell", বা "done" দিন'};
     },
     next:(v)=>{
+      /* FIX: if target is hit, go straight to sessionComplete
+         (which shows the single TARGET ACHIEVED message). */
       if(sessionTargetHit()) return 'sessionComplete';
       if(v==='buy'){
         if(session.orders.some(o=>o.status==='pending')) return 'afterPending';
@@ -1597,9 +1619,9 @@ el('btnSell').addEventListener('click', ()=>{
   }
   if(tState.kind==='targetHit'){
     openChat(); userScrolledUp=false;
-    botSay(`🎉 <b>TARGET ACHIEVED!</b>\n\nTotal Cost: ${fmtU(p.totalBuyCost)} USDT\nRealized Gross: <span class="pos">${fmtU(p.realizedGross)} USDT</span>\nSession Return: <span class="pos">${fmtPct(p.sessionReturnPct)}</span> (Target ${p.targetPct}%)\n\nSession সম্পন্ন — নতুন Sell শুরু করা যাবে না। Reset করুন।`);
+    /* FIX: route through sessionComplete which shows target message ONCE */
     session.conversation={state:'sessionComplete',data:{}}; persist();
-    setInputEnabled(false,'Session সম্পন্ন — Reset করুন',null);
+    goToState('sessionComplete');
     return;
   }
   if(!D.gt(p.remainingQty,'0')){
@@ -1611,7 +1633,7 @@ el('btnSell').addEventListener('click', ()=>{
     return;
   }
   openChat(); userScrolledUp=false;
-  /* NEW: Start with confirmSellTarget review */
+  /* Start with confirmSellTarget review */
   goToState('confirmSellTarget');
 });
 
