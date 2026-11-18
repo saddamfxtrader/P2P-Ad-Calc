@@ -1547,6 +1547,7 @@ el('btnReset').addEventListener('click', ()=>{
   confirmDialog('সব ডেটা রিসেট করবেন?',
     'বর্তমান Session-এর সব order, holdings, P/L, target এবং সম্পূর্ণ চ্যাট হিস্ট্রি মুছে যাবে এবং নতুন করে Session শুরু হবে। এটি আর ফিরিয়ে আনা যাবে না।',
     async ()=>{
+if(document.activeElement === input) input.blur();
       await store.del('session'); await clearChat();
       session = newSession(1);
       orderSeq = 1;
