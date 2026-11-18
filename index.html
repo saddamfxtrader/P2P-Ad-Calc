@@ -409,11 +409,11 @@ body.kb-open .chatwin{
 
 <script>
 /* =====================================================================
-   PEPE Smart Trader — v7.1 (duplicate-message fix + WAP/BE removed)
-   Changes:
-     (ক) fillOrder/cancelOrder accept isFromChat -> skip syncConversation...
-     (খ) afterPending/afterSellPending pass isFromChat=true
-     (গ) WAP & Break-even removed from dashboard + chat messages
+   PEPE Smart Trader — v7.2 (mobile keyboard fix)
+   Changes from v7.1:
+     - setInputEnabled(): removed auto-focus so mobile keyboard only opens
+       when the user taps the input field themselves.
+     - Reset / state transitions no longer pop the soft keyboard.
    ===================================================================== */
 (function(){
 'use strict';
@@ -1185,7 +1185,11 @@ function replayChat(){
 function setInputEnabled(on, placeholder, quick){
   input.disabled=!on; sendBtn.disabled=!on;
   input.placeholder = placeholder||(on?'উত্তর লিখুন...':'অপেক্ষা করুন...');
-  if(on) setTimeout(()=>{ try{ input.focus({preventScroll:true}); }catch(e){} },80);
+  /* ⚠️ IMPORTANT (v7.2 fix):
+     No auto-focus here. On mobile, calling input.focus() opens the soft
+     keyboard. We only want that when the USER taps the input themselves.
+     So we deliberately do NOT call focus() — the keyboard will open only
+     on the user's own tap on the input field. */
   quickBox.innerHTML='';
   if(quick&&quick.length){
     quick.forEach(q=>{
@@ -1630,6 +1634,9 @@ window.addEventListener('touchcancel', dragEnd);
 function openChat(){
   if(isOpen) return;
   isOpen=true; chatwin.classList.add('open'); fab.classList.add('hidden'); fab.classList.remove('has-msg');
+  /* ⚠️ IMPORTANT: Do NOT call input.focus() here.
+     Mobile browsers open the soft keyboard on programmatic focus().
+     The user must tap the input themselves to open the keyboard. */
 }
 function closeChat(){
   if(!isOpen) return;
