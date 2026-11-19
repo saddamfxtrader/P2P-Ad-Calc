@@ -409,18 +409,11 @@ body.kb-open .chatwin{
 
 <script>
 /* =====================================================================
-   PEPE Smart Trader — v7.4 FINAL
-   Fixes since v7.3:
-     1) "টার্গেট বদলান" এর পর quick buttons stale থাকত
-        → askNewTargetPct.next থেকে অপ্রয়োজনীয় botSay সরানো
-     2) "TARGET ACHIEVED" দুইবার আসত
-        → afterSellFilled.say আর TARGET ব্লক দেখাবে না
-        → target hit হলে next সরাসরি sessionComplete-এ যাবে
-     3) confirmSellTarget → askSellQty-তে target secured হলে
-        sellPrice হারানোর ঝুঁকি
-        → target secured হলে askSellPrice-এ, non-secured হলে
-          sellPrice সেট করে askSellQty-তে
-   সব অন্যান্য ফাংশনালিটি v7.3-এর মতোই অপরিবর্তিত।
+   PEPE Smart Trader — v7.2 (mobile keyboard fix)
+   Changes from v7.1:
+     - setInputEnabled(): removed auto-focus so mobile keyboard only opens
+       when the user taps the input field themselves.
+     - Reset / state transitions no longer pop the soft keyboard.
    ===================================================================== */
 (function(){
 'use strict';
@@ -607,7 +600,7 @@ async function persistChat(){ try{ await store.set(CHAT_KEY, chatHistory); }catc
 async function loadChat(){ const arr=await store.get(CHAT_KEY,[]); chatHistory=Array.isArray(arr)?arr:[]; }
 async function clearChat(){ chatHistory=[]; await store.del(CHAT_KEY); }
 
-/* ---------------- session model ---------------- */
+/* ---------------- session model (v7: seq + short code) ---------------- */
 let session = null;
 let settings = { maxInv:0, maxBuys:0, feePct:0 };
 let orderSeq = 1;
@@ -641,7 +634,7 @@ async function loadAll(){
   orderSeq = maxId+1;
   if(!session.conversation) session.conversation = {state:'askBuyPrice', data:{}};
 
-  const sellStates=['askSellPrice','askSellQty','confirmSell','afterSellPending','confirmSellTarget','askNewTargetPct'];
+  const sellStates=['askSellPrice','askSellQty','confirmSell','afterSellPending'];
   if(session.conversation && sellStates.includes(session.conversation.state)){
     const p = computePosition();
     if(!D.gt(p.remainingQty,'0') || sessionTargetHit()){
@@ -656,7 +649,7 @@ async function loadAll(){
   await loadChat();
 }
 
-/* ---------------- financial engine ---------------- */
+/* ---------------- financial engine (LEDGER, same as v6) ---------------- */
 function computePosition(){
   const buys  = session.orders.filter(o=>o.side==='buy'  && (o.status==='filled'||o.status==='partial'));
   const sells = session.orders.filter(o=>o.side==='sell' && (o.status==='filled'||o.status==='partial'));
@@ -963,104 +956,8 @@ const STATES = {
         if(session.orders.some(o=>o.status==='pending')) return 'afterPending';
         return 'askBuyPrice';
       }
-      if(v==='sell'){ return sellBlocked().blocked ? 'afterBuyFilled' : 'confirmSellTarget'; }
+      if(v==='sell'){ return sellBlocked().blocked ? 'afterBuyFilled' : 'askSellPrice'; }
       return 'done';
-    }
-  },
-  /* ===== Tier 1: Target Review before Sell ===== */
-  confirmSellTarget: {
-    field:'sellTargetChoice',
-    say:()=>{
-      const p = computePosition();
-      const cur = p.targetSecured
-        ? `Target: <span class="pos">already secured</span> — যেকোনো valid price দিতে পারেন।`
-        : `বর্তমান Target: <b>${p.targetPct}%</b>\nSuggested Sell Target: <span class="hl">${fmtP(p.sellTarget)} USDT</span>`;
-      const mkt = market.price ? `\nবর্তমান Market Price: <b>${fmtP(market.price)} USDT</b>` : '';
-      return `🎯 <b>Sell করার আগে টার্গেট নিশ্চিত করুন</b>\n\n`+
-        `Position: ${fmtQFull(p.remainingQty)} PEPE\n`+
-        cur + mkt +
-        `\n\nআপনি কী করতে চান?\n`+
-        `• <b>এই টার্গেটে</b> — বর্তমান sell target-এই এগিয়ে যান\n`+
-        `• <b>টার্গেট বদলান</b> — নতুন % সেট করে আবার review\n`+
-        `• <b>বাজার দামে</b> — live market price-কে sell price ধরুন`;
-    },
-    placeholder:'এই টার্গেটে / বদলান / বাজার দামে',
-    quick:[
-      {label:'✅ এই টার্গেটে',value:'this'},
-      {label:'🔄 টার্গেট বদলান',value:'change'},
-      {label:'📉 বাজার দামে',value:'market'}
-    ],
-    validate:(v)=>{
-      const s=v.toLowerCase().trim();
-      if(['this','এই','এই টার্গেটে','ok','yes','হ্যাঁ','y','current','keep'].includes(s))
-        return {ok:true,value:'this'};
-      if(['change','বদলান','টার্গেট বদলান','new','নতুন','edit'].includes(s))
-        return {ok:true,value:'change'};
-      if(['market','বাজার','বাজার দামে','live','এখনই','now'].includes(s))
-        return {ok:true,value:'market'};
-      return {ok:false,msg:'"এই টার্গেটে", "টার্গেট বদলান", বা "বাজার দামে" বেছে নিন'};
-    },
-    next:(v,d)=>{
-      const p = computePosition();
-      if(v==='this'){
-        if(p.targetSecured){
-          /* target already secured → price must be entered manually */
-          delete d.sellPrice;
-          return 'askSellPrice';
-        }
-        d.sellPrice = roundPrice(p.sellTarget);
-        if(n(d.sellPrice) <= 0){
-          botSay('⚠️ Suggested target price ঠিকভাবে হিসাব হয়নি — নিজে price দিন।');
-          delete d.sellPrice;
-          return 'askSellPrice';
-        }
-        return 'askSellQty';
-      }
-      if(v==='market'){
-        if(!market.price){
-          botSay('⚠️ Market price এখনো লোড হয়নি — নিজে price দিন।');
-          delete d.sellPrice;
-          return 'askSellPrice';
-        }
-        d.sellPrice = roundPrice(market.price);
-        if(n(d.sellPrice) <= 0){
-          botSay('⚠️ Market price সঠিক নয় — নিজে price দিন।');
-          delete d.sellPrice;
-          return 'askSellPrice';
-        }
-        return 'askSellQty';
-      }
-      /* change → ask new target % */
-      delete d.sellPrice;
-      return 'askNewTargetPct';
-    }
-  },
-  askNewTargetPct: {
-    field:'newTargetPct',
-    say:()=>{
-      const p = computePosition();
-      return `🔧 <b>নতুন Target % সেট করুন</b>\n\n`+
-        `বর্তমান Target: <b>${p.targetPct}%</b>\n`+
-        `Total Buy Cost: ${fmtU(p.totalBuyCost)} USDT\n`+
-        `Remaining PEPE: ${fmtQFull(p.remainingQty)}\n\n`+
-        `নতুন Target % দিন (যেমন 1 = ১% প্রফিট)।`;
-    },
-    placeholder:'নতুন Target % (যেমন 1)',
-    validate:(v)=>{
-      const x=parseUSDT(v);
-      if(x===null || n(x)<=0) return {ok:false,msg:'0-এর বেশি % দিন'};
-      if(n(x)>1000) return {ok:false,msg:'অবাস্তব মনে হচ্ছে'};
-      return {ok:true,value:x};
-    },
-    next:(v,d)=>{
-      /* FIX: no botSay here — let goToState(confirmSellTarget) handle
-         say + quick buttons cleanly so stale quick buttons are gone. */
-      session.targetPct = String(v);
-      persist();
-      delete d.newTargetPct;
-      delete d.sellPrice;
-      delete d.sellTargetChoice;
-      return 'confirmSellTarget';
     }
   },
   askSellPrice: {
@@ -1176,15 +1073,16 @@ const STATES = {
     field:'_go',
     say:()=>{
       const p = computePosition();
-      const hit = sessionTargetHit();
-      /* FIX: never show the TARGET ACHIEVED block here.
-         If target is hit, next() routes to sessionComplete which shows it ONCE. */
-      if(hit){
-        return `✅ Sell fill হয়েছে।\n\n`+
-          `Remaining PEPE: <b>${fmtQ(p.remainingQty)}</b>\n`+
-          `Realized Gross: <span class="${n(p.realizedGross)>=0?'pos':'neg'}">${fmtU(p.realizedGross)} USDT</span>\n`+
-          `Session Return: ${fmtPct(p.sessionReturnPct)} · Target: ${p.targetPct}%\n\n`+
-          `Target হিট হয়েছে — চূড়ান্ত summary দেখানো হচ্ছে…`;
+      const done = sessionTargetHit();
+      if(done){
+        return `🎉 <b>TARGET ACHIEVED!</b>\n\n`+
+          `Total Cost: ${fmtU(p.totalBuyCost)} USDT\n`+
+          `Total Sell Proceeds (gross): ${fmtU(p.totalSellProceeds)} USDT\n`+
+          `Realized Gross: <span class="pos">${fmtU(p.realizedGross)} USDT</span>\n`+
+          (n(p.feeEstimate)>0?`Est. Fee: ${fmtU(p.feeEstimate)} USDT\nRealized Net (est.): <span class="pos">${fmtU(p.realizedNet)} USDT</span>\n`:'')+
+          `Session Return: <span class="pos">${fmtPct(p.sessionReturnPct)}</span> (Target ${p.targetPct}%)\n`+
+          `Realized % (on sold basis): ${fmtPct(p.realizedPct_onSold)}\n\n`+
+          `Session সফলভাবে সম্পন্ন ✅ — Reset করে নতুন Session শুরু করুন।`;
       }
       const warn = !D.gt(p.remainingQty,'0') && n(p.sessionReturnPct)<n(p.targetPct)
         ? `\n\n⚠️ সব PEPE বিক্রি হয়েছে কিন্তু Target পূরণ হয়নি — Loss Recovery Mode.` : '';
@@ -1208,14 +1106,12 @@ const STATES = {
       return {ok:false,msg:'"buy", "sell", বা "done" দিন'};
     },
     next:(v)=>{
-      /* FIX: if target is hit, go straight to sessionComplete
-         (which shows the single TARGET ACHIEVED message). */
       if(sessionTargetHit()) return 'sessionComplete';
       if(v==='buy'){
         if(session.orders.some(o=>o.status==='pending')) return 'afterPending';
         return 'askBuyPrice';
       }
-      if(v==='sell'){ return sellBlocked().blocked ? 'afterBuyFilled' : 'confirmSellTarget'; }
+      if(v==='sell'){ return sellBlocked().blocked ? 'afterBuyFilled' : 'askSellPrice'; }
       return 'done';
     }
   },
@@ -1289,7 +1185,11 @@ function replayChat(){
 function setInputEnabled(on, placeholder, quick){
   input.disabled=!on; sendBtn.disabled=!on;
   input.placeholder = placeholder||(on?'উত্তর লিখুন...':'অপেক্ষা করুন...');
-  /* No auto-focus — keyboard only opens on user tap */
+  /* ⚠️ IMPORTANT (v7.2 fix):
+     No auto-focus here. On mobile, calling input.focus() opens the soft
+     keyboard. We only want that when the USER taps the input themselves.
+     So we deliberately do NOT call focus() — the keyboard will open only
+     on the user's own tap on the input field. */
   quickBox.innerHTML='';
   if(quick&&quick.length){
     quick.forEach(q=>{
@@ -1302,7 +1202,7 @@ function setInputEnabled(on, placeholder, quick){
 
 /* ---------------- state machine ---------------- */
 function goToState(name){
-  const sellStates=['askSellPrice','askSellQty','confirmSell','afterSellPending','confirmSellTarget','askNewTargetPct'];
+  const sellStates=['askSellPrice','askSellQty','confirmSell','afterSellPending'];
   if(sellStates.includes(name)){
     const p=computePosition();
     if(!D.gt(p.remainingQty,'0')){
@@ -1357,7 +1257,7 @@ function handleSubmit(){
 
   if(stateName==='sessionComplete'){ input.value=''; return; }
 
-  if(['askSellPrice','askSellQty','confirmSell','afterSellPending','confirmSellTarget','askNewTargetPct'].includes(stateName)){
+  if(['askSellPrice','askSellQty','confirmSell','afterSellPending'].includes(stateName)){
     const p=computePosition();
     if(!D.gt(p.remainingQty,'0')||sessionTargetHit()){
       input.value=''; userSay(raw);
@@ -1559,7 +1459,7 @@ function confirmDialog(title,msg,onOk){
   ok.onclick=()=>{ cleanup(); onOk(); }; cancel.onclick=cleanup;
 }
 
-/* ---------------- Partial-fill modal ---------------- */
+/* ---------------- Partial-fill modal (ক) ---------------- */
 let fillModalOrderId = null;
 function openFillModal(orderId){
   const o = session.orders.find(x=>x.id===orderId);
@@ -1619,9 +1519,9 @@ el('btnSell').addEventListener('click', ()=>{
   }
   if(tState.kind==='targetHit'){
     openChat(); userScrolledUp=false;
-    /* FIX: route through sessionComplete which shows target message ONCE */
+    botSay(`🎉 <b>TARGET ACHIEVED!</b>\n\nTotal Cost: ${fmtU(p.totalBuyCost)} USDT\nRealized Gross: <span class="pos">${fmtU(p.realizedGross)} USDT</span>\nSession Return: <span class="pos">${fmtPct(p.sessionReturnPct)}</span> (Target ${p.targetPct}%)\n\nSession সম্পন্ন — নতুন Sell শুরু করা যাবে না। Reset করুন।`);
     session.conversation={state:'sessionComplete',data:{}}; persist();
-    goToState('sessionComplete');
+    setInputEnabled(false,'Session সম্পন্ন — Reset করুন',null);
     return;
   }
   if(!D.gt(p.remainingQty,'0')){
@@ -1633,8 +1533,14 @@ el('btnSell').addEventListener('click', ()=>{
     return;
   }
   openChat(); userScrolledUp=false;
-  /* Start with confirmSellTarget review */
-  goToState('confirmSellTarget');
+  botSay(`💱 <b>Sell / Record Sell</b>\n\n`+
+    `Remaining: <b>${fmtQFull(p.remainingQty)} PEPE</b>\n`+
+    (p.targetSecured?`Target: <span class="pos">secured</span> — যেকোনো valid price দিন।`
+                    :`Suggested Sell Target: <span class="hl">${fmtP(p.sellTarget)} USDT</span>`) +
+    `\nTarget: ${p.targetPct}% · Fee: ${settings.feePct||0}%\n\n`+
+    `Binance-এ যেই price-এ sell করেছেন সেটি দিন।`);
+  session.conversation={state:'askSellPrice',data:{}}; persist();
+  goToState('askSellPrice');
 });
 
 el('btnReset').addEventListener('click', ()=>{
@@ -1729,7 +1635,9 @@ window.addEventListener('touchcancel', dragEnd);
 function openChat(){
   if(isOpen) return;
   isOpen=true; chatwin.classList.add('open'); fab.classList.add('hidden'); fab.classList.remove('has-msg');
-  /* No auto-focus — keyboard only opens on user tap */
+  /* ⚠️ IMPORTANT: Do NOT call input.focus() here.
+     Mobile browsers open the soft keyboard on programmatic focus().
+     The user must tap the input themselves to open the keyboard. */
 }
 function closeChat(){
   if(!isOpen) return;
@@ -1781,18 +1689,24 @@ fab.addEventListener('click', (e)=>{
     }
   }
 
+  // একটি pointerup event-ই ব্যবহার করুন। মোবাইলে touchend-এর পর synthetic
+  // click আসে; দুটো listener থাকলে একটি tap দুইবার গণনা হতো।
   chatwin.addEventListener('pointerup', (e)=>{
     if(!isOpen) return;
     registerTap(e);
   }, {passive:false});
 
+  // ⚠️ গুরুত্বপূর্ণ: মোবাইলে dblclick ব্লক করুন (এটাই মূল সমস্যা ছিল)
   chatwin.addEventListener('dblclick', (e)=>{
     e.preventDefault();
     e.stopPropagation();
+    // কিছুই করব না — শুধু ব্রাউজারের ডিফল্ট ডাবল-ট্যাপ ব্লক
   }, {passive:false});
 
+  // iOS Safari-এর জন্য: ডাবল-ট্যাপ জুম বন্ধ (ঐচ্ছিক কিন্তু উপকারী)
   chatwin.addEventListener('touchstart', (e)=>{
     if(e.touches.length > 1) return;
+    // শুধু চ্যাট বক্সের ভিতরে ডাবল-ট্যাপ জুম প্রতিরোধ
   }, {passive:true});
 })();
 
@@ -1877,7 +1791,7 @@ window.addEventListener('orientationchange', ()=>setTimeout(onResizeOrViewportCh
   });
 })();
 
-/* Translate killer */
+/* Translate killer (scoped, minimal) */
 (function killTranslate(){
   const kill=()=>{
     document.querySelectorAll('.goog-te-banner-frame,.skiptranslate>iframe,iframe.goog-te-banner-frame,#goog-gt-tt,.goog-te-balloon-frame').forEach(e=>e.remove());
