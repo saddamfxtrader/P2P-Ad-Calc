@@ -5,7 +5,7 @@
      - Do NOT cache Binance API (always network) so live prices stay fresh.
      - Fallback to cached index.html for navigation requests when offline.
 */
-const CACHE = 'pepe-shell-v1';
+const CACHE = 'pepe-shell-v2';
 const SHELL = ['./', './index.html', './sw.js'];
 
 self.addEventListener('install', (e) => {
