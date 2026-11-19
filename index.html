@@ -302,17 +302,19 @@ body.kb-open .chatwin{
     <h2>📊 Live Position <span class="badge b-ready" id="statusBadge">Ready to Start</span></h2>
     <div class="grid" id="dashGrid">
       <div class="stat hero">
-        <div class="l">Final Sell Target (USDT)</div>
+        <div class="l">Active Exit Sell Target (USDT)</div>
         <div class="v gold" id="sSellTarget">—</div>
       </div>
       <div class="stat"><div class="l">Total Buy Cost</div><div class="v" id="sCost">0.00</div></div>
       <div class="stat"><div class="l">PEPE Holdings</div><div class="v" id="sQty">0</div></div>
-      <div class="stat"><div class="l">Unrealized P/L</div><div class="v" id="sUpl">—</div></div>
+      <div class="stat"><div class="l">Unrealized P/L (gross)</div><div class="v" id="sUpl">—</div></div>
       <div class="stat"><div class="l">Realized P/L (gross)</div><div class="v" id="sRpl">0.00</div></div>
-      <div class="stat"><div class="l">Target Profit %</div><div class="v" id="sTargetPct">0%</div></div>
+      <div class="stat"><div class="l">Plan Target (gross)</div><div class="v" id="sPlanTargetPct">0%</div></div>
+      <div class="stat"><div class="l">Active Exit Target</div><div class="v" id="sTargetPct">0%</div></div>
+      <div class="stat"><div class="l">Active Exit Mode</div><div class="v" id="sTargetMode">—</div></div>
       <div class="stat"><div class="l">Realized % (on sold basis)</div><div class="v" id="sRplPct">0%</div></div>
       <div class="stat wide">
-        <div class="l">Recovery Progress</div>
+        <div class="l">Active Exit Progress</div>
         <div class="v" id="sRecovery">—</div>
         <div class="progress"><div class="bar" id="recBar"></div></div>
       </div>
@@ -320,6 +322,7 @@ body.kb-open .chatwin{
     <div id="warnArea"></div>
     <div class="row">
       <button class="good" id="btnSell" style="flex:2">💱 Sell / Record</button>
+      <button class="good" id="btnQuickExit" style="flex:1">⚡ Quick Exit</button>
       <button id="btnSettings" style="flex:1">⚙ Settings</button>
     </div>
     <div class="row">
@@ -363,12 +366,12 @@ body.kb-open .chatwin{
 <div class="modal" id="settingsModal">
   <div class="modal-box">
     <h3>⚙ Risk & Settings</h3>
-    <p>শুধু সতর্কতা দেখানোর জন্য; কোনো order auto-place হবে না।</p>
+    <p>শুধু হিসাব ও সতর্কতা দেখানোর জন্য; কোনো order auto-place হবে না। Quick Exit-এর net target এই estimated sell fee ব্যবহার করে।</p>
     <label>Max Session Investment (USDT)</label>
     <input id="setMaxInv" type="number" min="0" step="0.01" placeholder="0 = unlimited">
     <label>Max Buy Orders (0 = unlimited)</label>
     <input id="setMaxBuys" type="number" min="0" step="1" placeholder="0 = unlimited">
-    <label>Fee per Sell (% of proceeds)</label>
+    <label>Estimated sell fee (% of gross proceeds)</label>
     <input id="setFee" type="number" min="0" step="0.01" placeholder="e.g. 0.1">
     <div class="actions">
       <button class="cancel" id="setCancel">বাতিল</button>
@@ -397,7 +400,7 @@ body.kb-open .chatwin{
     <label>Actual filled PEPE quantity</label>
     <input id="fmQty" type="number" min="0" step="any" inputmode="decimal" placeholder="e.g. 6000000">
     <div class="hint" id="fmQtyHint"></div>
-    <label>Actual USDT (spent for buy / received for sell)</label>
+    <label>Actual USDT (spent for buy / gross proceeds for sell)</label>
     <input id="fmUsdt" type="number" min="0" step="any" inputmode="decimal" placeholder="e.g. 60">
     <div class="hint" id="fmUsdtHint"></div>
     <div class="actions">
@@ -409,10 +412,11 @@ body.kb-open .chatwin{
 
 <script>
 /* =====================================================================
-   PEPE Smart Trader — v7.2 (mobile keyboard fix)
-   Changes from v7.1:
-     - setInputEnabled(): removed auto-focus so mobile keyboard only opens
-       when the user taps the input field themselves.
+   PEPE Smart Trader — v8.0 (plan target + quick exit)
+   Changes from v7.2:
+     - Separate gross plan target from the active exit target.
+     - Add fee-aware net Quick Exit targets for the whole open session.
+     - Snap calculated sell targets upward to the exchange price tick.
      - Reset / state transitions no longer pop the soft keyboard.
    ===================================================================== */
 (function(){
@@ -540,7 +544,7 @@ function roundToStep(val, step, mode){
   try{
     const v=n(val), s=n(step);
     if(!s) return String(val);
-    const q = mode==='floor' ? Math.floor(v/s) : Math.round(v/s);
+    const q = mode==='floor' ? Math.floor(v/s) : mode==='ceil' ? Math.ceil(v/s) : Math.round(v/s);
     const out = (q*s);
     const dec = (String(step).split('.')[1]||'').length;
     return out.toFixed(dec);
@@ -548,6 +552,7 @@ function roundToStep(val, step, mode){
 }
 function floorQty(val){ return roundToStep(val, market.stepSize, 'floor'); }
 function roundPrice(val){ return roundToStep(val, market.tickSize, 'round'); }
+function ceilPrice(val){ return roundToStep(val, market.tickSize, 'ceil'); }
 
 /* ---------------- storage (serial queue) ---------------- */
 const DB_NAME='pepeSmartTrader', DB_VER=1, STORE='kv';
@@ -600,7 +605,7 @@ async function persistChat(){ try{ await store.set(CHAT_KEY, chatHistory); }catc
 async function loadChat(){ const arr=await store.get(CHAT_KEY,[]); chatHistory=Array.isArray(arr)?arr:[]; }
 async function clearChat(){ chatHistory=[]; await store.del(CHAT_KEY); }
 
-/* ---------------- session model (v7: seq + short code) ---------------- */
+/* ---------------- session model (v8: plan target + active exit) ---------------- */
 let session = null;
 let settings = { maxInv:0, maxBuys:0, feePct:0 };
 let orderSeq = 1;
@@ -613,17 +618,47 @@ function shortCode(seq){
 function newSession(seq, code){
   const s = (seq==null) ? 1 : Number(seq)||1;
   const c = code || shortCode(s);
-  return { id:s, code:c, startTs:Date.now(), targetPct:'0', orders:[], conversation:{state:'askBuyPrice', data:{}} };
+  return {
+    id:s, code:c, startTs:Date.now(),
+    planTargetPct:'0',
+    exitTargetPct:'0',
+    exitTargetMode:'gross',
+    exitTargetKind:'plan',
+    /* targetPct is kept for safe migration from v7 sessions. */
+    targetPct:'0',
+    orders:[], conversation:{state:'askBuyPrice', data:{}}
+  };
 }
 function persist(){ return store.set('session', session).then(()=>store.set('settings', settings)); }
 
+function getPlanTargetPct(){ return String((session&&session.planTargetPct) ?? (session&&session.targetPct) ?? '0'); }
+function getActiveExitTargetPct(){ return String((session&&session.exitTargetPct) ?? getPlanTargetPct()); }
+function getActiveExitMode(){ return session&&session.exitTargetMode==='net' ? 'net' : 'gross'; }
+function getActiveExitKind(){ return session&&session.exitTargetKind==='quick' ? 'quick' : 'plan'; }
+function exitModeLabel(mode){ return mode==='net' ? 'Net (after est. sell fee)' : 'Gross (before fee)'; }
+function activeExitLabel(p){
+  return `${p.targetPct}% ${p.exitTargetMode==='net'?'Net':'Gross'}${p.exitTargetKind==='quick'?' · Quick Exit':''}`;
+}
+function setActiveExit(pct, mode, kind){
+  session.exitTargetPct=String(pct);
+  session.exitTargetMode=mode==='net'?'net':'gross';
+  session.exitTargetKind=kind==='quick'?'quick':'plan';
+}
+
 async function loadAll(){
   dbReady = openDB();
+  let migrated=false;
   let s = await store.get('session', null);
   if(s && s.id && Array.isArray(s.orders)){
     if(!s.code) s.code = shortCode(s.id);
     session = s;
   } else session = newSession(1);
+  const legacyTarget = String(session.targetPct||'0');
+  if(session.planTargetPct===undefined){ session.planTargetPct=legacyTarget; migrated=true; }
+  if(session.exitTargetPct===undefined){ session.exitTargetPct=legacyTarget; migrated=true; }
+  if(!session.exitTargetMode){ session.exitTargetMode='gross'; migrated=true; }
+  if(!session.exitTargetKind){ session.exitTargetKind='plan'; migrated=true; }
+  session.targetPct=String(session.planTargetPct||legacyTarget||'0');
   const st = await store.get('settings', null);
   if(st && typeof st==='object') settings = Object.assign({maxInv:0,maxBuys:0,feePct:0}, st);
   let maxId=0;
@@ -646,10 +681,39 @@ async function loadAll(){
     session.conversation = { state: pend.side==='buy'?'afterPending':'afterSellPending', data:{ pendingOrderId: pend.id } };
   }
 
+  if(migrated) await persist();
   await loadChat();
 }
 
-/* ---------------- financial engine (LEDGER, same as v6) ---------------- */
+/* ---------------- financial engine (ledger + active exit math) ---------------- */
+function calculateExitTarget(totalBuyCost, totalSellProceeds, remainingQty, targetPct, targetMode){
+  const targetReturnTotal = D.mul(totalBuyCost, D.add('1', D.div(targetPct,'100',18)));
+  const feeRate = D.div(String(settings.feePct||0),'100',18);
+  const keepAfterSellFee = D.sub('1', feeRate);
+  const historicalEffectiveProceeds = targetMode==='net'
+    ? D.mul(totalSellProceeds, keepAfterSellFee)
+    : totalSellProceeds;
+  const neededEffectiveProceeds = D.sub(targetReturnTotal, historicalEffectiveProceeds);
+  let sellTarget='0', sellTargetRaw='0', targetSecured=false, neededProceeds='0';
+
+  if(!D.gt(neededEffectiveProceeds,'0')){
+    targetSecured=true;
+  } else if(D.gt(remainingQty,'0')){
+    const denominator = targetMode==='net'
+      ? D.mul(remainingQty, keepAfterSellFee)
+      : remainingQty;
+    neededProceeds = targetMode==='net'
+      ? D.div(neededEffectiveProceeds, keepAfterSellFee, 18)
+      : neededEffectiveProceeds;
+    sellTargetRaw = D.div(neededEffectiveProceeds, denominator, 18);
+    /* A sell target must never be rounded below the amount needed. */
+    sellTarget = ceilPrice(sellTargetRaw);
+  }
+
+  return { targetReturnTotal, historicalEffectiveProceeds, neededEffectiveProceeds,
+    neededProceeds, sellTargetRaw, sellTarget, targetSecured, keepAfterSellFee };
+}
+
 function computePosition(){
   const buys  = session.orders.filter(o=>o.side==='buy'  && (o.status==='filled'||o.status==='partial'));
   const sells = session.orders.filter(o=>o.side==='sell' && (o.status==='filled'||o.status==='partial'));
@@ -670,20 +734,22 @@ function computePosition(){
   const breakEven = D.gt(remainingQty,'0') ? D.div(remainingBasis, remainingQty, 18) : '0';
 
   const feePct = String(settings.feePct||0);
-  const feeEstimate = D.mul(totalSellProceeds, D.div(feePct,'100',18));
-  const realizedNet = D.sub(realizedGross, feeEstimate);
+  const feeRate = D.div(feePct,'100',18);
+  const feeEstimate = D.mul(totalSellProceeds, feeRate);
+  const netSellProceeds = D.sub(totalSellProceeds, feeEstimate);
+  const realizedNet = D.sub(netSellProceeds, realizedCostOfSold);
+  const sessionReturnNetPct = D.gt(totalBuyCost,'0') ? D.mul(D.div(realizedNet,totalBuyCost,18),'100') : '0';
 
-  const targetPct = session.targetPct || '0';
-  const targetReturnTotal = D.mul(totalBuyCost, D.add('1', D.div(targetPct,'100',18)));
-  const neededProceeds = D.sub(targetReturnTotal, totalSellProceeds);
-  let sellTarget='0', targetSecured=false;
-  if(D.gt(remainingQty,'0')){
-    if(D.lt(neededProceeds,'0')){ targetSecured=true; sellTarget='0'; }
-    else sellTarget = D.div(neededProceeds, remainingQty, 18);
-  } else if(!D.gt(neededProceeds,'0')){ targetSecured=true; }
+  const planTargetPct = getPlanTargetPct();
+  const targetPct = getActiveExitTargetPct();
+  const exitTargetMode = getActiveExitMode();
+  const exitTargetKind = getActiveExitKind();
+  const exit = calculateExitTarget(totalBuyCost, totalSellProceeds, remainingQty, targetPct, exitTargetMode);
+  const {targetReturnTotal, historicalEffectiveProceeds, neededEffectiveProceeds,
+    neededProceeds, sellTargetRaw, sellTarget, targetSecured} = exit;
 
   const progress = D.gt(targetReturnTotal,'0')
-    ? Math.max(0, Math.min(100, n(D.div(D.mul(totalSellProceeds,'100'), targetReturnTotal, 8))))
+    ? Math.max(0, Math.min(100, n(D.div(D.mul(historicalEffectiveProceeds,'100'), targetReturnTotal, 8))))
     : 0;
 
   let unrealized='0', hasPrice=false;
@@ -696,17 +762,35 @@ function computePosition(){
   return {
     totalBuyCost, totalBuyQty, totalSellProceeds, totalSellQty,
     remainingQty, avgBuy, breakEven,
-    realizedCostOfSold, realizedGross, realizedNet, feeEstimate,
-    realizedPct_onSold, sessionReturnPct,
-    remainingBasis, targetPct, targetReturnTotal,
-    neededProceeds, sellTarget, targetSecured, progress, unrealized, hasPrice
+    realizedCostOfSold, realizedGross, realizedNet, feeEstimate, netSellProceeds,
+    realizedPct_onSold, sessionReturnPct, sessionReturnNetPct,
+    remainingBasis, planTargetPct, targetPct, exitTargetMode, exitTargetKind, targetReturnTotal,
+    historicalEffectiveProceeds, neededEffectiveProceeds, neededProceeds, sellTargetRaw,
+    sellTarget, targetSecured, progress, unrealized, hasPrice
   };
 }
 
 function sessionTargetHit(){
   const p = computePosition();
   if(D.lt(p.totalBuyCost,'0.00000001')) return false;
-  return n(p.sessionReturnPct) >= n(p.targetPct) - 0.001 && !D.gt(p.remainingQty,'0');
+  const returnPct = p.exitTargetMode==='net' ? p.sessionReturnNetPct : p.sessionReturnPct;
+  return n(returnPct) >= n(p.targetPct) - 0.000001 && !D.gt(p.remainingQty,'0');
+}
+
+function completionMessage(p){
+  const quick = p.exitTargetKind==='quick';
+  const returnPct = p.exitTargetMode==='net' ? p.sessionReturnNetPct : p.sessionReturnPct;
+  const returnLabel = p.exitTargetMode==='net' ? 'Net Session Return' : 'Gross Session Return';
+  const netClass = n(p.realizedNet)>=0 ? 'pos' : 'neg';
+  return `${quick?'⚡ <b>QUICK EXIT COMPLETED!</b>':'🎉 <b>TARGET ACHIEVED!</b>'}\n\n`+
+    `Total Cost: ${fmtU(p.totalBuyCost)} USDT\n`+
+    `Total Sell Proceeds (gross): ${fmtU(p.totalSellProceeds)} USDT\n`+
+    `Realized Gross: <span class="pos">${fmtU(p.realizedGross)} USDT</span>\n`+
+    `Est. Sell Fee: ${fmtU(p.feeEstimate)} USDT\n`+
+    `Realized Net (est.): <span class="${netClass}">${fmtU(p.realizedNet)} USDT</span>\n`+
+    `${returnLabel}: <span class="pos">${fmtPct(returnPct)}</span> (Active Exit ${activeExitLabel(p)})\n`+
+    `Plan Target (gross): ${p.planTargetPct}%\n\n`+
+    `${quick?'Quick Exit':'Session'} সম্পন্ন ✅ — Reset করে নতুন Session শুরু করুন।`;
 }
 
 function getTradeState(){
@@ -718,7 +802,8 @@ function getTradeState(){
   if(!hasBuyCost && !hasPending) return {kind:'empty', p};
   if(hasPending) return {kind:'pending', p};
   if(sessionTargetHit()) return {kind:'targetHit', p};
-  if(!hasRemaining && hasBuyCost && hasFilledSell && n(p.sessionReturnPct) < n(p.targetPct)) return {kind:'zeroNoTarget', p};
+  const activeReturn = p.exitTargetMode==='net' ? p.sessionReturnNetPct : p.sessionReturnPct;
+  if(!hasRemaining && hasBuyCost && hasFilledSell && n(activeReturn) < n(p.targetPct)) return {kind:'zeroNoTarget', p};
   if(hasRemaining) return {kind:'inPosition', p};
   return {kind:'inPosition', p};
 }
@@ -834,14 +919,14 @@ const STATES = {
       return {ok:true,value:x};
     },
     next:(v,d)=>{
-      if(session.targetPct && n(session.targetPct) > 0){ d.targetPct = session.targetPct; return 'confirmBuy'; }
+      if(n(getPlanTargetPct()) > 0){ d.planTargetPct = getPlanTargetPct(); return 'confirmBuy'; }
       return 'askTargetPct';
     }
   },
   askTargetPct: {
-    field:'targetPct',
-    say:(d)=>`Investment: <b>${fmtU(d.invest)} USDT</b>\n\nসম্পূর্ণ Active Session-এর জন্য কত % <b>Profit Target (gross)</b> চান?\n(fee পরে যোগ হবে)`,
-    placeholder:'Profit % (যেমন 2)',
+    field:'planTargetPct',
+    say:(d)=>`Investment: <b>${fmtU(d.invest)} USDT</b>\n\nসম্পূর্ণ Active Session-এর জন্য আপনার মূল <b>Plan Target (gross)</b> কত % চান?\nপরে চাইলে সব filled buy মিলিয়ে <b>Quick Exit</b> target বদলাতে পারবেন।`,
+    placeholder:'Plan target % (যেমন 5)',
     validate:(v)=>{
       const x=parseUSDT(v);
       if(x===null || n(x)<=0) return {ok:false,msg:'0-এর বেশি % দিন'};
@@ -856,32 +941,26 @@ const STATES = {
       const rawQty = D.div(d.invest, d.buyPrice, 18);
       const qty = floorQty(rawQty);
       const p = computePosition();
-      const effectiveTarget = n(session.targetPct) > 0 ? n(session.targetPct) : n(d.targetPct);
+      const isExistingSession = n(getPlanTargetPct()) > 0;
+      const effectivePlanTarget = isExistingSession ? getPlanTargetPct() : String(d.planTargetPct);
+      const effectiveExitTarget = isExistingSession ? getActiveExitTargetPct() : effectivePlanTarget;
+      const effectiveExitMode = isExistingSession ? getActiveExitMode() : 'gross';
       const newTotalCost = D.add(p.totalBuyCost, d.invest);
       const newTotalQty  = D.add(p.totalBuyQty, qty);
-      const newAvg = D.gt(newTotalQty,'0') ? D.div(newTotalCost, newTotalQty, 18) : '0';
-      const newSoldCost = D.mul(p.totalSellQty, newAvg);
       const newRemainingQty = D.sub(newTotalQty, p.totalSellQty);
-      const newRemainingBasis = D.sub(newTotalCost, newSoldCost);
-      const newBe = D.gt(newRemainingQty,'0') ? D.div(newRemainingBasis, newRemainingQty, 18) : '0';
-      const newTargetReturn = D.mul(newTotalCost, D.add('1', D.div(String(effectiveTarget),'100',18)));
-      const newNeeded = D.sub(newTargetReturn, p.totalSellProceeds);
-      let newSellTarget='0', secured=false;
-      if(D.gt(newRemainingQty,'0')){
-        if(D.lt(newNeeded,'0')){ secured=true; }
-        else newSellTarget = D.div(newNeeded, newRemainingQty, 18);
-      } else if(!D.gt(newNeeded,'0')) secured=true;
+      const exit = calculateExitTarget(newTotalCost, p.totalSellProceeds, newRemainingQty, effectiveExitTarget, effectiveExitMode);
 
       return `📋 <b>Buy Plan</b>\n\n`+
         `Buy Limit: <span class="hl">${fmtP(d.buyPrice)}</span>\n`+
         `Investment: <span class="hl">${fmtU(d.invest)} USDT</span>\n`+
         `Est. PEPE (step-floored): <b>${fmtQ(qty)}</b>\n`+
-        `Effective Target: <b>${effectiveTarget}%</b>\n\n`+
+        `Plan Target: <b>${effectivePlanTarget}% Gross</b>\n`+
+        `Active Exit: <b>${effectiveExitTarget}% ${effectiveExitMode==='net'?'Net':'Gross'}</b>\n\n`+
         `<b>Fill হলে Position:</b>\n`+
         `Total Cost: ${fmtU(newTotalCost)} USDT\n`+
         `Total PEPE: ${fmtQ(newTotalQty)}\n`+
-        (secured ? `Sell Target: <span class="pos">Target secured</span>\n`
-                 : `Sell Target: <span class="hl">${fmtP(newSellTarget)}</span>\n`)+
+        (exit.targetSecured ? `Sell Target: <span class="pos">Target secured</span>\n`
+                 : `Sell Target: <span class="hl">${fmtP(exit.sellTarget)}</span>\n`)+
         `\nBinance-এ Limit Buy set করুন। Fill হলে জানান।`;
     },
     placeholder:'filled / pending',
@@ -894,7 +973,11 @@ const STATES = {
     },
     next:(v,d)=>{
       const qty = floorQty(D.div(d.invest, d.buyPrice, 18));
-      if(!session.targetPct || n(session.targetPct) <= 0){ session.targetPct = String(d.targetPct); }
+      if(n(getPlanTargetPct()) <= 0){
+        session.planTargetPct = String(d.planTargetPct);
+        session.targetPct = session.planTargetPct;
+        setActiveExit(session.planTargetPct, 'gross', 'plan');
+      }
       const order = { id: nextOrderId(), side:'buy', type:'limit', price:d.buyPrice, usdt:d.invest, qty,
         status: v==='filled'?'filled':'pending', filledUsdt: v==='filled'?d.invest:'0',
         filledQty: v==='filled'?qty:'0', fillPrice: v==='filled'?d.buyPrice:null, ts:Date.now(), note:'' };
@@ -938,27 +1021,75 @@ const STATES = {
       return `✅ Order fill হয়েছে!\n\n`+
         `Total Cost: <b>${fmtU(p.totalBuyCost)} USDT</b>\n`+
         `PEPE: <b>${fmtQ(p.remainingQty)}</b>\n`+
+        `Plan Target: ${p.planTargetPct}% Gross\n`+
+        `Active Exit: <b>${activeExitLabel(p)}</b>\n`+
         (p.targetSecured ? `Target: <span class="pos">secured</span>\n`
-                         : `Sell Target (${p.targetPct}%): <span class="hl">${fmtP(p.sellTarget)}</span>\n`)+
+                         : `Sell Target: <span class="hl">${fmtP(p.sellTarget)}</span>\n`)+
         `\nপরবর্তী পদক্ষেপ?`;
     },
     placeholder:'buy / sell / done',
-    quick:[{label:'📉 নতুন Buy',value:'buy'},{label:'💱 Sell',value:'sell'},{label:'✅ শেষ',value:'done'}],
+    quick:[{label:'📉 নতুন Buy',value:'buy'},{label:'⚡ Quick Exit',value:'quick'},{label:'💱 Sell',value:'sell'},{label:'✅ শেষ',value:'done'}],
     validate:(v)=>{
       const s=v.toLowerCase();
       if(s.includes('buy')||s.includes('কেন')) return {ok:true,value:'buy'};
+      if(s.includes('quick')||s.includes('exit')||s.includes('দ্রুত')) return {ok:true,value:'quick'};
       if(s.includes('sell')||s.includes('বিক্রি')) return {ok:true,value:'sell'};
       if(s.includes('done')||s.includes('শেষ')) return {ok:true,value:'done'};
-      return {ok:false,msg:'"buy", "sell", বা "done" দিন'};
+      return {ok:false,msg:'"buy", "quick", "sell", বা "done" দিন'};
     },
     next:(v)=>{
       if(v==='buy'){
         if(session.orders.some(o=>o.status==='pending')) return 'afterPending';
         return 'askBuyPrice';
       }
+      if(v==='quick') return 'chooseExitPlan';
       if(v==='sell'){ return sellBlocked().blocked ? 'afterBuyFilled' : 'askSellPrice'; }
       return 'done';
     }
+  },
+  chooseExitPlan: {
+    field:'exitChoice',
+    say:()=>{
+      const p=computePosition();
+      return `⚡ <b>Quick Exit Planner</b>\n\n`+
+        `Total Cost: <b>${fmtU(p.totalBuyCost)} USDT</b>\n`+
+        `Weighted Avg Buy: <b>${fmtP(p.avgBuy)}</b>\n`+
+        `Plan Target: <b>${p.planTargetPct}% Gross</b>\n`+
+        `Current Active Exit: <b>${activeExitLabel(p)}</b>\n`+
+        `Estimated Sell Fee: <b>${settings.feePct||0}%</b>\n\n`+
+        `নতুন Active Exit বেছে নিন। Quick Exit সব filled buy ও আগের sell মিলিয়ে হিসাব হবে; Plan Target বদলাবে না।`;
+    },
+    placeholder:'quick1 / plan / custom',
+    quick:[
+      {label:'⚡ 1% Net Quick Exit',value:'quick1'},
+      {label:'🎯 Plan Target রাখুন',value:'plan'},
+      {label:'✍ Custom Net %',value:'custom'}
+    ],
+    validate:(v)=>{
+      const s=v.toLowerCase().trim();
+      if(['quick1','quick','1','1%'].includes(s)) return {ok:true,value:'quick1'};
+      if(['plan','target','5'].includes(s)) return {ok:true,value:'plan'};
+      if(['custom','নিজে'].includes(s)) return {ok:true,value:'custom'};
+      return {ok:false,msg:'Quick Exit-এর জন্য "quick1", Plan-এর জন্য "plan", অথবা "custom" দিন'};
+    },
+    next:(v)=>{
+      if(v==='custom') return 'askQuickExitPct';
+      if(v==='quick1') setActiveExit('1','net','quick');
+      else setActiveExit(getPlanTargetPct(),'gross','plan');
+      return 'afterBuyFilled';
+    }
+  },
+  askQuickExitPct: {
+    field:'quickExitPct',
+    say:()=>`কত % <b>Net Quick Exit</b> চান?\nEstimated sell fee (${settings.feePct||0}%) target price-এ অন্তর্ভুক্ত হবে।`,
+    placeholder:'Net profit % (যেমন 1)',
+    validate:(v)=>{
+      const x=parseUSDT(v);
+      if(x===null || n(x)<=0) return {ok:false,msg:'0-এর বেশি % দিন'};
+      if(n(x)>1000) return {ok:false,msg:'অবাস্তব মনে হচ্ছে'};
+      return {ok:true,value:x};
+    },
+    next:(v)=>{ setActiveExit(v,'net','quick'); return 'afterBuyFilled'; }
   },
   askSellPrice: {
     field:'sellPrice',
@@ -969,12 +1100,14 @@ const STATES = {
         (p.targetSecured
           ? `Target: <span class="pos">already secured</span> — যেকোনো valid price দিতে পারেন।\n`
           : `Suggested Sell Target: <span class="hl">${fmtP(p.sellTarget)} USDT</span>\n`)+
+        `Active Exit: <b>${activeExitLabel(p)}</b> · Plan: ${p.planTargetPct}% Gross\n`+
         `\nBinance-এ যেই price-এ sell করেছেন সেটি দিন।`;
     },
     placeholder:'Sell price (USDT)',
     quick:()=>[{label:'🎯 Suggested',value:'__suggested__'}],
     validate:(v)=>{
       let x;
+      const suggested=v==='__suggested__';
       if(v==='__suggested__'){
         const p = computePosition();
         if(p.targetSecured) return {ok:false,msg:'Target secured — নিজে valid price দিন'};
@@ -982,7 +1115,7 @@ const STATES = {
         if(n(x)<=0) return {ok:false,msg:'Suggested target নেই — নিজে valid price দিন'};
       } else x = parsePEPEPrice(v);
       if(x===null || n(x)<=0) return {ok:false,msg:'সঠিক price দিন'};
-      x = roundPrice(x);
+      x = suggested ? ceilPrice(x) : roundPrice(x);
       if(n(x)<=0) return {ok:false,msg:'tick size-এ round করার পর price 0 হয়ে গেছে'};
       return {ok:true,value:x};
     },
@@ -1075,35 +1208,31 @@ const STATES = {
       const p = computePosition();
       const done = sessionTargetHit();
       if(done){
-        return `🎉 <b>TARGET ACHIEVED!</b>\n\n`+
-          `Total Cost: ${fmtU(p.totalBuyCost)} USDT\n`+
-          `Total Sell Proceeds (gross): ${fmtU(p.totalSellProceeds)} USDT\n`+
-          `Realized Gross: <span class="pos">${fmtU(p.realizedGross)} USDT</span>\n`+
-          (n(p.feeEstimate)>0?`Est. Fee: ${fmtU(p.feeEstimate)} USDT\nRealized Net (est.): <span class="pos">${fmtU(p.realizedNet)} USDT</span>\n`:'')+
-          `Session Return: <span class="pos">${fmtPct(p.sessionReturnPct)}</span> (Target ${p.targetPct}%)\n`+
-          `Realized % (on sold basis): ${fmtPct(p.realizedPct_onSold)}\n\n`+
-          `Session সফলভাবে সম্পন্ন ✅ — Reset করে নতুন Session শুরু করুন।`;
+        return completionMessage(p);
       }
-      const warn = !D.gt(p.remainingQty,'0') && n(p.sessionReturnPct)<n(p.targetPct)
+      const activeReturn = p.exitTargetMode==='net' ? p.sessionReturnNetPct : p.sessionReturnPct;
+      const warn = !D.gt(p.remainingQty,'0') && n(activeReturn)<n(p.targetPct)
         ? `\n\n⚠️ সব PEPE বিক্রি হয়েছে কিন্তু Target পূরণ হয়নি — Loss Recovery Mode.` : '';
       return `✅ Sell fill হয়েছে।\n\n`+
         `Remaining PEPE: <b>${fmtQ(p.remainingQty)}</b>\n`+
         `Realized Gross: <span class="${n(p.realizedGross)>=0?'pos':'neg'}">${fmtU(p.realizedGross)} USDT</span>\n`+
         (n(p.feeEstimate)>0?`Est. Fee: ${fmtU(p.feeEstimate)} · Net (est.): ${fmtU(p.realizedNet)}\n`:'')+
         `Realized % (on sold basis): ${fmtPct(p.realizedPct_onSold)}\n`+
-        `Session Return: ${fmtPct(p.sessionReturnPct)} · Target: ${p.targetPct}%\n`+
+        `Gross Session Return: ${fmtPct(p.sessionReturnPct)} · Net: ${fmtPct(p.sessionReturnNetPct)}\n`+
+        `Active Exit: ${activeExitLabel(p)} · Plan: ${p.planTargetPct}% Gross\n`+
         (p.targetSecured?`Next Sell Target: <span class="pos">secured</span>`
                         :`Next Sell Target: <span class="hl">${fmtP(p.sellTarget)}</span>`)+warn+
         `\n\nপরবর্তী পদক্ষেপ?`;
     },
     placeholder:'buy / sell / done',
-    quick:[{label:'📉 Buy',value:'buy'},{label:'💱 আরও Sell',value:'sell'},{label:'✅ শেষ',value:'done'}],
+    quick:[{label:'📉 Buy',value:'buy'},{label:'⚡ Quick Exit',value:'quick'},{label:'💱 আরও Sell',value:'sell'},{label:'✅ শেষ',value:'done'}],
     validate:(v)=>{
       const s=v.toLowerCase();
       if(s.includes('buy')||s.includes('কেন')) return {ok:true,value:'buy'};
+      if(s.includes('quick')||s.includes('exit')||s.includes('দ্রুত')) return {ok:true,value:'quick'};
       if(s.includes('sell')||s.includes('বিক্রি')) return {ok:true,value:'sell'};
       if(s.includes('done')||s.includes('শেষ')) return {ok:true,value:'done'};
-      return {ok:false,msg:'"buy", "sell", বা "done" দিন'};
+      return {ok:false,msg:'"buy", "quick", "sell", বা "done" দিন'};
     },
     next:(v)=>{
       if(sessionTargetHit()) return 'sessionComplete';
@@ -1111,20 +1240,13 @@ const STATES = {
         if(session.orders.some(o=>o.status==='pending')) return 'afterPending';
         return 'askBuyPrice';
       }
+      if(v==='quick') return 'chooseExitPlan';
       if(v==='sell'){ return sellBlocked().blocked ? 'afterBuyFilled' : 'askSellPrice'; }
       return 'done';
     }
   },
   sessionComplete: {
-    say:()=>{
-      const p = computePosition();
-      return `🎉 <b>TARGET ACHIEVED!</b>\n\n`+
-        `Total Cost: ${fmtU(p.totalBuyCost)} USDT\n`+
-        `Total Sell Proceeds (gross): ${fmtU(p.totalSellProceeds)} USDT\n`+
-        `Realized Gross: <span class="pos">${fmtU(p.realizedGross)} USDT</span>\n`+
-        `Session Return: <span class="pos">${fmtPct(p.sessionReturnPct)}</span> (Target ${p.targetPct}%)\n\n`+
-        `Session সম্পন্ন ✅ — Reset করুন।`;
-    },
+    say:()=>completionMessage(computePosition()),
     end:true,
     placeholder:'Session সম্পন্ন — Reset করুন'
   },
@@ -1310,12 +1432,7 @@ function startConversation(){
 
   if(kind==='targetHit'){
     session.conversation={state:'sessionComplete',data:{}}; persist();
-    botSay(`🎉 <b>TARGET ACHIEVED!</b>\n\n`+
-      `Total Cost: ${fmtU(p.totalBuyCost)} USDT\n`+
-      `Total Sell Proceeds (gross): ${fmtU(p.totalSellProceeds)} USDT\n`+
-      `Realized Gross: <span class="pos">${fmtU(p.realizedGross)} USDT</span>\n`+
-      `Session Return: <span class="pos">${fmtPct(p.sessionReturnPct)}</span> (Target ${p.targetPct}%)\n\n`+
-      `Session সম্পন্ন ✅ — Reset করুন।`);
+    botSay(completionMessage(p));
     setInputEnabled(false,'Session সম্পন্ন — Reset করুন',null);
     return;
   }
@@ -1325,7 +1442,8 @@ function startConversation(){
       `Total Cost: <b>${fmtU(p.totalBuyCost)} USDT</b>\n`+
       `PEPE: <b>0</b>\n`+
       `Realized Gross: <span class="${n(p.realizedGross)>=0?'pos':'neg'}">${fmtU(p.realizedGross)} USDT</span>\n`+
-      `Session Return: ${fmtPct(p.sessionReturnPct)} · Target: ${p.targetPct}%\n\n`+
+      `Gross Return: ${fmtPct(p.sessionReturnPct)} · Net: ${fmtPct(p.sessionReturnNetPct)}\n`+
+      `Active Exit: ${activeExitLabel(p)} · Plan: ${p.planTargetPct}% Gross\n\n`+
       `⚠️ সব PEPE বিক্রি হয়েছে কিন্তু Target পূরণ হয়নি।\n`+
       `নতুন Buy দিয়ে Recovery শুরু করুন।`);
     setInputEnabled(true,'buy / done',[{label:'📉 নতুন Buy',value:'buy'},{label:'✅ শেষ',value:'done'}]);
@@ -1346,7 +1464,8 @@ function startConversation(){
     botSay(`👋 Welcome back! Session #${session.id} (${session.code||''}) active.\n\n`+
       `Cost: <b>${fmtU(p.totalBuyCost)} USDT</b>\n`+
       `PEPE: <b>${fmtQ(p.remainingQty)}</b>\n`+
-      `Session Return: ${fmtPct(p.sessionReturnPct)} · Target: ${p.targetPct}%\n`+
+      `Gross Return: ${fmtPct(p.sessionReturnPct)} · Net: ${fmtPct(p.sessionReturnNetPct)}\n`+
+      `Active Exit: ${activeExitLabel(p)} · Plan: ${p.planTargetPct}% Gross\n`+
       (p.targetSecured?`Sell Target: <span class="pos">secured</span>`
                       :`Sell Target: <span class="hl">${fmtP(p.sellTarget)}</span>`)+
       `\n\nপরবর্তী পদক্ষেপ?`);
@@ -1369,7 +1488,10 @@ function renderDashboard(){
   const tState=getTradeState();
   const badge=el('statusBadge');
   let status='Ready to Start', cls='b-ready';
-  if(tState.kind==='targetHit'){ status='Target Achieved'; cls='b-done'; }
+  if(tState.kind==='targetHit'){
+    status=p.exitTargetKind==='quick' ? 'Quick Exit Completed' : 'Target Achieved';
+    cls='b-done';
+  }
   else if(tState.kind==='pending'){ status='Order Pending'; cls='b-pend'; }
   else if(tState.kind==='zeroNoTarget'){ status='Loss Recovery'; cls='b-rec'; }
   else if(tState.kind==='inPosition'){
@@ -1393,18 +1515,20 @@ function renderDashboard(){
   rpl.textContent=fmtU(p.realizedGross);
   rpl.className='v '+(n(p.realizedGross)>=0?'pos':'neg');
 
+  el('sPlanTargetPct').textContent=p.planTargetPct+'%';
   el('sTargetPct').textContent=p.targetPct+'%';
+  el('sTargetMode').textContent=exitModeLabel(p.exitTargetMode)+(p.exitTargetKind==='quick'?' · Quick':'');
   const rpp=el('sRplPct');
   rpp.textContent=fmtPct(p.realizedPct_onSold);
   rpp.className='v '+(n(p.realizedPct_onSold)>=0?'pos':'neg');
 
   el('sRecovery').textContent=D.gt(p.targetReturnTotal,'0')
-    ?`${p.progress.toFixed(1)}% (${fmtU(p.totalSellProceeds)} / ${fmtU(p.targetReturnTotal)})`:'—';
+    ?`${p.progress.toFixed(1)}% (${fmtU(p.historicalEffectiveProceeds)} / ${fmtU(p.targetReturnTotal)})`:'—';
   el('recBar').style.width=Math.min(100,p.progress)+'%';
 
   const wa=el('warnArea'); let html='';
   if(tState.kind==='zeroNoTarget') html+='<div class="danger-msg">⚠️ Position শূন্য কিন্তু Target পূরণ হয়নি। নতুন Buy plan করুন।</div>';
-  if(tState.kind==='targetHit') html+='<div class="warn" style="background:#123a24;border-left-color:#22c55e;color:#4ade80">🎉 Target Achieved! Reset করে নতুন Session শুরু করুন।</div>';
+  if(tState.kind==='targetHit') html+='<div class="warn" style="background:#123a24;border-left-color:#22c55e;color:#4ade80">'+(p.exitTargetKind==='quick'?'⚡ Quick Exit Completed!':'🎉 Target Achieved!')+' Reset করে নতুন Session শুরু করুন।</div>';
   if(settings.maxInv>0 && n(p.totalBuyCost)>=settings.maxInv*0.95) html+='<div class="warn">⚠️ Max Investment সীমার কাছাকাছি ('+fmtU(settings.maxInv)+' USDT)।</div>';
   if(settings.maxBuys>0){
     const cnt=session.orders.filter(o=>o.side==='buy'&&(o.status==='filled'||o.status==='partial')).length;
@@ -1479,7 +1603,7 @@ function openFillModal(orderId){
   el('fmQty').value = planQtyLeft;
   el('fmUsdt').value = planUsdtLeft;
   el('fmQtyHint').textContent = 'Plan baki: '+fmtQFull(planQtyLeft)+' PEPE';
-  el('fmUsdtHint').textContent = 'Plan baki: '+fmtU(planUsdtLeft)+' USDT';
+  el('fmUsdtHint').textContent = (o.side==='sell'?'Gross proceeds before the estimated sell fee. ':'Plan baki: ')+fmtU(planUsdtLeft)+' USDT';
   el('fillModal').classList.add('show');
 }
 el('fmCancel').addEventListener('click', ()=>{ el('fillModal').classList.remove('show'); fillModalOrderId=null; });
@@ -1500,6 +1624,29 @@ sendBtn.addEventListener('click', handleSubmit);
 input.addEventListener('keydown', e=>{ if(e.key==='Enter'&&!e.isComposing){ e.preventDefault(); handleSubmit(); } });
 
 /* ---------------- Sell / Settings / Reset ---------------- */
+el('btnQuickExit').addEventListener('click', ()=>{
+  const p=computePosition();
+  const tState=getTradeState();
+  if(tState.kind==='pending'){
+    toast('⚠️ Pending order আছে — আগে Fill/Cancel করুন');
+    return;
+  }
+  if(tState.kind==='targetHit'){
+    openChat(); userScrolledUp=false;
+    botSay(completionMessage(p));
+    session.conversation={state:'sessionComplete',data:{}}; persist();
+    setInputEnabled(false,'Session সম্পন্ন — Reset করুন',null);
+    return;
+  }
+  if(!D.gt(p.remainingQty,'0')){
+    toast('⚠️ কোনো PEPE নেই — Quick Exit সেট করা সম্ভব নয়');
+    return;
+  }
+  openChat(); userScrolledUp=false;
+  session.conversation={state:'chooseExitPlan',data:{}};
+  goToState('chooseExitPlan');
+});
+
 el('btnSell').addEventListener('click', ()=>{
   const p=computePosition();
   const tState=getTradeState();
@@ -1519,7 +1666,7 @@ el('btnSell').addEventListener('click', ()=>{
   }
   if(tState.kind==='targetHit'){
     openChat(); userScrolledUp=false;
-    botSay(`🎉 <b>TARGET ACHIEVED!</b>\n\nTotal Cost: ${fmtU(p.totalBuyCost)} USDT\nRealized Gross: <span class="pos">${fmtU(p.realizedGross)} USDT</span>\nSession Return: <span class="pos">${fmtPct(p.sessionReturnPct)}</span> (Target ${p.targetPct}%)\n\nSession সম্পন্ন — নতুন Sell শুরু করা যাবে না। Reset করুন।`);
+    botSay(completionMessage(p));
     session.conversation={state:'sessionComplete',data:{}}; persist();
     setInputEnabled(false,'Session সম্পন্ন — Reset করুন',null);
     return;
@@ -1527,7 +1674,7 @@ el('btnSell').addEventListener('click', ()=>{
   if(!D.gt(p.remainingQty,'0')){
     toast('⚠️ কোনো PEPE নেই — Sell করা সম্ভব নয়');
     openChat(); userScrolledUp=false;
-    botSay(`⚠️ বর্তমানে কোনো PEPE নেই।\n\nTotal Cost: ${fmtU(p.totalBuyCost)} USDT\nRealized Gross: ${fmtU(p.realizedGross)} USDT (${fmtPct(p.sessionReturnPct)})\nTarget: ${p.targetPct}%\n\nনতুন Sell করতে হলে প্রথমে Buy করুন।`);
+    botSay(`⚠️ বর্তমানে কোনো PEPE নেই।\n\nTotal Cost: ${fmtU(p.totalBuyCost)} USDT\nRealized Gross: ${fmtU(p.realizedGross)} USDT (${fmtPct(p.sessionReturnPct)})\nActive Exit: ${activeExitLabel(p)} · Plan: ${p.planTargetPct}% Gross\n\nনতুন Sell করতে হলে প্রথমে Buy করুন।`);
     session.conversation={state:'afterBuyFilled',data:{}}; persist();
     setInputEnabled(true,'buy / done',[{label:'📉 নতুন Buy',value:'buy'},{label:'✅ শেষ',value:'done'}]);
     return;
@@ -1537,7 +1684,7 @@ el('btnSell').addEventListener('click', ()=>{
     `Remaining: <b>${fmtQFull(p.remainingQty)} PEPE</b>\n`+
     (p.targetSecured?`Target: <span class="pos">secured</span> — যেকোনো valid price দিন।`
                     :`Suggested Sell Target: <span class="hl">${fmtP(p.sellTarget)} USDT</span>`) +
-    `\nTarget: ${p.targetPct}% · Fee: ${settings.feePct||0}%\n\n`+
+    `\nActive Exit: ${activeExitLabel(p)} · Plan: ${p.planTargetPct}% Gross · Est. Sell Fee: ${settings.feePct||0}%\n\n`+
     `Binance-এ যেই price-এ sell করেছেন সেটি দিন।`);
   session.conversation={state:'askSellPrice',data:{}}; persist();
   goToState('askSellPrice');
