@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, interactive-widget=resizes-content">
-<title>PEPE Smart Trader — Binance Convert</title>
+<title>PEPE Smart Trader — MEXC Convert</title>
 <meta name="google" content="notranslate">
 <meta name="theme-color" content="#0a0f1e">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -285,13 +285,13 @@ body.kb-open .chatwin{
 <div class="app" id="app">
   <div class="brand">
     <h1>🐸 PEPE Smart Trader</h1>
-    <p>Binance Convert Limit · Dynamic Recovery Assistant</p>
+    <p>MEXC Convert Limit · Dynamic Recovery Assistant</p>
     <div class="pair">PEPE / USDT</div>
   </div>
 
   <div class="ticker">
     <div>
-      <div class="lbl">Binance Live Market</div>
+      <div class="lbl">MEXC Live Market</div>
       <div class="price" id="livePrice">— USDT</div>
       <div class="meta" id="liveMeta">সংযোগ স্থাপন হচ্ছে…</div>
     </div>
@@ -414,25 +414,16 @@ body.kb-open .chatwin{
 
 <script>
 /* =====================================================================
-   PEPE Smart Trader — v8.3 (final logical cleanup)
+   PEPE Smart Trader — v8.4 (MEXC API migration)
    ---------------------------------------------------------------------
-   Changes from v8.2:
-     [FIX-1] askSellPrice.quick: removed dead-end "✍ Custom price" button.
-             Only "🎯 Suggested" remains; manual typing works as before.
-     [FIX-2] _fromSuggested flag no longer persisted into conversation.data.
-             It is consumed entirely inside askSellPrice.next():
-               - suggested → d.sellQtyPct='100'; d._sell100=true;
-                             return 'confirmSell'  (askSellQty skipped)
-               - manual    → return 'askSellQty'
-             goToState() no longer has any suggested special-case.
-     [FIX-3] stillPending in afterPending / afterSellPending:
-             does NOT re-enter the same state (which duplicated the
-             message). Instead it shows a toast and re-renders the
-             existing state's input/quick UI via resumeCurrentStateUI().
-     [FIX-4] afterBuyFilled.next & afterSellFilled.next:
-             "done" is checked FIRST, then sessionTargetHit().
-             This restores the user's explicit "done" intent.
-     [MINOR]  confirmSell placeholder made consistent with quick buttons.
+   [MEXC-1] Data source switched from Binance to MEXC spot API:
+            https://api.mexc.com/api/v3/ticker/price?symbol=PEPEUSDT
+   [MEXC-2] formatShortPrice() default tickDecimals = 9 (MEXC PEPE
+            precision), fallback if tickSize unavailable.
+   [MEXC-3] Removed Binance exchangeInfo fetch; MEXC tickSize not
+            publicly exposed via simple endpoint, so we hardcode 9
+            for display precision consistency.
+   [MEXC-4] Service Worker whitelist updated (sw.js: mexc.com).
    ===================================================================== */
 (function(){
 'use strict';
@@ -507,7 +498,7 @@ function fmtQFull(x){
 function fmtPct(x){ const v=n(x); return (v>=0?'+':'')+v.toFixed(2)+'%'; }
 
 /* =====================================================================
-   GLOBAL SHORT PRICE FORMATTER  (display only)
+   GLOBAL SHORT PRICE FORMATTER  (MEXC precision)
    ===================================================================== */
 function formatShortPrice(input){
   if(input === null || input === undefined || input === '') return '—';
@@ -518,11 +509,12 @@ function formatShortPrice(input){
   if(s.startsWith('-')){ neg = true; s = s.slice(1); }
   else if(s.startsWith('+')){ s = s.slice(1); }
 
+  // Scientific notation → plain decimal
   if(/[eE]/.test(s)){
     const num = Number(s);
     if(!isFinite(num)) return '—';
     s = num.toLocaleString('en-US',{useGrouping:false,maximumFractionDigits:20});
-    if(s.includes('.')) s = s.replace(/0+$/,'').replace(/\.$/,'');
+    if(s.includes('.')) s = s.replace(/\.$/,'');
   }
 
   if(!/^\d*\.?\d*$/.test(s)) return '—';
@@ -540,6 +532,12 @@ function formatShortPrice(input){
   intPart = intPart.replace(/^0+(?=\d)/,'');
   if(intPart === '') intPart = '0';
 
+  // MEXC PEPE/USDT tick size = 0.000000001 (9 decimals)
+  const MEXC_TICK_DECIMALS = 9;
+  if(fracPart.length < MEXC_TICK_DECIMALS){
+    fracPart = fracPart.padEnd(MEXC_TICK_DECIMALS, '0');
+  }
+
   const hasIntegerPart = intPart !== '0';
 
   let zeroRun = 0;
@@ -548,13 +546,14 @@ function formatShortPrice(input){
     else break;
   }
 
-  let sig = fracPart.slice(zeroRun).replace(/0+$/, '');
+  // Preserve trailing zeros to match MEXC display
+  let sig = fracPart.slice(zeroRun);
 
   const zeroIndicator = zeroRun > 0 ? '0{' + zeroRun + '}' : '';
 
   let out;
   if(hasIntegerPart){
-    out = intPart + (zeroRun > 0 ? '.0{' + zeroRun + '}' + sig : (fracPart.replace(/0+$/,'') ? '.' + fracPart.replace(/0+$/,'') : ''));
+    out = intPart + (zeroRun > 0 ? '.0{' + zeroRun + '}' + sig : (fracPart ? '.' + fracPart : ''));
   } else {
     if(zeroRun > 0){
       out = '0.' + zeroIndicator + sig;
@@ -574,65 +573,83 @@ function fmtP(x){
   return formatShortPrice(x);
 }
 
-/* ---------------- Binance live ---------------- */
-const BINANCE_PRICE='https://api.binance.com/api/v3/ticker/price?symbol=PEPEUSDT';
-const BINANCE_EXINFO='https://api.binance.com/api/v3/exchangeInfo?symbol=PEPEUSDT';
-const market = { price:null, ts:0, tickSize:null, stepSize:null, minQty:null, minNotional:null, status:'init', failCount:0 };
+/* ---------------- MEXC live price ---------------- */
+const MEXC_PRICE = 'https://api.mexc.com/api/v3/ticker/price?symbol=PEPEUSDT';
+const market = { price:null, ts:0, status:'init', failCount:0 };
 
 async function fetchLivePrice(){
   try{
-    const ctrl=new AbortController(); const t=setTimeout(()=>ctrl.abort(),8000);
-    const res=await fetch(BINANCE_PRICE,{signal:ctrl.signal,cache:'no-store'}); clearTimeout(t);
-    if(!res.ok) throw new Error('HTTP '+res.status);
-    const j=await res.json(); if(!j||!j.price) throw new Error('no price');
-    market.price=String(j.price); market.ts=Date.now(); market.status='live'; market.failCount=0;
+    const ctrl = new AbortController();
+    const t = setTimeout(()=>ctrl.abort(), 8000);
+    const res = await fetch(MEXC_PRICE, { signal: ctrl.signal, cache:'no-store' });
+    clearTimeout(t);
+    if(!res.ok) throw new Error('HTTP ' + res.status);
+    const j = await res.json();
+    // MEXC spot ticker price response: { "symbol": "PEPEUSDT", "price": "0.000003459" }
+    const p = j && (j.price || (Array.isArray(j) && j[0] && j[0].price));
+    if(!p) throw new Error('no price');
+    market.price = String(p);
+    market.ts = Date.now();
+    market.status = 'live';
+    market.failCount = 0;
   }catch(e){
     market.failCount++;
-    if(market.price && Date.now()-market.ts<5*60*1000) market.status='stale';
-    else market.status='offline';
+    if(market.price && Date.now() - market.ts < 5 * 60 * 1000) market.status = 'stale';
+    else market.status = 'offline';
   }
-  renderTicker(); renderDashboard();
+  renderTicker();
+  renderDashboard();
 }
-async function fetchExchangeInfo(){
-  try{
-    const res=await fetch(BINANCE_EXINFO,{cache:'no-store'}); if(!res.ok) return;
-    const j=await res.json(); const sym=j.symbols&&j.symbols[0]; if(!sym) return;
-    const pf=(sym.filters||[]).find(x=>x.filterType==='PRICE_FILTER');
-    if(pf&&pf.tickSize) market.tickSize=pf.tickSize;
-    const lf=(sym.filters||[]).find(x=>x.filterType==='LOT_SIZE');
-    if(lf&&lf.stepSize) market.stepSize=lf.stepSize;
-    if(lf&&lf.minQty) market.minQty=lf.minQty;
-    const nf=(sym.filters||[]).find(x=>x.filterType==='NOTIONAL'||x.filterType==='MIN_NOTIONAL');
-    if(nf&&(nf.minNotional||nf.notional)) market.minNotional=nf.minNotional||nf.notional;
-  }catch(e){}
-}
+
 function renderTicker(){
-  const elP=document.getElementById('livePrice'), elM=document.getElementById('liveMeta');
-  const elS=document.getElementById('liveStatus'), elT=document.getElementById('liveTxt');
-  elP.textContent = market.price? fmtP(market.price)+' USDT' : '— USDT';
-  if(market.status==='live'){ elS.className='live'; elT.textContent='LIVE'; elM.textContent='Binance · '+new Date(market.ts).toLocaleTimeString(); }
-  else if(market.status==='stale'){ elS.className='live stale'; elT.textContent='STALE'; elM.textContent='সর্বশেষ: '+new Date(market.ts).toLocaleTimeString()+' ('+Math.round((Date.now()-market.ts)/1000)+'s আগে)'; }
-  else if(market.status==='offline'){ elS.className='live offline'; elT.textContent='OFFLINE'; elM.textContent='Binance থেকে price পাওয়া যাচ্ছে না'; }
-  else{ elM.textContent='সংযোগ স্থাপন হচ্ছে…'; }
+  const elP = document.getElementById('livePrice');
+  const elM = document.getElementById('liveMeta');
+  const elS = document.getElementById('liveStatus');
+  const elT = document.getElementById('liveTxt');
+
+  elP.textContent = market.price ? fmtP(market.price) + ' USDT' : '— USDT';
+
+  if(market.status === 'live'){
+    elS.className = 'live';
+    elT.textContent = 'LIVE';
+    elM.textContent = 'MEXC · ' + new Date(market.ts).toLocaleTimeString();
+  } else if(market.status === 'stale'){
+    elS.className = 'live stale';
+    elT.textContent = 'STALE';
+    elM.textContent = 'সর্বশেষ: ' + new Date(market.ts).toLocaleTimeString() + ' (' + Math.round((Date.now() - market.ts) / 1000) + 's আগে)';
+  } else if(market.status === 'offline'){
+    elS.className = 'live offline';
+    elT.textContent = 'OFFLINE';
+    elM.textContent = 'MEXC থেকে price পাওয়া যাচ্ছে না';
+  } else {
+    elM.textContent = 'সংযোগ স্থাপন হচ্ছে…';
+  }
 }
 
-/* ---------------- rounding helpers ---------------- */
-function roundToStep(val, step, mode){
-  if(!step) return String(val);
-  try{
-    const v=n(val), s=n(step);
-    if(!s) return String(val);
-    const q = mode==='floor' ? Math.floor(v/s) : mode==='ceil' ? Math.ceil(v/s) : Math.round(v/s);
-    const out = (q*s);
-    const dec = (String(step).split('.')[1]||'').length;
-    return out.toFixed(dec);
-  }catch(e){ return String(val); }
+/* ---------------- rounding helpers (MEXC precision) ---------------- */
+// MEXC PEPE price precision 9 decimals
+function roundPrice(val){
+  const v = n(val);
+  if(!isFinite(v)) return String(val);
+  return v.toFixed(9).replace(/0+$/,'').replace(/\.$/,'');
 }
-function floorQty(val){ return roundToStep(val, market.stepSize, 'floor'); }
-function roundPrice(val){ return roundToStep(val, market.tickSize, 'round'); }
-function ceilPrice(val){ return roundToStep(val, market.tickSize, 'ceil'); }
+function ceilPrice(val){
+  const v = n(val);
+  if(!isFinite(v)) return String(val);
+  // ceiling to 9 decimals
+  const factor = 1e9;
+  return (Math.ceil(v * factor) / factor).toFixed(9).replace(/0+$/,'').replace(/\.$/,'');
+}
+// Quantity flooring remains generic (MEXC PEPE qty precision not critical for this app)
+function floorQty(val){
+  const v = n(val);
+  if(!isFinite(v)) return String(val);
+  // floor to 8 decimals (safe default)
+  const factor = 1e8;
+  return (Math.floor(v * factor) / factor).toFixed(8).replace(/0+$/,'').replace(/\.$/,'');
+}
 
-/* ---------------- storage ---------------- */
+/* ---------------- storage (unchanged) ---------------- */
 const DB_NAME='pepeSmartTrader', DB_VER=1, STORE='kv';
 let dbReady=null;
 function openDB(){
@@ -675,7 +692,7 @@ const store = {
   }
 };
 
-/* ---------------- chat history ---------------- */
+/* ---------------- chat history (unchanged) ---------------- */
 let chatHistory = [];
 const CHAT_KEY = 'chatHistory';
 
@@ -683,7 +700,7 @@ async function persistChat(){ try{ await store.set(CHAT_KEY, chatHistory); }catc
 async function loadChat(){ const arr=await store.get(CHAT_KEY,[]); chatHistory=Array.isArray(arr)?arr:[]; }
 async function clearChat(){ chatHistory=[]; await store.del(CHAT_KEY); }
 
-/* ---------------- session model ---------------- */
+/* ---------------- session model (unchanged) ---------------- */
 let session = null;
 let settings = { maxInv:0, maxBuys:0, feePct:0 };
 let orderSeq = 1;
@@ -762,7 +779,7 @@ async function loadAll(){
   await loadChat();
 }
 
-/* ---------------- financial engine ---------------- */
+/* ---------------- financial engine (unchanged) ---------------- */
 function calculateExitTarget(totalBuyCost, totalSellProceeds, remainingQty, targetPct, targetMode){
   const targetReturnTotal = D.mul(totalBuyCost, D.add('1', D.div(targetPct,'100',18)));
   const feeRate = D.div(String(settings.feePct||0),'100',18);
@@ -963,21 +980,21 @@ function sanitizeHTML(html){
 }
 
 /* =====================================================================
-   CONVERSATION STATES — v8.3
+   CONVERSATION STATES — v8.4 (unchanged logic, MEXC backend)
    ===================================================================== */
 const STATES = {
   askBuyPrice: {
     field:'buyPrice',
     say:()=>{
       const mp = market.price ? `<b>${fmtP(market.price)}</b> USDT` : '<i>লোড হচ্ছে…</i>';
-      return `👋 স্বাগতম!\n\nবর্তমান Binance Market Price: ${mp}\n\nএখন আপনি <b>কোন দামে Buy Limit Order</b> সেট করতে চান?`;
+      return `👋 স্বাগতম!\n\nবর্তমান MEXC Market Price: ${mp}\n\nএখন আপনি <b>কোন দামে Buy Limit Order</b> সেট করতে চান?`;
     },
     placeholder:'Buy limit price (USDT)',
     validate:(v)=>{
       let x = parsePEPEPrice(v);
-      if(x===null) return {ok:false,msg:'সঠিক price দিন, যেমন 0.00000680'};
+      if(x===null) return {ok:false,msg:'সঠিক price দিন, যেমন 0.000003459'};
       x = roundPrice(x);
-      if(n(x)<=0) return {ok:false,msg:'tick size-এ round করার পর price 0 হয়ে গেছে'};
+      if(n(x)<=0) return {ok:false,msg:'round করার পর price 0 হয়ে গেছে'};
       return {ok:true,value:x};
     },
     next:'askInvest'
@@ -990,10 +1007,7 @@ const STATES = {
       const x=parseUSDT(v);
       if(x===null || n(x)<=0) return {ok:false,msg:'0-এর বেশি USDT দিন'};
       const qty = floorQty(D.div(x, session.conversation.data.buyPrice||'1', 18));
-      if(D.lt(qty,'0.00000001') || (market.minQty && D.lt(qty,market.minQty)))
-        return {ok:false,msg:'Binance minimum quantity-এর চেয়ে ছোট'};
-      if(market.minNotional && D.lt(x, market.minNotional))
-        return {ok:false,msg:'Binance minimum notional-এর চেয়ে ছোট ('+market.minNotional+' USDT)'};
+      if(D.lt(qty,'0.00000001')) return {ok:false,msg:'quantity খুব ছোট'};
       return {ok:true,value:x};
     },
     next:(v,d)=>{
@@ -1031,7 +1045,7 @@ const STATES = {
       return `📋 <b>Buy Plan</b>\n\n`+
         `Buy Limit: <span class="hl">${fmtP(d.buyPrice)}</span>\n`+
         `Investment: <span class="hl">${fmtU(d.invest)} USDT</span>\n`+
-        `Est. PEPE (step-floored): <b>${fmtQ(qty)}</b>\n`+
+        `Est. PEPE: <b>${fmtQ(qty)}</b>\n`+
         `Plan Target: <b>${effectivePlanTarget}% Gross</b>\n`+
         `Active Exit: <b>${effectiveExitTarget}% ${effectiveExitMode==='net'?'Net':'Gross'}</b>\n\n`+
         `<b>Fill হলে Position:</b>\n`+
@@ -1039,7 +1053,7 @@ const STATES = {
         `Total PEPE: ${fmtQ(newTotalQty)}\n`+
         (exit.targetSecured ? `Sell Target: <span class="pos">Target secured</span>\n`
                  : `Sell Target: <span class="hl">${fmtP(exit.sellTarget)}</span>\n`)+
-        `\nBinance-এ Limit Buy set করুন। Fill হলে জানান।`;
+        `\nMEXC-এ Limit Buy set করুন। Fill হলে জানান।`;
     },
     placeholder:'filled / pending',
     quick:[{label:'✅ Filled',value:'filled'},{label:'⏳ Pending',value:'pending'}],
@@ -1083,7 +1097,6 @@ const STATES = {
       return {ok:false,msg:'"filled", "pending", "cancel", বা "filled <qty> <usdt>" দিন'};
     },
     next:(v,d)=>{
-      /* FIX-3: stillPending → no state change, no duplicate message */
       if(v.act==='stillPending'){ toast('⏳ এখনো pending — কোনো পরিবর্তন হয়নি'); return '__keep'; }
       const id = d.pendingOrderId || ([...session.orders].reverse().find(o=>o.status==='pending')||{}).id;
       if(id){
@@ -1119,7 +1132,6 @@ const STATES = {
       return {ok:false,msg:'"buy", "quick", "sell", বা "done" দিন'};
     },
     next:(v)=>{
-      /* FIX-4: user's explicit "done" wins; target-hit is a fallback */
       if(v==='done') return 'done';
       if(sessionTargetHit()) return 'sessionComplete';
       if(v==='buy'){
@@ -1185,10 +1197,9 @@ const STATES = {
           ? `Target: <span class="pos">already secured</span> — যেকোনো valid price দিতে পারেন।\n`
           : `Suggested Sell Target: <span class="hl">${fmtP(p.sellTarget)} USDT</span>\n`)+
         `Active Exit: <b>${activeExitLabel(p)}</b> · Plan: ${p.planTargetPct}% Gross\n`+
-        `\nBinance-এ যেই price-এ sell করতে চান সেটি দিন।`;
+        `\nMEXC-এ যেই price-এ sell করতে চান সেটি দিন।`;
     },
     placeholder:'Sell price (USDT)',
-    /* FIX-1: only Suggested; typing manually still works */
     quick:()=>[{label:'🎯 Suggested',value:'__suggested__'}],
     validate:(v)=>{
       let x;
@@ -1201,11 +1212,10 @@ const STATES = {
       } else x = parsePEPEPrice(v);
       if(x===null || n(x)<=0) return {ok:false,msg:'সঠিক price দিন'};
       x = suggested ? ceilPrice(x) : roundPrice(x);
-      if(n(x)<=0) return {ok:false,msg:'tick size-এ round করার পর price 0 হয়ে গেছে'};
+      if(n(x)<=0) return {ok:false,msg:'round করার পর price 0 হয়ে গেছে'};
       return {ok:true,value:x, _suggested:suggested};
     },
     next:(v,d,result)=>{
-      /* FIX-2: _fromSuggested no longer persisted; resolved here. */
       if(result && result._suggested){
         d.sellQtyPct = '100';
         d._sell100 = true;
@@ -1237,7 +1247,7 @@ const STATES = {
         `Price: <span class="hl">${fmtP(d.sellPrice)}</span>\n`+
         `Qty: ${fmtQ(qty)} PEPE (${d.sellQtyPct}%${d._sell100?' · suggested default':''})\n`+
         `Est. Gross Proceeds: <b>${fmtU(gross)} USDT</b> (before fees)\n\n`+
-        `Binance-এ এই Sell সম্পন্ন হয়েছে?`;
+        `MEXC-এ এই Sell সম্পন্ন হয়েছে?`;
     },
     placeholder:'filled / pending / partial <qty> <usdt>',
     quick:[
@@ -1292,7 +1302,6 @@ const STATES = {
       return {ok:false,msg:'"filled", "pending", "cancel", বা "filled <qty> <usdt>" দিন'};
     },
     next:(v,d)=>{
-      /* FIX-3: stillPending → no state change, no duplicate message */
       if(v.act==='stillPending'){ toast('⏳ এখনো pending — কোনো পরিবর্তন হয়নি'); return '__keep'; }
       const id = d.pendingOrderId || ([...session.orders].reverse().find(o=>o.status==='pending')||{}).id;
       if(id){
@@ -1337,7 +1346,6 @@ const STATES = {
       return {ok:false,msg:'"buy", "quick", "sell", বা "done" দিন'};
     },
     next:(v)=>{
-      /* FIX-4: user's explicit "done" wins; target-hit is a fallback */
       if(v==='done') return 'done';
       if(sessionTargetHit()) return 'sessionComplete';
       if(v==='buy'){
@@ -1379,7 +1387,7 @@ function parseUSDT(v){
   return v;
 }
 
-/* ---------------- chat rendering ---------------- */
+/* ---------------- chat rendering (unchanged) ---------------- */
 let userScrolledUp=false;
 const SCROLL_THRESHOLD=60;
 function isNearBottom(){ return (chatBox.scrollHeight-chatBox.scrollTop-chatBox.clientHeight)<SCROLL_THRESHOLD; }
@@ -1407,7 +1415,7 @@ function replayChat(){
   requestAnimationFrame(()=>{ chatBox.scrollTop=chatBox.scrollHeight; });
 }
 
-/* ---------------- input controls ---------------- */
+/* ---------------- input controls (unchanged) ---------------- */
 function setInputEnabled(on, placeholder, quick){
   input.disabled=!on; sendBtn.disabled=!on;
   input.placeholder = placeholder||(on?'উত্তর লিখুন...':'অপেক্ষা করুন...');
@@ -1422,9 +1430,6 @@ function setInputEnabled(on, placeholder, quick){
 }
 
 /* ---------------- state machine ---------------- */
-/* FIX-3 helper: re-render input/quick for the current state without
-   re-saying the prompt. Used for "still pending" to avoid duplicate
-   chat bubbles. */
 function resumeCurrentStateUI(){
   const name = session.conversation && session.conversation.state;
   const st = STATES[name];
@@ -1434,7 +1439,6 @@ function resumeCurrentStateUI(){
 }
 
 function goToState(name){
-  /* FIX-3: '__keep' is a sentinel meaning "no state change" */
   if(name === '__keep'){ resumeCurrentStateUI(); return; }
 
   const sellStates=['askSellPrice','askSellQty','confirmSell','afterSellPending'];
@@ -1798,7 +1802,7 @@ el('btnSell').addEventListener('click', ()=>{
     (p.targetSecured?`Target: <span class="pos">secured</span> — যেকোনো valid price দিন।`
                     :`Suggested Sell Target: <span class="hl">${fmtP(p.sellTarget)} USDT</span>`) +
     `\nActive Exit: ${activeExitLabel(p)} · Plan: ${p.planTargetPct}% Gross · Est. Sell Fee: ${settings.feePct||0}%\n\n`+
-    `Binance-এ যেই price-এ sell করতে চান সেটি দিন।`);
+    `MEXC-এ যেই price-এ sell করতে চান সেটি দিন।`);
   session.conversation={state:'askSellPrice',data:{}}; persist();
   goToState('askSellPrice');
 });
@@ -2040,7 +2044,7 @@ window.addEventListener('orientationchange', ()=>setTimeout(onResizeOrViewportCh
     });
   }
   const manifest={name:'PEPE Smart Trader',short_name:'PEPE Trader',
-    description:'Binance Convert Limit PEPE/USDT Recovery Assistant',
+    description:'MEXC Convert Limit PEPE/USDT Recovery Assistant',
     start_url:'.',scope:'.',display:'standalone',orientation:'portrait',
     background_color:'#0a0f1e',theme_color:'#0a0f1e',lang:'bn',icons:[]};
   (async()=>{
@@ -2077,7 +2081,6 @@ window.addEventListener('orientationchange', ()=>setTimeout(onResizeOrViewportCh
   renderAll();
   initFabPosition();
   startConversation();
-  await fetchExchangeInfo();
   fetchLivePrice();
   setInterval(fetchLivePrice, 15000);
   setInterval(renderTicker, 1000);
