@@ -414,14 +414,20 @@ body.kb-open .chatwin{
 
 <script>
 /* =====================================================================
-   PEPE Smart Trader — v8.1 (global short price format)
-   Changes from v8.0:
-     - Centralized formatShortPrice() for ALL price display.
-     - fmtP() delegates to formatShortPrice() — single source of truth.
-     - Every price in dashboard, ticker, chat, orders, modals, completion
-       message, pending info, and fill summary uses the short format.
-     - All calculations remain on full-precision strings via decimal engine.
-     - User input & storage keep original full-precision values.
+   PEPE Smart Trader — v8.2 (logical flow fix)
+   ---------------------------------------------------------------------
+   Changes from v8.1:
+     - askSellQty.say: "বিক্রি করেছেন?" → "বিক্রি করতে চান?" (intent tense)
+     - askSellPrice.say + btnSell inline: "sell করেছেন" → "sell করতে চান"
+     - __suggested__ click now skips askSellQty and goes straight to
+       confirmSell with 100% default (d._fromSuggested flag).
+     - askSellPrice.quick now includes ✍ Custom price option.
+     - confirmSell.quick now includes ◐ Partial option (UI/validator parity).
+     - afterPending/afterSellPending now accept "pending" (stillPending).
+     - afterBuyFilled.next now checks sessionTargetHit() before "done".
+     - askSellQty hint clearer: "(100% = সম্পূর্ণ position)".
+     - goToState skips askSellQty when arriving with _fromSuggested.
+     - goToState('askSellQty') with empty _fromSuggested still works.
    ===================================================================== */
 (function(){
 'use strict';
@@ -497,19 +503,6 @@ function fmtPct(x){ const v=n(x); return (v>=0?'+':'')+v.toFixed(2)+'%'; }
 
 /* =====================================================================
    GLOBAL SHORT PRICE FORMATTER  (display only)
-   ---------------------------------------------------------------------
-   Rule: after the decimal point, a run of N consecutive zeros is shown
-   as 0.{N} followed by the remaining significant digits.
-   Examples:
-       0.0003577    -> 0.0{3}3577
-       0.00003577   -> 0.0{4}3577
-       0.000003577  -> 0.0{5}3577
-       0.0000003577 -> 0.0{6}3577
-       0.000003610  -> 0.0{5}3610
-       0.000001250  -> 0.0{5}1250
-       0.00125000   -> 0.0{2}125000
-   No consecutive zero run -> normal decimal display (trailing zeros
-   stripped).  Never used for calculations; input/storage unaffected.
    ===================================================================== */
 function formatShortPrice(input){
   if(input === null || input === undefined || input === '') return '—';
@@ -520,7 +513,6 @@ function formatShortPrice(input){
   if(s.startsWith('-')){ neg = true; s = s.slice(1); }
   else if(s.startsWith('+')){ s = s.slice(1); }
 
-  /* Normalize exponents to plain decimal string, without Number() rounding */
   if(/[eE]/.test(s)){
     const num = Number(s);
     if(!isFinite(num)) return '—';
@@ -540,41 +532,31 @@ function formatShortPrice(input){
     fracPart = '';
   }
 
-  /* Strip leading zeros of integer part (keep at least one) */
   intPart = intPart.replace(/^0+(?=\d)/,'');
   if(intPart === '') intPart = '0';
 
-  /* Normalize integer part: "0" stays "0", anything else is the real integer */
   const hasIntegerPart = intPart !== '0';
 
-  /* Find the run of consecutive zeros at the start of the fractional part */
   let zeroRun = 0;
   for(let i = 0; i < fracPart.length; i++){
     if(fracPart[i] === '0') zeroRun++;
     else break;
   }
 
-  /* Strip trailing zeros from the significant fraction tail (standard display) */
   let sig = fracPart.slice(zeroRun).replace(/0+$/, '');
 
   const zeroIndicator = zeroRun > 0 ? '0{' + zeroRun + '}' : '';
 
   let out;
   if(hasIntegerPart){
-    /* Non-zero integer part: just show integer + fraction (no {N} needed unless zeroRun exists) */
     out = intPart + (zeroRun > 0 ? '.0{' + zeroRun + '}' + sig : (fracPart.replace(/0+$/,'') ? '.' + fracPart.replace(/0+$/,'') : ''));
   } else {
-    /* Integer part is zero */
     if(zeroRun > 0){
-      /* e.g. 0.0003577 -> 0.0{3}3577 ; if sig empty -> 0.0{3} */
       out = '0.' + zeroIndicator + sig;
-      /* Trim trailing dot if sig empty and zeroRun 0 (won't happen) */
       if(sig === '' && zeroRun === 0) out = '0';
     } else if(sig.length > 0){
-      /* No leading zero run, e.g. 0.1234 */
       out = '0.' + sig;
     } else {
-      /* Zero value */
       out = '0';
     }
   }
@@ -583,7 +565,6 @@ function formatShortPrice(input){
   return out;
 }
 
-/* fmtP is now a thin wrapper — everything that renders a PEPE price goes here */
 function fmtP(x){
   return formatShortPrice(x);
 }
@@ -630,7 +611,7 @@ function renderTicker(){
   else{ elM.textContent='সংযোগ স্থাপন হচ্ছে…'; }
 }
 
-/* ---------------- rounding helpers (unchanged) ---------------- */
+/* ---------------- rounding helpers ---------------- */
 function roundToStep(val, step, mode){
   if(!step) return String(val);
   try{
@@ -646,7 +627,7 @@ function floorQty(val){ return roundToStep(val, market.stepSize, 'floor'); }
 function roundPrice(val){ return roundToStep(val, market.tickSize, 'round'); }
 function ceilPrice(val){ return roundToStep(val, market.tickSize, 'ceil'); }
 
-/* ---------------- storage (unchanged) ---------------- */
+/* ---------------- storage ---------------- */
 const DB_NAME='pepeSmartTrader', DB_VER=1, STORE='kv';
 let dbReady=null;
 function openDB(){
@@ -697,7 +678,7 @@ async function persistChat(){ try{ await store.set(CHAT_KEY, chatHistory); }catc
 async function loadChat(){ const arr=await store.get(CHAT_KEY,[]); chatHistory=Array.isArray(arr)?arr:[]; }
 async function clearChat(){ chatHistory=[]; await store.del(CHAT_KEY); }
 
-/* ---------------- session model (unchanged) ---------------- */
+/* ---------------- session model ---------------- */
 let session = null;
 let settings = { maxInv:0, maxBuys:0, feePct:0 };
 let orderSeq = 1;
@@ -776,7 +757,7 @@ async function loadAll(){
   await loadChat();
 }
 
-/* ---------------- financial engine (unchanged) ---------------- */
+/* ---------------- financial engine ---------------- */
 function calculateExitTarget(totalBuyCost, totalSellProceeds, remainingQty, targetPct, targetMode){
   const targetReturnTotal = D.mul(totalBuyCost, D.add('1', D.div(targetPct,'100',18)));
   const feeRate = D.div(String(settings.feePct||0),'100',18);
@@ -976,7 +957,10 @@ function sanitizeHTML(html){
   return tpl.innerHTML;
 }
 
-/* ---------------- conversation states ---------------- */
+/* =====================================================================
+   CONVERSATION STATES — v8.2 (intent-tense for planning, past-tense
+   only inside confirm* fill-check states)
+   ===================================================================== */
 const STATES = {
   askBuyPrice: {
     field:'buyPrice',
@@ -1081,19 +1065,21 @@ const STATES = {
     say:(d)=>{
       const o = d.pendingOrderId ? session.orders.find(x=>x.id===d.pendingOrderId) : null;
       const info = o ? `\n\nPending: <b>${o.id}</b> · BUY @ ${fmtP(o.price)}` : '';
-      return `⏳ Buy order pending.${info}\n\nFill হলে জানান (partial হলে actual qty/USDT লিখুন: <code>filled 5000000 100</code>) অথবা cancel করুন।`;
+      return `⏳ Buy order pending.${info}\n\nFill হলে জানান (partial হলে actual qty/USDT লিখুন: <code>filled 5000000 100</code>) অথবা cancel করুন।\nএখনো pending থাকলে <code>pending</code> লিখুন।`;
     },
-    placeholder:'filled / pending details / cancel',
-    quick:[{label:'✅ Filled',value:'filled'},{label:'❌ Cancel',value:'cancel'}],
+    placeholder:'filled / pending / cancel / filled <qty> <usdt>',
+    quick:[{label:'✅ Filled',value:'filled'},{label:'◐ Partial…',value:'filled '},{label:'⏳ এখনো Pending',value:'pending'},{label:'❌ Cancel',value:'cancel'}],
     validate:(v)=>{
       const s=v.toLowerCase().trim();
       if(['filled','fill','done'].includes(s)) return {ok:true,value:{act:'fill',qty:null,usdt:null}};
+      if(['pending','pend','এখনো','still'].includes(s)) return {ok:true,value:{act:'stillPending'}};
       if(['cancel','no'].includes(s)) return {ok:true,value:{act:'cancel'}};
       const m = s.match(/^filled\s+([0-9.]+)\s+([0-9.]+)$/);
       if(m) return {ok:true,value:{act:'fillPartial',qty:m[1],usdt:m[2]}};
-      return {ok:false,msg:'"filled", "cancel", বা "filled <qty> <usdt>" দিন'};
+      return {ok:false,msg:'"filled", "pending", "cancel", বা "filled <qty> <usdt>" দিন'};
     },
     next:(v,d)=>{
+      if(v.act==='stillPending') return 'afterPending';
       const id = d.pendingOrderId || ([...session.orders].reverse().find(o=>o.status==='pending')||{}).id;
       if(id){
         if(v.act==='fillPartial') fillOrder(id, v.qty, v.usdt, true);
@@ -1128,6 +1114,8 @@ const STATES = {
       return {ok:false,msg:'"buy", "quick", "sell", বা "done" দিন'};
     },
     next:(v)=>{
+      /* v8.2: target hit হলে "done" বললেও sessionComplete-এ যাবে */
+      if(sessionTargetHit()) return 'sessionComplete';
       if(v==='buy'){
         if(session.orders.some(o=>o.status==='pending')) return 'afterPending';
         return 'askBuyPrice';
@@ -1191,31 +1179,47 @@ const STATES = {
           ? `Target: <span class="pos">already secured</span> — যেকোনো valid price দিতে পারেন।\n`
           : `Suggested Sell Target: <span class="hl">${fmtP(p.sellTarget)} USDT</span>\n`)+
         `Active Exit: <b>${activeExitLabel(p)}</b> · Plan: ${p.planTargetPct}% Gross\n`+
-        `\nBinance-এ যেই price-এ sell করেছেন সেটি দিন।`;
+        `\nBinance-এ যেই price-এ sell করতে চান সেটি দিন।`;
     },
     placeholder:'Sell price (USDT)',
-    quick:()=>[{label:'🎯 Suggested',value:'__suggested__'}],
+    quick:()=>[
+      {label:'🎯 Suggested',value:'__suggested__'},
+      {label:'✍ Custom price',value:'__custom__'}
+    ],
     validate:(v)=>{
       let x;
-      const suggested=v==='__suggested__';
-      if(v==='__suggested__'){
+      const suggested = (v==='__suggested__');
+      const custom    = (v==='__custom__');
+      if(suggested){
         const p = computePosition();
         if(p.targetSecured) return {ok:false,msg:'Target secured — নিজে valid price দিন'};
         x = p.sellTarget;
         if(n(x)<=0) return {ok:false,msg:'Suggested target নেই — নিজে valid price দিন'};
+      } else if(custom){
+        return {ok:false,msg:'নিজের sell price টাইপ করুন (USDT)'};
       } else x = parsePEPEPrice(v);
       if(x===null || n(x)<=0) return {ok:false,msg:'সঠিক price দিন'};
       x = suggested ? ceilPrice(x) : roundPrice(x);
       if(n(x)<=0) return {ok:false,msg:'tick size-এ round করার পর price 0 হয়ে গেছে'};
-      return {ok:true,value:x};
+      return {ok:true,value:x, _fromSuggested:suggested};
     },
-    next:'askSellQty'
+    next:(v,d)=>{
+      /* v8.2: suggested হলে intent স্পষ্ট — সরাসরি confirmSell (100% default) */
+      const wasSuggested = !!d._fromSuggested;
+      delete d._fromSuggested;
+      if(wasSuggested){
+        d.sellQtyPct = '100';
+        d._sell100 = true;
+        return 'confirmSell';
+      }
+      return 'askSellQty';
+    }
   },
   askSellQty: {
     field:'sellQtyPct',
-    say:(d)=>`Sell Price: <b>${fmtP(d.sellPrice)}</b>\n\nকত % PEPE বিক্রি করেছেন? (100 = সম্পূর্ণ)`,
+    say:(d)=>`Sell Price: <b>${fmtP(d.sellPrice)}</b>\n\nকত % PEPE বিক্রি করতে চান? (100% = সম্পূর্ণ position)`,
     placeholder:'0-100',
-    quick:[{label:'100%',value:'100'},{label:'50%',value:'50'},{label:'25%',value:'25'}],
+    quick:[{label:'100%',value:'100'},{label:'75%',value:'75'},{label:'50%',value:'50'},{label:'25%',value:'25'}],
     validate:(v)=>{
       const x=parseUSDT(v);
       if(x===null || n(x)<=0 || n(x)>100) return {ok:false,msg:'0-100 এর মধ্যে দিন'};
@@ -1232,16 +1236,21 @@ const STATES = {
       const gross = D.mul(qty, d.sellPrice);
       return `📋 <b>Sell Record</b>\n\n`+
         `Price: <span class="hl">${fmtP(d.sellPrice)}</span>\n`+
-        `Qty: ${fmtQ(qty)} PEPE (${d.sellQtyPct}%)\n`+
+        `Qty: ${fmtQ(qty)} PEPE (${d.sellQtyPct}%${d._sell100?' · suggested default':''})\n`+
         `Est. Gross Proceeds: <b>${fmtU(gross)} USDT</b> (before fees)\n\n`+
         `Binance-এ এই Sell সম্পন্ন হয়েছে?`;
     },
-    placeholder:'filled / pending / partial (qty usdt)',
-    quick:[{label:'✅ Filled',value:'filled'},{label:'⏳ Pending',value:'pending'}],
+    placeholder:'filled / pending / partial <qty> <usdt>',
+    quick:[
+      {label:'✅ Filled',value:'filled'},
+      {label:'◐ Partial…',value:'partial '},
+      {label:'⏳ Pending',value:'pending'}
+    ],
     validate:(v)=>{
       const s=v.toLowerCase().trim();
       if(['filled','fill','done','হয়েছে'].includes(s)) return {ok:true,value:{act:'fill'}};
       if(['pending','pend'].includes(s)) return {ok:true,value:{act:'pending'}};
+      if(['partial','আংশিক'].includes(s)) return {ok:false,msg:'partial এর সাথে qty ও usdt দিন: partial <qty> <usdt>'};
       const m = s.match(/^(?:partial|filled)\s+([0-9.]+)\s+([0-9.]+)$/);
       if(m) return {ok:true,value:{act:'partial',qty:m[1],usdt:m[2]}};
       return {ok:false,msg:'"filled", "pending", বা "partial <qty> <usdt>" দিন'};
@@ -1261,6 +1270,7 @@ const STATES = {
         fillPrice: status!=='pending'?d.sellPrice:null, ts:Date.now(), note:'' };
       pushOrder(order);
       if(status==='pending') session.conversation.data.pendingOrderId = order.id;
+      if(d._sell100) delete d._sell100;
       return status==='pending' ? 'afterSellPending' : 'afterSellFilled';
     }
   },
@@ -1269,19 +1279,21 @@ const STATES = {
     say:(d)=>{
       const o = d.pendingOrderId ? session.orders.find(x=>x.id===d.pendingOrderId) : null;
       const info = o ? `\n\nPending: <b>${o.id}</b> · SELL @ ${fmtP(o.price)}` : '';
-      return `⏳ Sell pending.${info}\n\nFill হলে জানান (partial হলে: <code>filled <qty> <usdt></code>) অথবা cancel করুন।`;
+      return `⏳ Sell pending.${info}\n\nFill হলে জানান (partial হলে: <code>filled <qty> <usdt></code>) অথবা cancel করুন।\nএখনো pending থাকলে <code>pending</code> লিখুন।`;
     },
-    placeholder:'filled / partial (qty usdt) / cancel',
-    quick:[{label:'✅ Filled',value:'filled'},{label:'❌ Cancel',value:'cancel'}],
+    placeholder:'filled / pending / cancel / filled <qty> <usdt>',
+    quick:[{label:'✅ Filled',value:'filled'},{label:'◐ Partial…',value:'filled '},{label:'⏳ এখনো Pending',value:'pending'},{label:'❌ Cancel',value:'cancel'}],
     validate:(v)=>{
       const s=v.toLowerCase().trim();
       if(['filled','fill','done'].includes(s)) return {ok:true,value:{act:'fill'}};
+      if(['pending','pend','এখনো','still'].includes(s)) return {ok:true,value:{act:'stillPending'}};
       if(['cancel','no'].includes(s)) return {ok:true,value:{act:'cancel'}};
       const m = s.match(/^filled\s+([0-9.]+)\s+([0-9.]+)$/);
       if(m) return {ok:true,value:{act:'fillPartial',qty:m[1],usdt:m[2]}};
-      return {ok:false,msg:'"filled", "cancel", বা "filled <qty> <usdt>" দিন'};
+      return {ok:false,msg:'"filled", "pending", "cancel", বা "filled <qty> <usdt>" দিন'};
     },
     next:(v,d)=>{
+      if(v.act==='stillPending') return 'afterSellPending';
       const id = d.pendingOrderId || ([...session.orders].reverse().find(o=>o.status==='pending')||{}).id;
       if(id){
         if(v.act==='fillPartial') fillOrder(id, v.qty, v.usdt, true);
@@ -1343,7 +1355,7 @@ const STATES = {
   done: { say:'ধন্যবাদ! Dashboard থেকে যেকোনো সময় নতুন Buy বা Sell plan করতে পারেন।', end:true }
 };
 
-/* ---------------- parsers (unchanged) ---------------- */
+/* ---------------- parsers ---------------- */
 function parsePEPEPrice(v){
   v=String(v==null?'':v).trim().replace(/,/g,'');
   if(!/^\d*\.?\d+(e-?\d+)?$/i.test(v)) return null;
@@ -1417,6 +1429,11 @@ function goToState(name){
       else{ botSay('⚠️ কোনো PEPE নেই — Sell করা সম্ভব নয়। নতুন Buy করুন।'); name='afterBuyFilled'; }
     } else if(sessionTargetHit()) name='sessionComplete';
   }
+  /* v8.2: suggested path — askSellQty skip, _sell100 flag carry through */
+  if(name==='askSellQty' && session.conversation && session.conversation.data && session.conversation.data._fromSuggested){
+    session.conversation.data.sellQtyPct='100';
+    name='confirmSell';
+  }
   if(['askBuyPrice','askInvest','askTargetPct','confirmBuy'].includes(name)){
     if(session.orders.some(o=>o.status==='pending') && name!=='afterPending'){
       const pend = session.orders.find(o=>o.status==='pending');
@@ -1489,6 +1506,8 @@ function handleSubmit(){
     input.value='';
     userSay(raw);
     session.conversation.data[st.field]=result.value;
+    /* carry _fromSuggested flag from validator to data */
+    if(result._fromSuggested) session.conversation.data._fromSuggested=true;
     let next=st.next;
     if(typeof next==='function') next=next(result.value, session.conversation.data, result);
     if(!session.conversation.data) session.conversation.data={};
@@ -1770,7 +1789,7 @@ el('btnSell').addEventListener('click', ()=>{
     (p.targetSecured?`Target: <span class="pos">secured</span> — যেকোনো valid price দিন।`
                     :`Suggested Sell Target: <span class="hl">${fmtP(p.sellTarget)} USDT</span>`) +
     `\nActive Exit: ${activeExitLabel(p)} · Plan: ${p.planTargetPct}% Gross · Est. Sell Fee: ${settings.feePct||0}%\n\n`+
-    `Binance-এ যেই price-এ sell করেছেন সেটি দিন।`);
+    `Binance-এ যেই price-এ sell করতে চান সেটি দিন।`);
   session.conversation={state:'askSellPrice',data:{}}; persist();
   goToState('askSellPrice');
 });
@@ -1870,7 +1889,6 @@ function openChat(){
   chatwin.classList.add('open');
   fab.classList.add('hidden');
   fab.classList.remove('has-msg');
-  /* Mobile Back button support: push a history entry so Back closes the chat */
   try{
     history.pushState({ pepeChatOpen: true }, '');
   }catch(e){}
@@ -1882,11 +1900,6 @@ function closeChat(programmatic){
   chatwin.classList.remove('open');
   fab.classList.remove('hidden');
   try{ if(document.activeElement && chatwin.contains(document.activeElement)) document.activeElement.blur(); }catch(e){}
-  /* If we pushed a history entry when opening, consume it so the next
-     Back press doesn't reopen/close anything unexpected.
-     `programmatic` = true when called by FAB/badge/etc (not by popstate),
-     so we need to pop the history entry we added. When called from the
-     popstate handler, the entry is already gone. */
   if(!programmatic){
     try{
       if(history.state && history.state.pepeChatOpen){
@@ -1896,15 +1909,12 @@ function closeChat(programmatic){
   }
 }
 
-  
 fab.addEventListener('click', (e)=>{
   if(Date.now()<suppressClickUntil){ e.preventDefault(); e.stopPropagation(); return; }
   if(isOpen) closeChat(); else openChat();
 });
 
-
-
- (function enableTripleTapClose(){
+(function enableTripleTapClose(){
   const TRIPLE_MS = 600;
   let tapCount = 0;
   let firstTapTime = 0;
@@ -1967,8 +1977,6 @@ document.addEventListener('pointerdown', (e)=>{
 
 document.addEventListener('keydown',(e)=>{ if(e.key==='Escape'&&isOpen) closeChat(); });
 
-/* Mobile Back button: when the chat is open and the user presses Back,
-   the pushed history entry is popped; close the chat instead of navigating. */
 window.addEventListener('popstate', ()=>{
   if(isOpen) closeChat(true);
 });
