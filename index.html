@@ -40,7 +40,7 @@ body{background:linear-gradient(180deg,#080c17 0%,#0a0f1e 100%);color:var(--txt)
 
 .ticker{display:flex;justify-content:space-between;align-items:center;background:linear-gradient(135deg,#0c1e3a,#0a2a3a);border:1px solid #1e4a6f;border-radius:14px;padding:11px 14px;margin-bottom:14px}
 .ticker .lbl{font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:#7dd3fc;font-weight:700}
-.ticker .price{font-size:19px;font-weight:800;color:#fff;margin-top:2px;letter-spacing:.3px}
+.ticker .price{font-size:19px;font-weight:800;color:#fff;margin-top:2px;letter-spacing:.3px;font-variant-numeric:tabular-nums}
 .ticker .meta{font-size:10px;color:var(--mut);margin-top:3px}
 .ticker .live{display:inline-flex;align-items:center;gap:5px;font-size:10px;font-weight:700;color:var(--pos)}
 .ticker .live .dot{width:7px;height:7px;border-radius:50%;background:var(--pos);animation:pulse 1.6s infinite}
@@ -414,17 +414,19 @@ body.kb-open .chatwin{
 
 <script>
 /* =====================================================================
-   PEPE Smart Trader — v8.0 (plan target + quick exit)
-   Changes from v7.2:
-     - Separate gross plan target from the active exit target.
-     - Add fee-aware net Quick Exit targets for the whole open session.
-     - Snap calculated sell targets upward to the exchange price tick.
-     - Reset / state transitions no longer pop the soft keyboard.
+   PEPE Smart Trader — v8.1 (global short price format)
+   Changes from v8.0:
+     - Centralized formatShortPrice() for ALL price display.
+     - fmtP() delegates to formatShortPrice() — single source of truth.
+     - Every price in dashboard, ticker, chat, orders, modals, completion
+       message, pending info, and fill summary uses the short format.
+     - All calculations remain on full-precision strings via decimal engine.
+     - User input & storage keep original full-precision values.
    ===================================================================== */
 (function(){
 'use strict';
 
-/* ---------------- Decimal engine ---------------- */
+/* ---------------- Decimal engine (unchanged) ---------------- */
 const D = {
   mul(a,b){ const A=dp(a),B=dp(b); return fmtScaled(BigInt(A.i+A.f)*BigInt(B.i+B.f), A.d+B.d); },
   div(a,b,dp_=18){
@@ -481,11 +483,6 @@ function fmtU(x,dp_=2){
   if(Math.abs(v)<1e-12) return '0.00';
   return v.toLocaleString('en-US',{minimumFractionDigits:dp_,maximumFractionDigits:dp_});
 }
-function fmtP(x){
-  const v=n(x);
-  if(!v) return '—';
-  return v.toFixed(11).replace(/0+$/,'').replace(/\.$/,'');
-}
 function fmtQ(x){
   const v=n(x);
   if(!v) return '0';
@@ -497,6 +494,99 @@ function fmtQFull(x){
   return v.toLocaleString('en-US',{maximumFractionDigits:8});
 }
 function fmtPct(x){ const v=n(x); return (v>=0?'+':'')+v.toFixed(2)+'%'; }
+
+/* =====================================================================
+   GLOBAL SHORT PRICE FORMATTER  (display only)
+   ---------------------------------------------------------------------
+   Rule: after the decimal point, a run of N consecutive zeros is shown
+   as 0.{N} followed by the remaining significant digits.
+   Examples:
+       0.0003577    -> 0.0{3}3577
+       0.00003577   -> 0.0{4}3577
+       0.000003577  -> 0.0{5}3577
+       0.0000003577 -> 0.0{6}3577
+       0.000003610  -> 0.0{5}3610
+       0.000001250  -> 0.0{5}1250
+       0.00125000   -> 0.0{2}125000
+   No consecutive zero run -> normal decimal display (trailing zeros
+   stripped).  Never used for calculations; input/storage unaffected.
+   ===================================================================== */
+function formatShortPrice(input){
+  if(input === null || input === undefined || input === '') return '—';
+  let s = String(input).trim();
+  if(s === '' || s === '.' || s === '-' || s === '+') return '—';
+
+  let neg = false;
+  if(s.startsWith('-')){ neg = true; s = s.slice(1); }
+  else if(s.startsWith('+')){ s = s.slice(1); }
+
+  /* Normalize exponents to plain decimal string, without Number() rounding */
+  if(/[eE]/.test(s)){
+    const num = Number(s);
+    if(!isFinite(num)) return '—';
+    s = num.toLocaleString('en-US',{useGrouping:false,maximumFractionDigits:20});
+    if(s.includes('.')) s = s.replace(/0+$/,'').replace(/\.$/,'');
+  }
+
+  if(!/^\d*\.?\d*$/.test(s)) return '—';
+
+  let intPart = '', fracPart = '';
+  if(s.includes('.')){
+    const parts = s.split('.');
+    intPart = parts[0] || '0';
+    fracPart = parts[1] || '';
+  } else {
+    intPart = s || '0';
+    fracPart = '';
+  }
+
+  /* Strip leading zeros of integer part (keep at least one) */
+  intPart = intPart.replace(/^0+(?=\d)/,'');
+  if(intPart === '') intPart = '0';
+
+  /* Normalize integer part: "0" stays "0", anything else is the real integer */
+  const hasIntegerPart = intPart !== '0';
+
+  /* Find the run of consecutive zeros at the start of the fractional part */
+  let zeroRun = 0;
+  for(let i = 0; i < fracPart.length; i++){
+    if(fracPart[i] === '0') zeroRun++;
+    else break;
+  }
+
+  /* Strip trailing zeros from the significant fraction tail (standard display) */
+  let sig = fracPart.slice(zeroRun).replace(/0+$/, '');
+
+  const zeroIndicator = zeroRun > 0 ? '0{' + zeroRun + '}' : '';
+
+  let out;
+  if(hasIntegerPart){
+    /* Non-zero integer part: just show integer + fraction (no {N} needed unless zeroRun exists) */
+    out = intPart + (zeroRun > 0 ? '.0{' + zeroRun + '}' + sig : (fracPart.replace(/0+$/,'') ? '.' + fracPart.replace(/0+$/,'') : ''));
+  } else {
+    /* Integer part is zero */
+    if(zeroRun > 0){
+      /* e.g. 0.0003577 -> 0.0{3}3577 ; if sig empty -> 0.0{3} */
+      out = '0.' + zeroIndicator + sig;
+      /* Trim trailing dot if sig empty and zeroRun 0 (won't happen) */
+      if(sig === '' && zeroRun === 0) out = '0';
+    } else if(sig.length > 0){
+      /* No leading zero run, e.g. 0.1234 */
+      out = '0.' + sig;
+    } else {
+      /* Zero value */
+      out = '0';
+    }
+  }
+
+  if(neg && out !== '0') out = '-' + out;
+  return out;
+}
+
+/* fmtP is now a thin wrapper — everything that renders a PEPE price goes here */
+function fmtP(x){
+  return formatShortPrice(x);
+}
 
 /* ---------------- Binance live ---------------- */
 const BINANCE_PRICE='https://api.binance.com/api/v3/ticker/price?symbol=PEPEUSDT';
@@ -540,7 +630,7 @@ function renderTicker(){
   else{ elM.textContent='সংযোগ স্থাপন হচ্ছে…'; }
 }
 
-/* ---------------- rounding helpers ---------------- */
+/* ---------------- rounding helpers (unchanged) ---------------- */
 function roundToStep(val, step, mode){
   if(!step) return String(val);
   try{
@@ -556,7 +646,7 @@ function floorQty(val){ return roundToStep(val, market.stepSize, 'floor'); }
 function roundPrice(val){ return roundToStep(val, market.tickSize, 'round'); }
 function ceilPrice(val){ return roundToStep(val, market.tickSize, 'ceil'); }
 
-/* ---------------- storage (serial queue) ---------------- */
+/* ---------------- storage (unchanged) ---------------- */
 const DB_NAME='pepeSmartTrader', DB_VER=1, STORE='kv';
 let dbReady=null;
 function openDB(){
@@ -607,7 +697,7 @@ async function persistChat(){ try{ await store.set(CHAT_KEY, chatHistory); }catc
 async function loadChat(){ const arr=await store.get(CHAT_KEY,[]); chatHistory=Array.isArray(arr)?arr:[]; }
 async function clearChat(){ chatHistory=[]; await store.del(CHAT_KEY); }
 
-/* ---------------- session model (v8: plan target + active exit) ---------------- */
+/* ---------------- session model (unchanged) ---------------- */
 let session = null;
 let settings = { maxInv:0, maxBuys:0, feePct:0 };
 let orderSeq = 1;
@@ -626,7 +716,6 @@ function newSession(seq, code){
     exitTargetPct:'0',
     exitTargetMode:'gross',
     exitTargetKind:'plan',
-    /* targetPct is kept for safe migration from v7 sessions. */
     targetPct:'0',
     orders:[], conversation:{state:'askBuyPrice', data:{}}
   };
@@ -687,7 +776,7 @@ async function loadAll(){
   await loadChat();
 }
 
-/* ---------------- financial engine (ledger + active exit math) ---------------- */
+/* ---------------- financial engine (unchanged) ---------------- */
 function calculateExitTarget(totalBuyCost, totalSellProceeds, remainingQty, targetPct, targetMode){
   const targetReturnTotal = D.mul(totalBuyCost, D.add('1', D.div(targetPct,'100',18)));
   const feeRate = D.div(String(settings.feePct||0),'100',18);
@@ -708,7 +797,6 @@ function calculateExitTarget(totalBuyCost, totalSellProceeds, remainingQty, targ
       ? D.div(neededEffectiveProceeds, keepAfterSellFee, 18)
       : neededEffectiveProceeds;
     sellTargetRaw = D.div(neededEffectiveProceeds, denominator, 18);
-    /* A sell target must never be rounded below the amount needed. */
     sellTarget = ceilPrice(sellTargetRaw);
   }
 
@@ -1255,7 +1343,7 @@ const STATES = {
   done: { say:'ধন্যবাদ! Dashboard থেকে যেকোনো সময় নতুন Buy বা Sell plan করতে পারেন।', end:true }
 };
 
-/* ---------------- parsers ---------------- */
+/* ---------------- parsers (unchanged) ---------------- */
 function parsePEPEPrice(v){
   v=String(v==null?'':v).trim().replace(/,/g,'');
   if(!/^\d*\.?\d+(e-?\d+)?$/i.test(v)) return null;
@@ -1309,11 +1397,6 @@ function replayChat(){
 function setInputEnabled(on, placeholder, quick){
   input.disabled=!on; sendBtn.disabled=!on;
   input.placeholder = placeholder||(on?'উত্তর লিখুন...':'অপেক্ষা করুন...');
-  /* ⚠️ IMPORTANT (v7.2 fix):
-     No auto-focus here. On mobile, calling input.focus() opens the soft
-     keyboard. We only want that when the USER taps the input themselves.
-     So we deliberately do NOT call focus() — the keyboard will open only
-     on the user's own tap on the input field. */
   quickBox.innerHTML='';
   if(quick&&quick.length){
     quick.forEach(q=>{
@@ -1482,7 +1565,7 @@ function startConversation(){
 /* ---------------- dashboard / orders render ---------------- */
 function renderAll(){
   renderDashboard(); renderOrders();
-el('sessionTag').textContent = 'Session #'+session.id;
+  el('sessionTag').textContent = 'Session #'+session.id;
 }
 
 function renderDashboard(){
@@ -1585,7 +1668,7 @@ function confirmDialog(title,msg,onOk){
   ok.onclick=()=>{ cleanup(); onOk(); }; cancel.onclick=cleanup;
 }
 
-/* ---------------- Partial-fill modal (ক) ---------------- */
+/* ---------------- Partial-fill modal ---------------- */
 let fillModalOrderId = null;
 function openFillModal(orderId){
   const o = session.orders.find(x=>x.id===orderId);
@@ -1784,9 +1867,6 @@ window.addEventListener('touchcancel', dragEnd);
 function openChat(){
   if(isOpen) return;
   isOpen=true; chatwin.classList.add('open'); fab.classList.add('hidden'); fab.classList.remove('has-msg');
-  /* ⚠️ IMPORTANT: Do NOT call input.focus() here.
-     Mobile browsers open the soft keyboard on programmatic focus().
-     The user must tap the input themselves to open the keyboard. */
 }
 function closeChat(){
   if(!isOpen) return;
@@ -1838,24 +1918,18 @@ fab.addEventListener('click', (e)=>{
     }
   }
 
-  // একটি pointerup event-ই ব্যবহার করুন। মোবাইলে touchend-এর পর synthetic
-  // click আসে; দুটো listener থাকলে একটি tap দুইবার গণনা হতো।
   chatwin.addEventListener('pointerup', (e)=>{
     if(!isOpen) return;
     registerTap(e);
   }, {passive:false});
 
-  // ⚠️ গুরুত্বপূর্ণ: মোবাইলে dblclick ব্লক করুন (এটাই মূল সমস্যা ছিল)
   chatwin.addEventListener('dblclick', (e)=>{
     e.preventDefault();
     e.stopPropagation();
-    // কিছুই করব না — শুধু ব্রাউজারের ডিফল্ট ডাবল-ট্যাপ ব্লক
   }, {passive:false});
 
-  // iOS Safari-এর জন্য: ডাবল-ট্যাপ জুম বন্ধ (ঐচ্ছিক কিন্তু উপকারী)
   chatwin.addEventListener('touchstart', (e)=>{
     if(e.touches.length > 1) return;
-    // শুধু চ্যাট বক্সের ভিতরে ডাবল-ট্যাপ জুম প্রতিরোধ
   }, {passive:true});
 })();
 
