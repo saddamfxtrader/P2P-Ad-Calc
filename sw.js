@@ -27,7 +27,7 @@ self.addEventListener('fetch', (e) => {
   const req = e.request;
   const url = new URL(req.url);
 
-  if (url.hostname.endsWith('binance.com')) {
+if (url.hostname.endsWith('mexc.com')) {
     e.respondWith(fetch(req).catch(() => new Response('', {status:503})));
     return;
   }
