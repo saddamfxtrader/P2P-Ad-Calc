@@ -574,7 +574,7 @@ function fmtP(x){
 }
 
 /* ---------------- MEXC live price ---------------- */
-const MEXC_PRICE = 'https://api.mexc.com/api/v3/ticker/price?symbol=PEPEUSDT';
+const MEXC_PRICE = 'https://proxy.cors.dev/https://api.mexc.com/api/v3/ticker/price?symbol=PEPEUSDT';
 const market = { price:null, ts:0, status:'init', failCount:0 };
 
 async function fetchLivePrice(){
