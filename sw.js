@@ -4,9 +4,9 @@
      - Do NOT cache Binance API (always network) so live prices stay fresh.
      - Fallback to cached index.html for navigation requests when offline.
 
-   Cache bumped to v4 to ship the v8.2 logical flow fix.
+   Cache bumped to v5 to ship the v8.3 logical cleanup.
 */
-const CACHE = 'pepe-shell-v4';
+const CACHE = 'pepe-shell-v5';
 const SHELL = ['./', './index.html', './sw.js'];
 
 self.addEventListener('install', (e) => {
@@ -27,13 +27,11 @@ self.addEventListener('fetch', (e) => {
   const req = e.request;
   const url = new URL(req.url);
 
-  // Always network for Binance API (live data must be fresh)
   if (url.hostname.endsWith('binance.com')) {
     e.respondWith(fetch(req).catch(() => new Response('', {status:503})));
     return;
   }
 
-  // For navigation requests: network first, fallback to cached shell
   if (req.mode === 'navigate') {
     e.respondWith(
       fetch(req).then(res => {
@@ -45,7 +43,6 @@ self.addEventListener('fetch', (e) => {
     return;
   }
 
-  // For other GETs: cache-first, then network
   if (req.method === 'GET' && url.origin === location.origin) {
     e.respondWith(
       caches.match(req).then(hit => hit || fetch(req).then(res => {
@@ -56,6 +53,4 @@ self.addEventListener('fetch', (e) => {
     );
     return;
   }
-
-  // Default: pass-through
 });
