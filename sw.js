@@ -1,13 +1,12 @@
 /* PEPE Smart Trader - Service Worker (offline-first app shell)
-   Place this file next to index.html.
    Strategy:
      - Cache same-origin static app shell (index.html, sw.js).
      - Do NOT cache Binance API (always network) so live prices stay fresh.
      - Fallback to cached index.html for navigation requests when offline.
 
-   Cache bumped to v3 to ship the Global Short Price Format update.
+   Cache bumped to v4 to ship the v8.2 logical flow fix.
 */
-const CACHE = 'pepe-shell-v3';
+const CACHE = 'pepe-shell-v4';
 const SHELL = ['./', './index.html', './sw.js'];
 
 self.addEventListener('install', (e) => {
