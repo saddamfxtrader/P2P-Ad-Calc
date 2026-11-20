@@ -414,20 +414,25 @@ body.kb-open .chatwin{
 
 <script>
 /* =====================================================================
-   PEPE Smart Trader — v8.2 (logical flow fix)
+   PEPE Smart Trader — v8.3 (final logical cleanup)
    ---------------------------------------------------------------------
-   Changes from v8.1:
-     - askSellQty.say: "বিক্রি করেছেন?" → "বিক্রি করতে চান?" (intent tense)
-     - askSellPrice.say + btnSell inline: "sell করেছেন" → "sell করতে চান"
-     - __suggested__ click now skips askSellQty and goes straight to
-       confirmSell with 100% default (d._fromSuggested flag).
-     - askSellPrice.quick now includes ✍ Custom price option.
-     - confirmSell.quick now includes ◐ Partial option (UI/validator parity).
-     - afterPending/afterSellPending now accept "pending" (stillPending).
-     - afterBuyFilled.next now checks sessionTargetHit() before "done".
-     - askSellQty hint clearer: "(100% = সম্পূর্ণ position)".
-     - goToState skips askSellQty when arriving with _fromSuggested.
-     - goToState('askSellQty') with empty _fromSuggested still works.
+   Changes from v8.2:
+     [FIX-1] askSellPrice.quick: removed dead-end "✍ Custom price" button.
+             Only "🎯 Suggested" remains; manual typing works as before.
+     [FIX-2] _fromSuggested flag no longer persisted into conversation.data.
+             It is consumed entirely inside askSellPrice.next():
+               - suggested → d.sellQtyPct='100'; d._sell100=true;
+                             return 'confirmSell'  (askSellQty skipped)
+               - manual    → return 'askSellQty'
+             goToState() no longer has any suggested special-case.
+     [FIX-3] stillPending in afterPending / afterSellPending:
+             does NOT re-enter the same state (which duplicated the
+             message). Instead it shows a toast and re-renders the
+             existing state's input/quick UI via resumeCurrentStateUI().
+     [FIX-4] afterBuyFilled.next & afterSellFilled.next:
+             "done" is checked FIRST, then sessionTargetHit().
+             This restores the user's explicit "done" intent.
+     [MINOR]  confirmSell placeholder made consistent with quick buttons.
    ===================================================================== */
 (function(){
 'use strict';
@@ -958,8 +963,7 @@ function sanitizeHTML(html){
 }
 
 /* =====================================================================
-   CONVERSATION STATES — v8.2 (intent-tense for planning, past-tense
-   only inside confirm* fill-check states)
+   CONVERSATION STATES — v8.3
    ===================================================================== */
 const STATES = {
   askBuyPrice: {
@@ -1079,7 +1083,8 @@ const STATES = {
       return {ok:false,msg:'"filled", "pending", "cancel", বা "filled <qty> <usdt>" দিন'};
     },
     next:(v,d)=>{
-      if(v.act==='stillPending') return 'afterPending';
+      /* FIX-3: stillPending → no state change, no duplicate message */
+      if(v.act==='stillPending'){ toast('⏳ এখনো pending — কোনো পরিবর্তন হয়নি'); return '__keep'; }
       const id = d.pendingOrderId || ([...session.orders].reverse().find(o=>o.status==='pending')||{}).id;
       if(id){
         if(v.act==='fillPartial') fillOrder(id, v.qty, v.usdt, true);
@@ -1114,7 +1119,8 @@ const STATES = {
       return {ok:false,msg:'"buy", "quick", "sell", বা "done" দিন'};
     },
     next:(v)=>{
-      /* v8.2: target hit হলে "done" বললেও sessionComplete-এ যাবে */
+      /* FIX-4: user's explicit "done" wins; target-hit is a fallback */
+      if(v==='done') return 'done';
       if(sessionTargetHit()) return 'sessionComplete';
       if(v==='buy'){
         if(session.orders.some(o=>o.status==='pending')) return 'afterPending';
@@ -1182,32 +1188,25 @@ const STATES = {
         `\nBinance-এ যেই price-এ sell করতে চান সেটি দিন।`;
     },
     placeholder:'Sell price (USDT)',
-    quick:()=>[
-      {label:'🎯 Suggested',value:'__suggested__'},
-      {label:'✍ Custom price',value:'__custom__'}
-    ],
+    /* FIX-1: only Suggested; typing manually still works */
+    quick:()=>[{label:'🎯 Suggested',value:'__suggested__'}],
     validate:(v)=>{
       let x;
       const suggested = (v==='__suggested__');
-      const custom    = (v==='__custom__');
       if(suggested){
         const p = computePosition();
         if(p.targetSecured) return {ok:false,msg:'Target secured — নিজে valid price দিন'};
         x = p.sellTarget;
         if(n(x)<=0) return {ok:false,msg:'Suggested target নেই — নিজে valid price দিন'};
-      } else if(custom){
-        return {ok:false,msg:'নিজের sell price টাইপ করুন (USDT)'};
       } else x = parsePEPEPrice(v);
       if(x===null || n(x)<=0) return {ok:false,msg:'সঠিক price দিন'};
       x = suggested ? ceilPrice(x) : roundPrice(x);
       if(n(x)<=0) return {ok:false,msg:'tick size-এ round করার পর price 0 হয়ে গেছে'};
-      return {ok:true,value:x, _fromSuggested:suggested};
+      return {ok:true,value:x, _suggested:suggested};
     },
-    next:(v,d)=>{
-      /* v8.2: suggested হলে intent স্পষ্ট — সরাসরি confirmSell (100% default) */
-      const wasSuggested = !!d._fromSuggested;
-      delete d._fromSuggested;
-      if(wasSuggested){
+    next:(v,d,result)=>{
+      /* FIX-2: _fromSuggested no longer persisted; resolved here. */
+      if(result && result._suggested){
         d.sellQtyPct = '100';
         d._sell100 = true;
         return 'confirmSell';
@@ -1293,7 +1292,8 @@ const STATES = {
       return {ok:false,msg:'"filled", "pending", "cancel", বা "filled <qty> <usdt>" দিন'};
     },
     next:(v,d)=>{
-      if(v.act==='stillPending') return 'afterSellPending';
+      /* FIX-3: stillPending → no state change, no duplicate message */
+      if(v.act==='stillPending'){ toast('⏳ এখনো pending — কোনো পরিবর্তন হয়নি'); return '__keep'; }
       const id = d.pendingOrderId || ([...session.orders].reverse().find(o=>o.status==='pending')||{}).id;
       if(id){
         if(v.act==='fillPartial') fillOrder(id, v.qty, v.usdt, true);
@@ -1337,6 +1337,8 @@ const STATES = {
       return {ok:false,msg:'"buy", "quick", "sell", বা "done" দিন'};
     },
     next:(v)=>{
+      /* FIX-4: user's explicit "done" wins; target-hit is a fallback */
+      if(v==='done') return 'done';
       if(sessionTargetHit()) return 'sessionComplete';
       if(v==='buy'){
         if(session.orders.some(o=>o.status==='pending')) return 'afterPending';
@@ -1420,7 +1422,21 @@ function setInputEnabled(on, placeholder, quick){
 }
 
 /* ---------------- state machine ---------------- */
+/* FIX-3 helper: re-render input/quick for the current state without
+   re-saying the prompt. Used for "still pending" to avoid duplicate
+   chat bubbles. */
+function resumeCurrentStateUI(){
+  const name = session.conversation && session.conversation.state;
+  const st = STATES[name];
+  if(!st){ setInputEnabled(false); return; }
+  const q = typeof st.quick==='function' ? st.quick(session.conversation.data) : st.quick;
+  setInputEnabled(true, st.placeholder, q);
+}
+
 function goToState(name){
+  /* FIX-3: '__keep' is a sentinel meaning "no state change" */
+  if(name === '__keep'){ resumeCurrentStateUI(); return; }
+
   const sellStates=['askSellPrice','askSellQty','confirmSell','afterSellPending'];
   if(sellStates.includes(name)){
     const p=computePosition();
@@ -1428,11 +1444,6 @@ function goToState(name){
       if(sessionTargetHit()) name='sessionComplete';
       else{ botSay('⚠️ কোনো PEPE নেই — Sell করা সম্ভব নয়। নতুন Buy করুন।'); name='afterBuyFilled'; }
     } else if(sessionTargetHit()) name='sessionComplete';
-  }
-  /* v8.2: suggested path — askSellQty skip, _sell100 flag carry through */
-  if(name==='askSellQty' && session.conversation && session.conversation.data && session.conversation.data._fromSuggested){
-    session.conversation.data.sellQtyPct='100';
-    name='confirmSell';
   }
   if(['askBuyPrice','askInvest','askTargetPct','confirmBuy'].includes(name)){
     if(session.orders.some(o=>o.status==='pending') && name!=='afterPending'){
@@ -1506,8 +1517,6 @@ function handleSubmit(){
     input.value='';
     userSay(raw);
     session.conversation.data[st.field]=result.value;
-    /* carry _fromSuggested flag from validator to data */
-    if(result._fromSuggested) session.conversation.data._fromSuggested=true;
     let next=st.next;
     if(typeof next==='function') next=next(result.value, session.conversation.data, result);
     if(!session.conversation.data) session.conversation.data={};
