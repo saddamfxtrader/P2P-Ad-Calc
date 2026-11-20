@@ -1866,13 +1866,37 @@ window.addEventListener('touchcancel', dragEnd);
 
 function openChat(){
   if(isOpen) return;
-  isOpen=true; chatwin.classList.add('open'); fab.classList.add('hidden'); fab.classList.remove('has-msg');
+  isOpen=true;
+  chatwin.classList.add('open');
+  fab.classList.add('hidden');
+  fab.classList.remove('has-msg');
+  /* Mobile Back button support: push a history entry so Back closes the chat */
+  try{
+    history.pushState({ pepeChatOpen: true }, '');
+  }catch(e){}
 }
-function closeChat(){
+
+function closeChat(programmatic){
   if(!isOpen) return;
-  isOpen=false; chatwin.classList.remove('open'); fab.classList.remove('hidden');
+  isOpen=false;
+  chatwin.classList.remove('open');
+  fab.classList.remove('hidden');
   try{ if(document.activeElement && chatwin.contains(document.activeElement)) document.activeElement.blur(); }catch(e){}
+  /* If we pushed a history entry when opening, consume it so the next
+     Back press doesn't reopen/close anything unexpected.
+     `programmatic` = true when called by FAB/badge/etc (not by popstate),
+     so we need to pop the history entry we added. When called from the
+     popstate handler, the entry is already gone. */
+  if(!programmatic){
+    try{
+      if(history.state && history.state.pepeChatOpen){
+        history.back();
+      }
+    }catch(e){}
+  }
 }
+
+  
 fab.addEventListener('click', (e)=>{
   if(Date.now()<suppressClickUntil){ e.preventDefault(); e.stopPropagation(); return; }
   if(isOpen) closeChat(); else openChat();
@@ -1943,6 +1967,12 @@ document.addEventListener('pointerdown', (e)=>{
 
 document.addEventListener('keydown',(e)=>{ if(e.key==='Escape'&&isOpen) closeChat(); });
 
+/* Mobile Back button: when the chat is open and the user presses Back,
+   the pushed history entry is popped; close the chat instead of navigating. */
+window.addEventListener('popstate', ()=>{
+  if(isOpen) closeChat(true);
+});
+  
 function onResizeOrViewportChange(){
   if(!fab.style.left) resetFabToDefault();
   else {
