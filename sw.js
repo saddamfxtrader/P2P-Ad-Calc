@@ -4,8 +4,10 @@
      - Cache same-origin static app shell (index.html, sw.js).
      - Do NOT cache Binance API (always network) so live prices stay fresh.
      - Fallback to cached index.html for navigation requests when offline.
+
+   Cache bumped to v3 to ship the Global Short Price Format update.
 */
-const CACHE = 'pepe-shell-v2';
+const CACHE = 'pepe-shell-v3';
 const SHELL = ['./', './index.html', './sw.js'];
 
 self.addEventListener('install', (e) => {
