@@ -205,6 +205,9 @@ body{background:linear-gradient(180deg,#080c17 0%,#0a0f1e 100%);color:var(--txt)
 }
 .chatwin .quick button:hover{background:#1a2c47;color:#fff}
 .chatwin .quick button:active{transform:scale(.96)}
+.chatwin .quick button.back{background:#1c1c2e;border-color:#2e2e48;color:#a5b4fc}
+.chatwin .quick button.warnbtn{background:#2a1f0a;border-color:#3a2e12;color:#fcd34d}
+.chatwin .quick button.dangerbtn{background:#1c0f0f;border-color:#3a1a1a;color:#fca5a5}
 .chatwin .dock-inner{display:flex;gap:7px;align-items:center}
 .chatwin .dock-inner input{
   flex:1;min-width:0;
@@ -239,17 +242,21 @@ body.kb-open .chatwin{
 
 .modal{position:fixed;inset:0;background:rgba(3,6,14,.82);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;padding:20px;z-index:600;opacity:0;pointer-events:none;transition:.25s}
 .modal.show{opacity:1;pointer-events:auto}
-.modal-box{background:var(--panel);border:1px solid #22304e;border-radius:20px;padding:22px 18px;max-width:420px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,.6);transform:scale(.92);transition:.25s}
+.modal-box{background:var(--panel);border:1px solid #22304e;border-radius:20px;padding:22px 18px;max-width:420px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,.6);transform:scale(.92);transition:.25s;max-height:calc(100dvh - 40px);overflow-y:auto}
 .modal.show .modal-box{transform:scale(1)}
 .modal-box h3{font-size:17px;margin-bottom:6px;color:#fff}
 .modal-box p{font-size:13px;color:var(--mut);line-height:1.5;margin-bottom:14px}
-.modal-box label{display:block;font-size:12px;color:#93b4e0;margin-bottom:4px}
-.modal-box input{width:100%;padding:11px;border-radius:11px;border:1px solid #26344f;background:#0d1626;color:#fff;font-size:16px;margin-bottom:12px}
-.modal-box .actions{display:flex;gap:8px}
+.modal-box label{display:block;font-size:12px;color:#93b4e0;margin-bottom:4px;margin-top:8px}
+.modal-box input{width:100%;padding:11px;border-radius:11px;border:1px solid #26344f;background:#0d1626;color:#fff;font-size:16px;margin-bottom:6px}
+.modal-box .hint{font-size:11px;color:#5c7299;margin-bottom:10px}
+.modal-box .actions{display:flex;gap:8px;margin-top:12px}
 .modal-box .actions button{flex:1;padding:11px;border-radius:12px;border:none;font-weight:700;font-size:13px;cursor:pointer}
 .modal-box .actions .cancel{background:#1a2438;color:#93b4e0}
+.modal-box .actions .back{background:#1c1c2e;color:#a5b4fc}
 .modal-box .actions .ok{background:linear-gradient(135deg,#2563eb,#0891b2);color:#fff}
-.modal-box .hint{font-size:11px;color:#5c7299;margin-top:-6px;margin-bottom:10px}
+.modal-box .actions .full{background:#14301f;color:#86efac;border:1px solid #1e4a2f}
+.modal-box .fill-summary{background:#0d1626;border:1px solid #182338;border-radius:11px;padding:10px 12px;font-size:12px;line-height:1.6;color:#c7d6ee;margin-bottom:10px}
+.modal-box .fill-summary b{color:#7dd3fc}
 
 @media(max-width:420px){
   .grid{grid-template-columns:1fr}
@@ -320,13 +327,13 @@ body.kb-open .chatwin{
       </div>
     </div>
     <div id="warnArea"></div>
-    
-<div class="row">
-  <button class="good" id="btnSell">💱S Record</button>
-  <button class="good" id="btnQuickExit">⚡Q Exit</button>
-  <button id="btnSettings">⚙ Settings</button>
-</div>
-    
+
+    <div class="row">
+      <button class="good" id="btnSell">💱 Record Sell</button>
+      <button class="good" id="btnQuickExit">⚡ Quick Exit</button>
+      <button id="btnSettings">⚙ Settings</button>
+    </div>
+
     <div class="row">
       <button class="danger" id="btnReset" style="flex:1">↺ Reset</button>
     </div>
@@ -394,36 +401,42 @@ body.kb-open .chatwin{
   </div>
 </div>
 
-<!-- Partial-fill / actual-fill modal -->
+<!-- Partial-fill / actual-fill modal (unified) -->
 <div class="modal" id="fillModal">
   <div class="modal-box">
     <h3 id="fmTitle">Fill Order</h3>
-    <p id="fmInfo" style="font-size:12px;color:#93b4e0"></p>
+    <div class="fill-summary" id="fmSummary"></div>
     <label>Actual filled PEPE quantity</label>
     <input id="fmQty" type="number" min="0" step="any" inputmode="decimal" placeholder="e.g. 6000000">
     <div class="hint" id="fmQtyHint"></div>
-    <label>Actual USDT (spent for buy / gross proceeds for sell)</label>
+    <label id="fmUsdtLabel">Actual USDT spent (buy)</label>
     <input id="fmUsdt" type="number" min="0" step="any" inputmode="decimal" placeholder="e.g. 60">
     <div class="hint" id="fmUsdtHint"></div>
     <div class="actions">
+      <button class="back" id="fmBack">◀ Back</button>
       <button class="cancel" id="fmCancel">বাতিল</button>
-      <button class="ok" id="fmSave">✅ Fill</button>
+      <button class="ok" id="fmSave">✅ Save Fill</button>
+    </div>
+    <div class="actions" style="margin-top:8px">
+      <button class="full" id="fmFull" style="flex:1">✅ Full Fill (remaining)</button>
     </div>
   </div>
 </div>
 
 <script>
 /* =====================================================================
-   PEPE Smart Trader — v8.4 (MEXC API migration)
+   PEPE Smart Trader — v9.0 (Partial Fill + Back Navigation rewrite)
    ---------------------------------------------------------------------
-   [MEXC-1] Data source switched from Binance to MEXC spot API:
-            https://api.mexc.com/api/v3/ticker/price?symbol=PEPEUSDT
-   [MEXC-2] formatShortPrice() default tickDecimals = 9 (MEXC PEPE
-            precision), fallback if tickSize unavailable.
-   [MEXC-3] Removed Binance exchangeInfo fetch; MEXC tickSize not
-            publicly exposed via simple endpoint, so we hardcode 9
-            for display precision consistency.
-   [MEXC-4] Service Worker whitelist updated (sw.js: mexc.com).
+   [v9-1] fillOrder() now ADDITIVE — cumulative filledQty/filledUsdt,
+          fills[] audit trail, no overwrite (fixes 40%→30%→30% data loss).
+   [v9-2] Unified Partial Fill modal reachable from chat & dashboard.
+   [v9-3] Back navigation on every editable state with data unwinding.
+   [v9-4] Rewritten quick-button sets — no text-command hacks.
+   [v9-5] formatShortPrice() → plain decimal, MEXC 9-decimal precision.
+   [v9-6] Sell confirm shows Gross / Est. Fee / Net / P/L impact.
+   [v9-7] Quick Exit shows computed net sell target inline.
+   Trading rules unchanged: MEXC Convert Limit only, manual fill,
+   no stop loss, no auto placement.
    ===================================================================== */
 (function(){
 'use strict';
@@ -498,7 +511,7 @@ function fmtQFull(x){
 function fmtPct(x){ const v=n(x); return (v>=0?'+':'')+v.toFixed(2)+'%'; }
 
 /* =====================================================================
-   GLOBAL SHORT PRICE FORMATTER  (MEXC precision)
+   SHORT PRICE FORMATTER — plain decimal, MEXC 9-decimal precision
    ===================================================================== */
 function formatShortPrice(input){
   if(input === null || input === undefined || input === '') return '—';
@@ -509,14 +522,12 @@ function formatShortPrice(input){
   if(s.startsWith('-')){ neg = true; s = s.slice(1); }
   else if(s.startsWith('+')){ s = s.slice(1); }
 
-  // Scientific notation → plain decimal
   if(/[eE]/.test(s)){
     const num = Number(s);
     if(!isFinite(num)) return '—';
     s = num.toLocaleString('en-US',{useGrouping:false,maximumFractionDigits:20});
     if(s.includes('.')) s = s.replace(/\.$/,'');
   }
-
   if(!/^\d*\.?\d*$/.test(s)) return '—';
 
   let intPart = '', fracPart = '';
@@ -526,52 +537,32 @@ function formatShortPrice(input){
     fracPart = parts[1] || '';
   } else {
     intPart = s || '0';
-    fracPart = '';
   }
-
   intPart = intPart.replace(/^0+(?=\d)/,'');
   if(intPart === '') intPart = '0';
 
-  // MEXC PEPE/USDT tick size = 0.000000001 (9 decimals)
   const MEXC_TICK_DECIMALS = 9;
   if(fracPart.length < MEXC_TICK_DECIMALS){
     fracPart = fracPart.padEnd(MEXC_TICK_DECIMALS, '0');
   }
-
-  const hasIntegerPart = intPart !== '0';
-
+  // trim to at most 9 significant tail digits after leading zeros
   let zeroRun = 0;
   for(let i = 0; i < fracPart.length; i++){
     if(fracPart[i] === '0') zeroRun++;
     else break;
   }
-
-  // Preserve trailing zeros to match MEXC display
-  let sig = fracPart.slice(zeroRun);
-
-  const zeroIndicator = zeroRun > 0 ? '0{' + zeroRun + '}' : '';
-
   let out;
-  if(hasIntegerPart){
-    out = intPart + (zeroRun > 0 ? '.0{' + zeroRun + '}' + sig : (fracPart ? '.' + fracPart : ''));
+  if(intPart !== '0'){
+    out = intPart + (fracPart ? '.' + fracPart : '');
+  } else if(fracPart === '' || /^0+$/.test(fracPart)){
+    out = '0';
   } else {
-    if(zeroRun > 0){
-      out = '0.' + zeroIndicator + sig;
-      if(sig === '' && zeroRun === 0) out = '0';
-    } else if(sig.length > 0){
-      out = '0.' + sig;
-    } else {
-      out = '0';
-    }
+    out = '0.' + fracPart;
   }
-
   if(neg && out !== '0') out = '-' + out;
   return out;
 }
-
-function fmtP(x){
-  return formatShortPrice(x);
-}
+function fmtP(x){ return formatShortPrice(x); }
 
 /* ---------------- MEXC live price ---------------- */
 const MEXC_PRICE = 'https://proxy.cors.dev/https://api.mexc.com/api/v3/ticker/price?symbol=PEPEUSDT';
@@ -585,7 +576,6 @@ async function fetchLivePrice(){
     clearTimeout(t);
     if(!res.ok) throw new Error('HTTP ' + res.status);
     const j = await res.json();
-    // MEXC spot ticker price response: { "symbol": "PEPEUSDT", "price": "0.000003459" }
     const p = j && (j.price || (Array.isArray(j) && j[0] && j[0].price));
     if(!p) throw new Error('no price');
     market.price = String(p);
@@ -627,7 +617,6 @@ function renderTicker(){
 }
 
 /* ---------------- rounding helpers (MEXC precision) ---------------- */
-// MEXC PEPE price precision 9 decimals
 function roundPrice(val){
   const v = n(val);
   if(!isFinite(v)) return String(val);
@@ -636,20 +625,17 @@ function roundPrice(val){
 function ceilPrice(val){
   const v = n(val);
   if(!isFinite(v)) return String(val);
-  // ceiling to 9 decimals
   const factor = 1e9;
   return (Math.ceil(v * factor) / factor).toFixed(9).replace(/0+$/,'').replace(/\.$/,'');
 }
-// Quantity flooring remains generic (MEXC PEPE qty precision not critical for this app)
 function floorQty(val){
   const v = n(val);
   if(!isFinite(v)) return String(val);
-  // floor to 8 decimals (safe default)
   const factor = 1e8;
   return (Math.floor(v * factor) / factor).toFixed(8).replace(/0+$/,'').replace(/\.$/,'');
 }
 
-/* ---------------- storage (unchanged) ---------------- */
+/* ---------------- storage ---------------- */
 const DB_NAME='pepeSmartTrader', DB_VER=1, STORE='kv';
 let dbReady=null;
 function openDB(){
@@ -692,7 +678,7 @@ const store = {
   }
 };
 
-/* ---------------- chat history (unchanged) ---------------- */
+/* ---------------- chat history ---------------- */
 let chatHistory = [];
 const CHAT_KEY = 'chatHistory';
 
@@ -700,7 +686,7 @@ async function persistChat(){ try{ await store.set(CHAT_KEY, chatHistory); }catc
 async function loadChat(){ const arr=await store.get(CHAT_KEY,[]); chatHistory=Array.isArray(arr)?arr:[]; }
 async function clearChat(){ chatHistory=[]; await store.del(CHAT_KEY); }
 
-/* ---------------- session model (unchanged) ---------------- */
+/* ---------------- session model ---------------- */
 let session = null;
 let settings = { maxInv:0, maxBuys:0, feePct:0 };
 let orderSeq = 1;
@@ -720,7 +706,7 @@ function newSession(seq, code){
     exitTargetMode:'gross',
     exitTargetKind:'plan',
     targetPct:'0',
-    orders:[], conversation:{state:'askBuyPrice', data:{}}
+    orders:[], conversation:{state:'askBuyPrice', data:{}, history:[]}
   };
 }
 function persist(){ return store.set('session', session).then(()=>store.set('settings', settings)); }
@@ -753,6 +739,26 @@ async function loadAll(){
   if(!session.exitTargetMode){ session.exitTargetMode='gross'; migrated=true; }
   if(!session.exitTargetKind){ session.exitTargetKind='plan'; migrated=true; }
   session.targetPct=String(session.planTargetPct||legacyTarget||'0');
+
+  // v9: ensure fills[] exists on every order, and cumulative totals are consistent
+  for(const o of session.orders){
+    if(!Array.isArray(o.fills)){
+      o.fills = [];
+      const fq = String(o.filledQty||'0'), fu = String(o.filledUsdt||'0');
+      if(n(fq)>0 || n(fu)>0){
+        o.fills.push({ id:'F'+Date.now()+Math.floor(Math.random()*1000), qty:fq, usdt:fu,
+          price: o.fillPrice || (n(fq)>0 ? D.div(fu,fq,18) : o.price), ts: o.ts||Date.now() });
+      }
+    }
+    // Recompute cumulative from fills (safety — additive truth)
+    if(o.fills.length>0 && (o.status==='filled'||o.status==='partial')){
+      let tq='0', tu='0';
+      for(const f of o.fills){ tq=D.add(tq, f.qty||'0'); tu=D.add(tu, f.usdt||'0'); }
+      o.filledQty=tq; o.filledUsdt=tu;
+      o.fillPrice = D.gt(tq,'0') ? D.div(tu,tq,18) : o.price;
+    }
+  }
+
   const st = await store.get('settings', null);
   if(st && typeof st==='object') settings = Object.assign({maxInv:0,maxBuys:0,feePct:0}, st);
   let maxId=0;
@@ -761,25 +767,26 @@ async function loadAll(){
     if(num>maxId) maxId=num;
   }
   orderSeq = maxId+1;
-  if(!session.conversation) session.conversation = {state:'askBuyPrice', data:{}};
+  if(!session.conversation) session.conversation = {state:'askBuyPrice', data:{}, history:[]};
+  if(!Array.isArray(session.conversation.history)) session.conversation.history = [];
 
   const sellStates=['askSellPrice','askSellQty','confirmSell','afterSellPending'];
   if(session.conversation && sellStates.includes(session.conversation.state)){
     const p = computePosition();
     if(!D.gt(p.remainingQty,'0') || sessionTargetHit()){
-      session.conversation = {state:'afterBuyFilled', data:{}};
+      session.conversation = {state:'afterBuyFilled', data:{}, history:[]};
     }
   }
   const pend = session.orders.find(o=>o.status==='pending');
   if(pend && !['afterPending','afterSellPending'].includes(session.conversation.state)){
-    session.conversation = { state: pend.side==='buy'?'afterPending':'afterSellPending', data:{ pendingOrderId: pend.id } };
+    session.conversation = { state: pend.side==='buy'?'afterPending':'afterSellPending', data:{ pendingOrderId: pend.id }, history:[] };
   }
 
   if(migrated) await persist();
   await loadChat();
 }
 
-/* ---------------- financial engine (unchanged) ---------------- */
+/* ---------------- financial engine (unchanged logic) ---------------- */
 function calculateExitTarget(totalBuyCost, totalSellProceeds, remainingQty, targetPct, targetMode){
   const targetReturnTotal = D.mul(totalBuyCost, D.add('1', D.div(targetPct,'100',18)));
   const feeRate = D.div(String(settings.feePct||0),'100',18);
@@ -911,19 +918,68 @@ function sellBlocked(){
 function nextOrderId(){ return 'O'+(orderSeq++); }
 function pushOrder(order){ session.orders.push(order); persist(); renderAll(); }
 
+/* =====================================================================
+   v9 — ADDITIVE fillOrder()
+   ---------------------------------------------------------------------
+   Each call appends a fill to o.fills[] and recomputes cumulative
+   filledQty / filledUsdt. Status auto-transitions:
+     pending → partial (cum < plan)
+     pending → filled  (cum >= plan)
+     partial → filled  (cum >= plan)
+   Never overwrites prior fills. Capped at plan qty.
+   ===================================================================== */
 function fillOrder(id, actualQty, actualUsdt, isFromChat){
   isFromChat = !!isFromChat;
   const o = session.orders.find(x=>x.id===id);
   if(!o || o.status==='filled' || o.status==='cancelled') return false;
-  const fq = actualQty ? String(actualQty) : o.qty;
-  const fu = actualUsdt ? String(actualUsdt) : o.usdt;
-  o.filledQty = fq;
-  o.filledUsdt = fu;
-  o.fillPrice = (n(fq)>0) ? D.div(fu, fq, 18) : o.price;
-  o.status = (n(fq) >= n(o.qty) - 1e-12) ? 'filled' : 'partial';
+  if(!Array.isArray(o.fills)) o.fills = [];
+
+  const planQty = String(o.qty||'0');
+  const planUsdt = String(o.usdt||'0');
+  const prevQty = String(o.filledQty||'0');
+  const prevUsdt = String(o.filledUsdt||'0');
+
+  // Remaining allowance
+  const remainQty = D.gt(planQty,prevQty) ? D.sub(planQty,prevQty) : '0';
+  const remainUsdt = D.gt(planUsdt,prevUsdt) ? D.sub(planUsdt,prevUsdt) : '0';
+
+  let addQty, addUsdt;
+  if(actualQty && n(actualQty)>0){
+    addQty = floorQty(actualQty);
+    // cap at remaining
+    if(D.gt(addQty, remainQty)) addQty = remainQty;
+    addUsdt = (actualUsdt!=null && actualUsdt!=='') ? String(actualUsdt) : '0';
+    if(n(addUsdt)<=0 && n(o.price)>0){
+      addUsdt = D.mul(addQty, o.price);
+    }
+    if(D.gt(addUsdt, remainUsdt) && D.gt(remainUsdt,'0')) addUsdt = remainUsdt;
+  } else {
+    // Full fill: use remaining
+    addQty = remainQty;
+    addUsdt = remainUsdt;
+    if(n(addUsdt)<=0 && n(o.price)>0) addUsdt = D.mul(addQty, o.price);
+  }
+
+  if(!D.gt(addQty,'0')){ toast('⚠️ এই fill-এ কোনো quantity যোগ হচ্ছে না'); return false; }
+
+  const fillPrice = D.gt(addQty,'0') ? D.div(addUsdt, addQty, 18) : o.price;
+  const fillId = 'F'+Date.now()+Math.floor(Math.random()*10000);
+  o.fills.push({ id:fillId, qty:addQty, usdt:addUsdt, price:fillPrice, ts:Date.now() });
+
+  // Recompute cumulative from fills (additive truth)
+  let tq='0', tu='0';
+  for(const f of o.fills){ tq=D.add(tq, f.qty||'0'); tu=D.add(tu, f.usdt||'0'); }
+  o.filledQty = tq;
+  o.filledUsdt = tu;
+  o.fillPrice = D.gt(tq,'0') ? D.div(tu,tq,18) : o.price;
+  o.status = D.gte(tq, planQty) ? 'filled' : 'partial';
+
   persist(); renderAll();
   if(!isFromChat) syncConversationAfterOrderAction(id, 'filled');
-  toast(o.status==='partial'?'✅ Partial fill recorded':'✅ Order filled');
+
+  const remainAfter = D.gt(planQty, o.filledQty) ? D.sub(planQty,o.filledQty) : '0';
+  if(o.status==='filled') toast('✅ Order filled সম্পূর্ণ');
+  else toast('◐ Partial recorded — বাকি '+fmtQFull(remainAfter)+' PEPE');
   return true;
 }
 function cancelOrder(id, isFromChat){
@@ -980,9 +1036,18 @@ function sanitizeHTML(html){
 }
 
 /* =====================================================================
-   CONVERSATION STATES — v8.4 (unchanged logic, MEXC backend)
+   CONVERSATION STATES — v9
+   Each editable state declares:
+     field     : data key to store
+     prev      : state name to return to on Back
+     say       : message
+     validate  : returns {ok, value}
+     next      : next state name (or fn)
+     quick     : quick buttons array (or fn returning array)
    ===================================================================== */
 const STATES = {
+
+  /* -------- BUY FLOW -------- */
   askBuyPrice: {
     field:'buyPrice',
     say:()=>{
@@ -999,8 +1064,10 @@ const STATES = {
     },
     next:'askInvest'
   },
+
   askInvest: {
     field:'invest',
+    prev:'askBuyPrice',
     say:(d)=>`Buy Limit: <b>${fmtP(d.buyPrice)}</b>\n\nএখন কত <b>USDT</b> invest করতে চান?`,
     placeholder:'USDT amount',
     validate:(v)=>{
@@ -1015,8 +1082,10 @@ const STATES = {
       return 'askTargetPct';
     }
   },
+
   askTargetPct: {
     field:'planTargetPct',
+    prev:'askInvest',
     say:(d)=>`Investment: <b>${fmtU(d.invest)} USDT</b>\n\nসম্পূর্ণ Active Session-এর জন্য আপনার মূল <b>Plan Target (gross)</b> কত % চান?\nপরে চাইলে সব filled buy মিলিয়ে <b>Quick Exit</b> target বদলাতে পারবেন।`,
     placeholder:'Plan target % (যেমন 5)',
     validate:(v)=>{
@@ -1027,14 +1096,16 @@ const STATES = {
     },
     next:'confirmBuy'
   },
+
   confirmBuy: {
     field:'_fill',
+    prev:'askInvest',   // goes back to invest (target usually set); if fresh, invest still best edit point
     say:(d)=>{
       const rawQty = D.div(d.invest, d.buyPrice, 18);
       const qty = floorQty(rawQty);
       const p = computePosition();
       const isExistingSession = n(getPlanTargetPct()) > 0;
-      const effectivePlanTarget = isExistingSession ? getPlanTargetPct() : String(d.planTargetPct);
+      const effectivePlanTarget = isExistingSession ? getPlanTargetPct() : String(d.planTargetPct||d.planTarget||0);
       const effectiveExitTarget = isExistingSession ? getActiveExitTargetPct() : effectivePlanTarget;
       const effectiveExitMode = isExistingSession ? getActiveExitMode() : 'gross';
       const newTotalCost = D.add(p.totalBuyCost, d.invest);
@@ -1042,7 +1113,7 @@ const STATES = {
       const newRemainingQty = D.sub(newTotalQty, p.totalSellQty);
       const exit = calculateExitTarget(newTotalCost, p.totalSellProceeds, newRemainingQty, effectiveExitTarget, effectiveExitMode);
 
-      return `📋 <b>Buy Plan</b>\n\n`+
+      return `📋 <b>Buy Plan — Confirm</b>\n\n`+
         `Buy Limit: <span class="hl">${fmtP(d.buyPrice)}</span>\n`+
         `Investment: <span class="hl">${fmtU(d.invest)} USDT</span>\n`+
         `Est. PEPE: <b>${fmtQ(qty)}</b>\n`+
@@ -1056,58 +1127,83 @@ const STATES = {
         `\nMEXC-এ Limit Buy set করুন। Fill হলে জানান।`;
     },
     placeholder:'filled / pending',
-    quick:[{label:'✅ Filled',value:'filled'},{label:'⏳ Pending',value:'pending'}],
+    quick:[
+      {label:'✅ Filled',value:'filled'},
+      {label:'⏳ Pending',value:'pending'},
+      {label:'◀ Back',value:'__back__',cls:'back'}
+    ],
     validate:(v)=>{
       const s=v.toLowerCase().trim();
       if(['filled','fill','done','হয়েছে','yes','y'].includes(s)) return {ok:true,value:'filled'};
       if(['pending','pend','অপেক্ষা','no','n'].includes(s)) return {ok:true,value:'pending'};
-      return {ok:false,msg:'"filled" অথবা "pending" দিন'};
+      if(s==='__back__') return {ok:true,value:'__back__'};
+      return {ok:false,msg:'"filled" অথবা "pending" দিন (অথবা ◀ Back)'};
     },
     next:(v,d)=>{
+      if(v==='__back__') return '__back__';
       const qty = floorQty(D.div(d.invest, d.buyPrice, 18));
       if(n(getPlanTargetPct()) <= 0){
-        session.planTargetPct = String(d.planTargetPct);
-        session.targetPct = session.planTargetPct;
-        setActiveExit(session.planTargetPct, 'gross', 'plan');
+        const pt = String(d.planTargetPct||d.planTarget||d.planTargetPct||'0');
+        if(n(pt)>0){
+          session.planTargetPct = pt;
+          session.targetPct = pt;
+          setActiveExit(pt, 'gross', 'plan');
+        }
       }
       const order = { id: nextOrderId(), side:'buy', type:'limit', price:d.buyPrice, usdt:d.invest, qty,
-        status: v==='filled'?'filled':'pending', filledUsdt: v==='filled'?d.invest:'0',
-        filledQty: v==='filled'?qty:'0', fillPrice: v==='filled'?d.buyPrice:null, ts:Date.now(), note:'' };
+        status: v==='filled'?'filled':'pending', filledUsdt:'0', filledQty:'0',
+        fillPrice:null, ts:Date.now(), note:'', fills:[] };
       pushOrder(order);
-      if(v==='pending') session.conversation.data.pendingOrderId = order.id;
+      if(v==='filled'){
+        fillOrder(order.id, qty, d.invest, true);
+      } else {
+        session.conversation.data.pendingOrderId = order.id;
+      }
       return v==='filled' ? 'afterBuyFilled' : 'afterPending';
     }
   },
+
+  /* -------- BUY PENDING -------- */
   afterPending: {
     field:'_go',
     say:(d)=>{
       const o = d.pendingOrderId ? session.orders.find(x=>x.id===d.pendingOrderId) : null;
-      const info = o ? `\n\nPending: <b>${o.id}</b> · BUY @ ${fmtP(o.price)}` : '';
-      return `⏳ Buy order pending.${info}\n\nFill হলে জানান (partial হলে actual qty/USDT লিখুন: <code>filled 5000000 100</code>) অথবা cancel করুন।\nএখনো pending থাকলে <code>pending</code> লিখুন।`;
+      const info = o ? `\n\nPending: <b>${o.id}</b> · BUY @ ${fmtP(o.price)}\nPlan: ${fmtU(o.usdt)} USDT · ${fmtQFull(o.qty)} PEPE` : '';
+      return `⏳ Buy order pending.${info}\n\nFill হলে জানান — Full Fill অথবা Partial Fill (modal থেকে)। Cancel করতে চাইলে ❌ Cancel Order।`;
     },
-    placeholder:'filled / pending / cancel / filled <qty> <usdt>',
-    quick:[{label:'✅ Filled',value:'filled'},{label:'◐ Partial…',value:'filled '},{label:'⏳ এখনো Pending',value:'pending'},{label:'❌ Cancel',value:'cancel'}],
+    placeholder:'filled / pending / cancel',
+    quick:[
+      {label:'✅ Full Fill',value:'fill'},
+      {label:'◐ Partial Fill',value:'__partial__'},
+      {label:'⏳ Still Pending',value:'pending'},
+      {label:'❌ Cancel Order',value:'cancel',cls:'dangerbtn'}
+    ],
     validate:(v)=>{
       const s=v.toLowerCase().trim();
-      if(['filled','fill','done'].includes(s)) return {ok:true,value:{act:'fill',qty:null,usdt:null}};
+      if(['filled','fill','done'].includes(s)) return {ok:true,value:{act:'fill'}};
       if(['pending','pend','এখনো','still'].includes(s)) return {ok:true,value:{act:'stillPending'}};
       if(['cancel','no'].includes(s)) return {ok:true,value:{act:'cancel'}};
-      const m = s.match(/^filled\s+([0-9.]+)\s+([0-9.]+)$/);
-      if(m) return {ok:true,value:{act:'fillPartial',qty:m[1],usdt:m[2]}};
-      return {ok:false,msg:'"filled", "pending", "cancel", বা "filled <qty> <usdt>" দিন'};
+      if(s==='__partial__') return {ok:true,value:{act:'partial'}};
+      return {ok:false,msg:'Quick button ব্যবহার করুন — Full Fill / Partial Fill / Still Pending / Cancel'};
     },
     next:(v,d)=>{
       if(v.act==='stillPending'){ toast('⏳ এখনো pending — কোনো পরিবর্তন হয়নি'); return '__keep'; }
+      if(v.act==='partial'){
+        const id = d.pendingOrderId || ([...session.orders].reverse().find(o=>o.status==='pending')||{}).id;
+        if(id) openFillModal(id);
+        return '__keep';
+      }
       const id = d.pendingOrderId || ([...session.orders].reverse().find(o=>o.status==='pending')||{}).id;
       if(id){
-        if(v.act==='fillPartial') fillOrder(id, v.qty, v.usdt, true);
-        else if(v.act==='fill') fillOrder(id, null, null, true);
+        if(v.act==='fill') fillOrder(id, null, null, true);
         else cancelOrder(id, true);
       }
       if(d.pendingOrderId) delete d.pendingOrderId;
       return v.act==='cancel' ? 'askBuyPrice' : 'afterBuyFilled';
     }
   },
+
+  /* -------- POSITION ACTIVE -------- */
   afterBuyFilled: {
     field:'_go',
     say:()=>{
@@ -1121,8 +1217,13 @@ const STATES = {
                          : `Sell Target: <span class="hl">${fmtP(p.sellTarget)}</span>\n`)+
         `\nপরবর্তী পদক্ষেপ?`;
     },
-    placeholder:'buy / sell / done',
-    quick:[{label:'📉 নতুন Buy',value:'buy'},{label:'⚡ Quick Exit',value:'quick'},{label:'💱 Sell',value:'sell'},{label:'✅ শেষ',value:'done'}],
+    placeholder:'buy / quick / sell / done',
+    quick:[
+      {label:'📉 New Buy',value:'buy'},
+      {label:'⚡ Quick Exit',value:'quick'},
+      {label:'💱 Sell',value:'sell'},
+      {label:'✅ Done',value:'done'}
+    ],
     validate:(v)=>{
       const s=v.toLowerCase();
       if(s.includes('buy')||s.includes('কেন')) return {ok:true,value:'buy'};
@@ -1143,52 +1244,87 @@ const STATES = {
       return 'done';
     }
   },
+
+  /* -------- QUICK EXIT PLANNER -------- */
   chooseExitPlan: {
     field:'exitChoice',
+    prev:'afterBuyFilled',
     say:()=>{
       const p=computePosition();
+      // preview computed net targets for a few choices
+      const previews = ['1','2','3','5'].map(pct=>{
+        const q = D.mul(p.remainingQty, '1');
+        const feeRate = D.div(String(settings.feePct||0),'100',18);
+        const targetReturn = D.mul(p.totalBuyCost, D.add('1', D.div(pct,'100',18)));
+        const histEff = p.exitTargetMode==='net'? D.mul(p.totalSellProceeds, D.sub('1',feeRate)) : p.totalSellProceeds;
+        const need = D.sub(targetReturn, histEff);
+        let price='—';
+        if(D.gt(need,'0') && D.gt(p.remainingQty,'0')){
+          const den = D.mul(p.remainingQty, D.sub('1',feeRate));
+          price = fmtP(ceilPrice(D.div(need, den, 18)));
+        } else price='secured ✅';
+        return `${pct}% net → <b>${price}</b>`;
+      }).join('\n');
       return `⚡ <b>Quick Exit Planner</b>\n\n`+
         `Total Cost: <b>${fmtU(p.totalBuyCost)} USDT</b>\n`+
         `Weighted Avg Buy: <b>${fmtP(p.avgBuy)}</b>\n`+
-        `Plan Target: <b>${p.planTargetPct}% Gross</b>\n`+
+        `Plan Target: <b>${p.planTargetPct}% Gross</b> (অপরিবর্তিত থাকবে)\n`+
         `Current Active Exit: <b>${activeExitLabel(p)}</b>\n`+
         `Estimated Sell Fee: <b>${settings.feePct||0}%</b>\n\n`+
-        `নতুন Active Exit বেছে নিন। Quick Exit সব filled buy ও আগের sell মিলিয়ে হিসাব হবে; Plan Target বদলাবে না।`;
+        `নতুন Net Exit বেছে নিলে যে Sell Price লাগবে:\n${previews}\n\n`+
+        `Quick Exit সব filled buy + আগের sell মিলিয়ে হিসাব করে।`;
     },
     placeholder:'quick1 / plan / custom',
     quick:[
-      {label:'⚡ 1% Net Quick Exit',value:'quick1'},
-      {label:'🎯 Plan Target রাখুন',value:'plan'},
-      {label:'✍ Custom Net %',value:'custom'}
+      {label:'⚡ 1% Net',value:'quick1'},
+      {label:'🎯 Plan Target',value:'plan'},
+      {label:'✍ Custom',value:'custom'},
+      {label:'◀ Back',value:'__back__',cls:'back'}
     ],
     validate:(v)=>{
       const s=v.toLowerCase().trim();
       if(['quick1','quick','1','1%'].includes(s)) return {ok:true,value:'quick1'};
-      if(['plan','target','5'].includes(s)) return {ok:true,value:'plan'};
+      if(['plan','target'].includes(s)) return {ok:true,value:'plan'};
       if(['custom','নিজে'].includes(s)) return {ok:true,value:'custom'};
-      return {ok:false,msg:'Quick Exit-এর জন্য "quick1", Plan-এর জন্য "plan", অথবা "custom" দিন'};
+      if(s==='__back__') return {ok:true,value:'__back__'};
+      return {ok:false,msg:'"quick1", "plan", "custom", অথবা ◀ Back'};
     },
     next:(v)=>{
+      if(v==='__back__') return '__back__';
       if(v==='custom') return 'askQuickExitPct';
       if(v==='quick1') setActiveExit('1','net','quick');
       else setActiveExit(getPlanTargetPct(),'gross','plan');
       return 'afterBuyFilled';
     }
   },
+
   askQuickExitPct: {
     field:'quickExitPct',
+    prev:'chooseExitPlan',
     say:()=>`কত % <b>Net Quick Exit</b> চান?\nEstimated sell fee (${settings.feePct||0}%) target price-এ অন্তর্ভুক্ত হবে।`,
     placeholder:'Net profit % (যেমন 1)',
+    quick:[
+      {label:'1%',value:'1'},{label:'2%',value:'2'},{label:'3%',value:'3'},{label:'5%',value:'5'},
+      {label:'◀ Back',value:'__back__',cls:'back'}
+    ],
     validate:(v)=>{
+      if(v==='__back__') return {ok:true,value:'__back__'};
       const x=parseUSDT(v);
       if(x===null || n(x)<=0) return {ok:false,msg:'0-এর বেশি % দিন'};
       if(n(x)>1000) return {ok:false,msg:'অবাস্তব মনে হচ্ছে'};
       return {ok:true,value:x};
     },
-    next:(v)=>{ setActiveExit(v,'net','quick'); return 'afterBuyFilled'; }
+    next:(v)=>{
+      if(v==='__back__') return '__back__';
+      setActiveExit(v,'net','quick');
+      return 'afterBuyFilled';
+    }
   },
+
+  /* -------- SELL FLOW -------- */
   askSellPrice: {
     field:'sellPrice',
+    prev:'afterBuyFilled',
     say:()=>{
       const p = computePosition();
       return `💱 <b>Sell / Record Sell</b>\n\n`+
@@ -1200,8 +1336,12 @@ const STATES = {
         `\nMEXC-এ যেই price-এ sell করতে চান সেটি দিন।`;
     },
     placeholder:'Sell price (USDT)',
-    quick:()=>[{label:'🎯 Suggested',value:'__suggested__'}],
+    quick:()=>[
+      {label:'🎯 Suggested',value:'__suggested__'},
+      {label:'◀ Back',value:'__back__',cls:'back'}
+    ],
     validate:(v)=>{
+      if(v==='__back__') return {ok:true,value:'__back__'};
       let x;
       const suggested = (v==='__suggested__');
       if(suggested){
@@ -1216,6 +1356,7 @@ const STATES = {
       return {ok:true,value:x, _suggested:suggested};
     },
     next:(v,d,result)=>{
+      if(v==='__back__') return '__back__';
       if(result && result._suggested){
         d.sellQtyPct = '100';
         d._sell100 = true;
@@ -1224,103 +1365,136 @@ const STATES = {
       return 'askSellQty';
     }
   },
+
   askSellQty: {
     field:'sellQtyPct',
+    prev:'askSellPrice',
     say:(d)=>`Sell Price: <b>${fmtP(d.sellPrice)}</b>\n\nকত % PEPE বিক্রি করতে চান? (100% = সম্পূর্ণ position)`,
     placeholder:'0-100',
-    quick:[{label:'100%',value:'100'},{label:'75%',value:'75'},{label:'50%',value:'50'},{label:'25%',value:'25'}],
+    quick:[
+      {label:'100%',value:'100'},{label:'75%',value:'75'},
+      {label:'50%',value:'50'},{label:'25%',value:'25'},
+      {label:'◀ Back',value:'__back__',cls:'back'}
+    ],
     validate:(v)=>{
+      if(v==='__back__') return {ok:true,value:'__back__'};
       const x=parseUSDT(v);
       if(x===null || n(x)<=0 || n(x)>100) return {ok:false,msg:'0-100 এর মধ্যে দিন'};
       return {ok:true,value:x};
     },
     next:'confirmSell'
   },
+
   confirmSell: {
     field:'_fill',
+    prev:'askSellQty',
     say:(d)=>{
       const p = computePosition();
       const rawQty = D.mul(p.remainingQty, D.div(d.sellQtyPct,'100',18));
       const qty = floorQty(rawQty);
       const gross = D.mul(qty, d.sellPrice);
-      return `📋 <b>Sell Record</b>\n\n`+
+      const feeRate = D.div(String(settings.feePct||0),'100',18);
+      const feeEst = D.mul(gross, feeRate);
+      const net = D.sub(gross, feeEst);
+      const avgBuy = p.avgBuy;
+      const costOfSold = D.mul(qty, avgBuy);
+      const plGross = D.sub(gross, costOfSold);
+      const plNet = D.sub(net, costOfSold);
+      return `📋 <b>Sell Record — Confirm</b>\n\n`+
         `Price: <span class="hl">${fmtP(d.sellPrice)}</span>\n`+
         `Qty: ${fmtQ(qty)} PEPE (${d.sellQtyPct}%${d._sell100?' · suggested default':''})\n`+
-        `Est. Gross Proceeds: <b>${fmtU(gross)} USDT</b> (before fees)\n\n`+
+        `Gross Proceeds: <b>${fmtU(gross)} USDT</b>\n`+
+        `Est. Sell Fee (${settings.feePct||0}%): ${fmtU(feeEst)} USDT\n`+
+        `Est. Net Proceeds: <b>${fmtU(net)} USDT</b>\n\n`+
+        `P/L on this sell (est.):\n`+
+        `Gross: <span class="${n(plGross)>=0?'pos':'neg'}">${fmtU(plGross)} USDT</span>\n`+
+        `Net: <span class="${n(plNet)>=0?'pos':'neg'}">${fmtU(plNet)} USDT</span>\n\n`+
         `MEXC-এ এই Sell সম্পন্ন হয়েছে?`;
     },
-    placeholder:'filled / pending / partial <qty> <usdt>',
+    placeholder:'filled / pending / partial',
     quick:[
       {label:'✅ Filled',value:'filled'},
-      {label:'◐ Partial…',value:'partial '},
-      {label:'⏳ Pending',value:'pending'}
+      {label:'◐ Partial Fill',value:'__partial__'},
+      {label:'⏳ Pending',value:'pending'},
+      {label:'◀ Back',value:'__back__',cls:'back'}
     ],
     validate:(v)=>{
       const s=v.toLowerCase().trim();
       if(['filled','fill','done','হয়েছে'].includes(s)) return {ok:true,value:{act:'fill'}};
       if(['pending','pend'].includes(s)) return {ok:true,value:{act:'pending'}};
-      if(['partial','আংশিক'].includes(s)) return {ok:false,msg:'partial এর সাথে qty ও usdt দিন: partial <qty> <usdt>'};
-      const m = s.match(/^(?:partial|filled)\s+([0-9.]+)\s+([0-9.]+)$/);
-      if(m) return {ok:true,value:{act:'partial',qty:m[1],usdt:m[2]}};
-      return {ok:false,msg:'"filled", "pending", বা "partial <qty> <usdt>" দিন'};
+      if(s==='__partial__') return {ok:true,value:{act:'partial'}};
+      if(s==='__back__') return {ok:true,value:{act:'back'}};
+      return {ok:false,msg:'Quick button ব্যবহার করুন'};
     },
     next:(v,d)=>{
+      if(v.act==='back') return '__back__';
       const p = computePosition();
-      let qty, usdt;
-      if(v.act==='partial'){ qty=floorQty(v.qty); usdt=String(v.usdt); }
-      else {
-        qty = floorQty(D.mul(p.remainingQty, D.div(d.sellQtyPct,'100',18)));
-        usdt = D.mul(qty, d.sellPrice);
-      }
+      const qty = floorQty(D.mul(p.remainingQty, D.div(d.sellQtyPct,'100',18)));
+      const usdt = D.mul(qty, d.sellPrice);
       const status = v.act==='fill' ? 'filled' : v.act==='pending' ? 'pending' : 'partial';
       const order = { id: nextOrderId(), side:'sell', type:'limit', price:d.sellPrice, usdt, qty,
-        status, filledUsdt: status!=='pending'?usdt:'0',
-        filledQty: status!=='pending'?qty:'0',
-        fillPrice: status!=='pending'?d.sellPrice:null, ts:Date.now(), note:'' };
+        status, filledUsdt:'0', filledQty:'0', fillPrice:null, ts:Date.now(), note:'', fills:[] };
       pushOrder(order);
-      if(status==='pending') session.conversation.data.pendingOrderId = order.id;
+      if(v.act==='partial'){
+        if(d._sell100) delete d._sell100;
+        openFillModal(order.id);
+        return '__keep';
+      }
+      if(status==='filled'){
+        fillOrder(order.id, qty, usdt, true);
+      } else {
+        session.conversation.data.pendingOrderId = order.id;
+      }
       if(d._sell100) delete d._sell100;
       return status==='pending' ? 'afterSellPending' : 'afterSellFilled';
     }
   },
+
   afterSellPending: {
     field:'_go',
     say:(d)=>{
       const o = d.pendingOrderId ? session.orders.find(x=>x.id===d.pendingOrderId) : null;
-      const info = o ? `\n\nPending: <b>${o.id}</b> · SELL @ ${fmtP(o.price)}` : '';
-      return `⏳ Sell pending.${info}\n\nFill হলে জানান (partial হলে: <code>filled <qty> <usdt></code>) অথবা cancel করুন।\nএখনো pending থাকলে <code>pending</code> লিখুন।`;
+      const info = o ? `\n\nPending: <b>${o.id}</b> · SELL @ ${fmtP(o.price)}\nPlan: ${fmtQFull(o.qty)} PEPE · ${fmtU(o.usdt)} USDT` : '';
+      return `⏳ Sell pending.${info}\n\nFill হলে জানান — Full Fill অথবা Partial Fill (modal থেকে)। Cancel করতে চাইলে ❌ Cancel Order।`;
     },
-    placeholder:'filled / pending / cancel / filled <qty> <usdt>',
-    quick:[{label:'✅ Filled',value:'filled'},{label:'◐ Partial…',value:'filled '},{label:'⏳ এখনো Pending',value:'pending'},{label:'❌ Cancel',value:'cancel'}],
+    placeholder:'filled / pending / cancel',
+    quick:[
+      {label:'✅ Full Fill',value:'fill'},
+      {label:'◐ Partial Fill',value:'__partial__'},
+      {label:'⏳ Still Pending',value:'pending'},
+      {label:'❌ Cancel Order',value:'cancel',cls:'dangerbtn'}
+    ],
     validate:(v)=>{
       const s=v.toLowerCase().trim();
       if(['filled','fill','done'].includes(s)) return {ok:true,value:{act:'fill'}};
       if(['pending','pend','এখনো','still'].includes(s)) return {ok:true,value:{act:'stillPending'}};
       if(['cancel','no'].includes(s)) return {ok:true,value:{act:'cancel'}};
-      const m = s.match(/^filled\s+([0-9.]+)\s+([0-9.]+)$/);
-      if(m) return {ok:true,value:{act:'fillPartial',qty:m[1],usdt:m[2]}};
-      return {ok:false,msg:'"filled", "pending", "cancel", বা "filled <qty> <usdt>" দিন'};
+      if(s==='__partial__') return {ok:true,value:{act:'partial'}};
+      return {ok:false,msg:'Quick button ব্যবহার করুন'};
     },
     next:(v,d)=>{
       if(v.act==='stillPending'){ toast('⏳ এখনো pending — কোনো পরিবর্তন হয়নি'); return '__keep'; }
+      if(v.act==='partial'){
+        const id = d.pendingOrderId || ([...session.orders].reverse().find(o=>o.status==='pending')||{}).id;
+        if(id) openFillModal(id);
+        return '__keep';
+      }
       const id = d.pendingOrderId || ([...session.orders].reverse().find(o=>o.status==='pending')||{}).id;
       if(id){
-        if(v.act==='fillPartial') fillOrder(id, v.qty, v.usdt, true);
-        else if(v.act==='fill') fillOrder(id, null, null, true);
+        if(v.act==='fill') fillOrder(id, null, null, true);
         else cancelOrder(id, true);
       }
       if(d.pendingOrderId) delete d.pendingOrderId;
       return v.act==='cancel' ? 'afterBuyFilled' : 'afterSellFilled';
     }
   },
+
   afterSellFilled: {
     field:'_go',
     say:()=>{
       const p = computePosition();
       const done = sessionTargetHit();
-      if(done){
-        return completionMessage(p);
-      }
+      if(done){ return completionMessage(p); }
       const activeReturn = p.exitTargetMode==='net' ? p.sessionReturnNetPct : p.sessionReturnPct;
       const warn = !D.gt(p.remainingQty,'0') && n(activeReturn)<n(p.targetPct)
         ? `\n\n⚠️ সব PEPE বিক্রি হয়েছে কিন্তু Target পূরণ হয়নি — Loss Recovery Mode.` : '';
@@ -1335,8 +1509,13 @@ const STATES = {
                         :`Next Sell Target: <span class="hl">${fmtP(p.sellTarget)}</span>`)+warn+
         `\n\nপরবর্তী পদক্ষেপ?`;
     },
-    placeholder:'buy / sell / done',
-    quick:[{label:'📉 Buy',value:'buy'},{label:'⚡ Quick Exit',value:'quick'},{label:'💱 আরও Sell',value:'sell'},{label:'✅ শেষ',value:'done'}],
+    placeholder:'buy / quick / sell / done',
+    quick:[
+      {label:'📉 Buy',value:'buy'},
+      {label:'⚡ Quick Exit',value:'quick'},
+      {label:'💱 Sell More',value:'sell'},
+      {label:'✅ Done',value:'done'}
+    ],
     validate:(v)=>{
       const s=v.toLowerCase();
       if(s.includes('buy')||s.includes('কেন')) return {ok:true,value:'buy'};
@@ -1357,6 +1536,7 @@ const STATES = {
       return 'done';
     }
   },
+
   sessionComplete: {
     say:()=>completionMessage(computePosition()),
     end:true,
@@ -1387,7 +1567,7 @@ function parseUSDT(v){
   return v;
 }
 
-/* ---------------- chat rendering (unchanged) ---------------- */
+/* ---------------- chat rendering ---------------- */
 let userScrolledUp=false;
 const SCROLL_THRESHOLD=60;
 function isNearBottom(){ return (chatBox.scrollHeight-chatBox.scrollTop-chatBox.clientHeight)<SCROLL_THRESHOLD; }
@@ -1415,7 +1595,7 @@ function replayChat(){
   requestAnimationFrame(()=>{ chatBox.scrollTop=chatBox.scrollHeight; });
 }
 
-/* ---------------- input controls (unchanged) ---------------- */
+/* ---------------- input controls ---------------- */
 function setInputEnabled(on, placeholder, quick){
   input.disabled=!on; sendBtn.disabled=!on;
   input.placeholder = placeholder||(on?'উত্তর লিখুন...':'অপেক্ষা করুন...');
@@ -1423,10 +1603,41 @@ function setInputEnabled(on, placeholder, quick){
   if(quick&&quick.length){
     quick.forEach(q=>{
       const b=document.createElement('button'); b.type='button'; b.textContent=q.label;
+      if(q.cls) b.className=q.cls;
       b.onclick=()=>{ if(input.disabled||submitLock) return; input.value=q.value; handleSubmit(); };
       quickBox.appendChild(b);
     });
   }
+}
+
+/* =====================================================================
+   v9 — Back navigation with data unwinding
+   ===================================================================== */
+function goBack(){
+  const conv = session.conversation;
+  const cur = conv.state;
+  const st = STATES[cur];
+  if(!st || !st.prev){ toast('⚠️ এখান থেকে Back সম্ভব নয়'); return; }
+  // If we're inside a pending state, Back must NOT touch the order
+  if(['afterPending','afterSellPending'].includes(cur)){
+    // clear pendingOrderId so we don't accidentally point to it later
+    // but do NOT cancel the order
+    botSay('ℹ️ Back করলেও pending order সক্রিয় থাকবে। Cancel করতে চাইলে ❌ Cancel Order ব্যবহার করুন।');
+    return;
+  }
+  const prevState = st.prev;
+  const fieldToClear = st.field;
+  if(fieldToClear && fieldToClear!=='_go' && fieldToClear!=='_fill'){
+    delete conv.data[fieldToClear];
+  }
+  if(cur==='confirmBuy'){
+    // drop pending _fill marker if any
+    delete conv.data._fill;
+  }
+  if(cur==='confirmSell'){
+    delete conv.data._fill;
+  }
+  goToState(prevState, {fromBack:true});
 }
 
 /* ---------------- state machine ---------------- */
@@ -1438,8 +1649,10 @@ function resumeCurrentStateUI(){
   setInputEnabled(true, st.placeholder, q);
 }
 
-function goToState(name){
+function goToState(name, opts){
+  opts = opts||{};
   if(name === '__keep'){ resumeCurrentStateUI(); return; }
+  if(name === '__back__'){ goBack(); return; }
 
   const sellStates=['askSellPrice','askSellQty','confirmSell','afterSellPending'];
   if(sellStates.includes(name)){
@@ -1452,7 +1665,7 @@ function goToState(name){
   if(['askBuyPrice','askInvest','askTargetPct','confirmBuy'].includes(name)){
     if(session.orders.some(o=>o.status==='pending') && name!=='afterPending'){
       const pend = session.orders.find(o=>o.status==='pending');
-      session.conversation = { state: pend.side==='buy'?'afterPending':'afterSellPending', data:{ pendingOrderId: pend.id } };
+      session.conversation = { state: pend.side==='buy'?'afterPending':'afterSellPending', data:{ pendingOrderId: pend.id }, history:[] };
       persist();
       const st = STATES[session.conversation.state];
       setTimeout(()=>{ botSay('⚠️ একটি pending order আছে — আগে সেটি Fill/Cancel করুন।'); setInputEnabled(true, st.placeholder, st.quick); },120);
@@ -1462,7 +1675,7 @@ function goToState(name){
 
   if(!name || name==='done'){
     const st=STATES.done;
-    session.conversation={state:'done',data:{}}; persist();
+    session.conversation={state:'done',data:{},history:[]}; persist();
     setTimeout(()=>{ botSay(st.say); setInputEnabled(false); },120);
     return;
   }
@@ -1482,6 +1695,10 @@ function goToState(name){
     botSay(say);
     if(st.end){ setInputEnabled(false); return; }
     const q = typeof st.quick==='function'?st.quick(session.conversation.data):st.quick;
+    // Pre-fill input with previous value if Back-restored
+    if(opts.fromBack && st.field && session.conversation.data[st.field]!=null){
+      input.value = String(session.conversation.data[st.field]);
+    }
     setInputEnabled(true, st.placeholder, q);
   },120);
 }
@@ -1495,6 +1712,9 @@ function handleSubmit(){
   const stateName=session.conversation.state;
 
   if(stateName==='sessionComplete'){ input.value=''; return; }
+
+  // Special: Back token
+  if(raw==='__back__'){ input.value=''; userSay('◀ Back'); goBack(); return; }
 
   if(['askSellPrice','askSellQty','confirmSell','afterSellPending'].includes(stateName)){
     const p=computePosition();
@@ -1548,13 +1768,13 @@ function startConversation(){
   const {kind,p}=getTradeState();
 
   if(kind==='targetHit'){
-    session.conversation={state:'sessionComplete',data:{}}; persist();
+    session.conversation={state:'sessionComplete',data:{},history:[]}; persist();
     botSay(completionMessage(p));
     setInputEnabled(false,'Session সম্পন্ন — Reset করুন',null);
     return;
   }
   if(kind==='zeroNoTarget'){
-    session.conversation={state:'afterBuyFilled',data:{}}; persist();
+    session.conversation={state:'afterBuyFilled',data:{},history:[]}; persist();
     botSay(`👋 Welcome back! Session #${session.id} (${session.code||''}) active.\n\n`+
       `Total Cost: <b>${fmtU(p.totalBuyCost)} USDT</b>\n`+
       `PEPE: <b>0</b>\n`+
@@ -1563,13 +1783,13 @@ function startConversation(){
       `Active Exit: ${activeExitLabel(p)} · Plan: ${p.planTargetPct}% Gross\n\n`+
       `⚠️ সব PEPE বিক্রি হয়েছে কিন্তু Target পূরণ হয়নি।\n`+
       `নতুন Buy দিয়ে Recovery শুরু করুন।`);
-    setInputEnabled(true,'buy / done',[{label:'📉 নতুন Buy',value:'buy'},{label:'✅ শেষ',value:'done'}]);
+    setInputEnabled(true,'buy / done',[{label:'📉 New Buy',value:'buy'},{label:'✅ Done',value:'done'}]);
     return;
   }
   if(kind==='pending'){
     const pend = session.orders.find(o=>o.status==='pending');
     const stateName = pend && pend.side==='sell' ? 'afterSellPending' : 'afterPending';
-    session.conversation={state:stateName,data:{ pendingOrderId: pend?pend.id:null }}; persist();
+    session.conversation={state:stateName,data:{ pendingOrderId: pend?pend.id:null },history:[]}; persist();
     const st=STATES[stateName];
     const say = typeof st.say==='function'?st.say(session.conversation.data):st.say;
     botSay(say);
@@ -1577,7 +1797,7 @@ function startConversation(){
     return;
   }
   if(kind==='inPosition'){
-    session.conversation={state:'afterBuyFilled',data:{}}; persist();
+    session.conversation={state:'afterBuyFilled',data:{},history:[]}; persist();
     botSay(`👋 Welcome back! Session #${session.id} (${session.code||''}) active.\n\n`+
       `Cost: <b>${fmtU(p.totalBuyCost)} USDT</b>\n`+
       `PEPE: <b>${fmtQ(p.remainingQty)}</b>\n`+
@@ -1590,7 +1810,7 @@ function startConversation(){
     setInputEnabled(true, st.placeholder, st.quick);
     return;
   }
-  session.conversation={state:'askBuyPrice',data:{}};
+  session.conversation={state:'askBuyPrice',data:{},history:[]};
   goToState('askBuyPrice'); persist();
 }
 
@@ -1651,7 +1871,6 @@ function renderDashboard(){
     const cnt=session.orders.filter(o=>o.side==='buy'&&(o.status==='filled'||o.status==='partial')).length;
     if(cnt>=settings.maxBuys) html+='<div class="warn">⚠️ Max Buy Orders সীমায় পৌঁছেছেন ('+settings.maxBuys+')।</div>';
   }
-
   wa.innerHTML=html;
 }
 
@@ -1672,18 +1891,24 @@ function renderOrders(){
     } else if(o.status==='partial'){
       actions = `<button data-fill="${o.id}" style="font-size:10px;padding:4px 8px;border-radius:8px;border:1px solid #14301f;background:#0c1c13;color:#86efac;cursor:pointer">Add fill…</button>`;
     }
-    const filledRow=(o.status==='filled'||o.status==='partial')
-      ?`<div class="t">Filled: ${fmtU(o.filledUsdt)} USDT · ${fmtQFull(o.filledQty)} PEPE @ ${fmtP(o.fillPrice)}</div>`:'';
+    const fills = Array.isArray(o.fills)?o.fills:[];
+    const fillsHtml = fills.length>1
+      ? `<div class="t">${fills.length} fills — ${fmtU(o.filledUsdt)} USDT · ${fmtQFull(o.filledQty)} PEPE @ avg ${fmtP(o.fillPrice)}</div>`
+      : (o.status==='filled'||o.status==='partial'
+        ?`<div class="t">Filled: ${fmtU(o.filledUsdt)} USDT · ${fmtQFull(o.filledQty)} PEPE @ ${fmtP(o.fillPrice)}</div>`
+        :'');
     d.innerHTML=`<div style="flex:1;min-width:0">
       <div><b>${side}</b> @ ${fmtP(o.price)} <span class="badge ${badgeCls}">${st}</span></div>
       <div class="t">Plan: ${fmtU(o.usdt)} USDT · ${fmtQFull(o.qty)} PEPE</div>
-      ${filledRow}
+      ${fillsHtml}
     </div>
     <div style="display:flex;flex-direction:column;gap:4px;align-items:flex-end;flex-shrink:0">${actions}</div>`;
     box.appendChild(d);
   });
   box.querySelectorAll('[data-fill]').forEach(b=>{ b.onclick=()=>openFillModal(b.getAttribute('data-fill')); });
-  box.querySelectorAll('[data-cancel]').forEach(b=>{ b.onclick=()=>cancelOrder(b.getAttribute('data-cancel')); });
+  box.querySelectorAll('[data-cancel]').forEach(b=>{ b.onclick=()=>{
+    confirmDialog('Order cancel করবেন?','Pending order টি cancel হয়ে যাবে। এটি আর fill হবে না।',()=>cancelOrder(b.getAttribute('data-cancel')));
+  }; });
 }
 
 /* ---------------- toast / confirm ---------------- */
@@ -1700,40 +1925,66 @@ function confirmDialog(title,msg,onOk){
   ok.onclick=()=>{ cleanup(); onOk(); }; cancel.onclick=cleanup;
 }
 
-/* ---------------- Partial-fill modal ---------------- */
+/* =====================================================================
+   v9 — Unified Fill Modal (Partial or Full)
+   ===================================================================== */
 let fillModalOrderId = null;
 function openFillModal(orderId){
   const o = session.orders.find(x=>x.id===orderId);
   if(!o){ return; }
+  if(o.status==='filled'||o.status==='cancelled'){ toast('⚠️ এই order আর editable নয়'); return; }
+
   fillModalOrderId = orderId;
-  el('fmTitle').textContent = (o.status==='partial'?'Add fill — ':'Fill — ')+o.id;
-  el('fmInfo').innerHTML = `${o.side==='buy'?'🟢 BUY':'🔴 SELL'} @ ${fmtP(o.price)}\nPlan: ${fmtU(o.usdt)} USDT · ${fmtQFull(o.qty)} PEPE`
-    + (o.status==='partial'?`\nAlready filled: ${fmtU(o.filledUsdt)} USDT · ${fmtQFull(o.filledQty)} PEPE`:'');
-  let planQtyLeft, planUsdtLeft;
-  if(o.status==='partial'){
-    planQtyLeft = D.sub(o.qty||'0', o.filledQty||'0');
-    planUsdtLeft = D.sub(o.usdt||'0', o.filledUsdt||'0');
-  } else {
-    planQtyLeft = o.qty||'0';
-    planUsdtLeft = o.usdt||'0';
-  }
-  el('fmQty').value = planQtyLeft;
-  el('fmUsdt').value = planUsdtLeft;
-  el('fmQtyHint').textContent = 'Plan baki: '+fmtQFull(planQtyLeft)+' PEPE';
-  el('fmUsdtHint').textContent = (o.side==='sell'?'Gross proceeds before the estimated sell fee. ':'Plan baki: ')+fmtU(planUsdtLeft)+' USDT';
+  const isPartial = o.status==='partial';
+  el('fmTitle').textContent = (isPartial?'◐ Partial Fill — ':'◐ Partial Fill — ')+o.id;
+
+  const planQty = String(o.qty||'0');
+  const planUsdt = String(o.usdt||'0');
+  const filledQty = String(o.filledQty||'0');
+  const filledUsdt = String(o.filledUsdt||'0');
+  const remainQty = D.gt(planQty,filledQty) ? D.sub(planQty,filledQty) : '0';
+  const remainUsdt = D.gt(planUsdt,filledUsdt) ? D.sub(planUsdt,filledUsdt) : '0';
+  const fills = Array.isArray(o.fills)?o.fills:[];
+
+  el('fmSummary').innerHTML =
+    `${o.side==='buy'?'🟢 BUY':'🔴 SELL'} @ <b>${fmtP(o.price)}</b>\n`+
+    `Plan: <b>${fmtQFull(planQty)}</b> PEPE · <b>${fmtU(planUsdt)}</b> USDT\n`+
+    (isPartial
+      ? `Already filled: <b>${fmtQFull(filledQty)}</b> PEPE · <b>${fmtU(filledUsdt)}</b> USDT (${fills.length} fill${fills.length>1?'s':''})\n`
+      : '')+
+    `Remaining: <b>${fmtQFull(remainQty)}</b> PEPE · <b>${fmtU(remainUsdt)}</b> USDT`;
+
+  el('fmQty').value = remainQty;
+  el('fmUsdt').value = remainUsdt;
+  el('fmQtyHint').textContent = 'এই fill-এ কত PEPE যোগ হবে (remaining-এর বেশি হলে cap হবে)';
+  el('fmUsdtLabel').textContent = o.side==='sell' ? 'Actual USDT received (gross proceeds, before fee)' : 'Actual USDT spent (buy)';
+  el('fmUsdtHint').textContent = o.side==='sell'
+    ? 'Gross proceeds — estimated sell fee পরে কাটা হবে হিসাবে।'
+    : 'Plan remaining: '+fmtU(remainUsdt)+' USDT';
+
   el('fillModal').classList.add('show');
 }
-el('fmCancel').addEventListener('click', ()=>{ el('fillModal').classList.remove('show'); fillModalOrderId=null; });
+
+function closeFillModal(){ el('fillModal').classList.remove('show'); fillModalOrderId=null; }
+el('fmCancel').addEventListener('click', closeFillModal);
+el('fmBack').addEventListener('click', closeFillModal);
+
 el('fmSave').addEventListener('click', ()=>{
-  if(!fillModalOrderId) { el('fillModal').classList.remove('show'); return; }
+  if(!fillModalOrderId){ closeFillModal(); return; }
   const q = String(el('fmQty').value||'').trim();
   const u = String(el('fmUsdt').value||'').trim();
   if(parseUSDT(q)===null || n(q)<=0){ toast('⚠️ সঠিক filled quantity দিন'); return; }
   if(parseUSDT(u)===null || n(u)<0){ toast('⚠️ সঠিক USDT দিন'); return; }
   const id = fillModalOrderId;
-  fillModalOrderId = null;
-  el('fillModal').classList.remove('show');
-  fillOrder(id, q, u);
+  const ok = fillOrder(id, q, u);
+  if(ok) closeFillModal();
+});
+
+el('fmFull').addEventListener('click', ()=>{
+  if(!fillModalOrderId){ closeFillModal(); return; }
+  const id = fillModalOrderId;
+  const ok = fillOrder(id, null, null);
+  if(ok) closeFillModal();
 });
 
 /* ---------------- wire send ---------------- */
@@ -1751,7 +2002,7 @@ el('btnQuickExit').addEventListener('click', ()=>{
   if(tState.kind==='targetHit'){
     openChat(); userScrolledUp=false;
     botSay(completionMessage(p));
-    session.conversation={state:'sessionComplete',data:{}}; persist();
+    session.conversation={state:'sessionComplete',data:{},history:[]}; persist();
     setInputEnabled(false,'Session সম্পন্ন — Reset করুন',null);
     return;
   }
@@ -1760,7 +2011,7 @@ el('btnQuickExit').addEventListener('click', ()=>{
     return;
   }
   openChat(); userScrolledUp=false;
-  session.conversation={state:'chooseExitPlan',data:{}};
+  session.conversation={state:'chooseExitPlan',data:{},history:[]};
   goToState('chooseExitPlan');
 });
 
@@ -1773,7 +2024,7 @@ el('btnSell').addEventListener('click', ()=>{
     openChat();
     const pend = session.orders.find(o=>o.status==='pending');
     const stateName = pend.side==='sell' ? 'afterSellPending' : 'afterPending';
-    session.conversation = { state:stateName, data:{ pendingOrderId: pend.id } };
+    session.conversation = { state:stateName, data:{ pendingOrderId: pend.id }, history:[] };
     persist();
     const st=STATES[stateName];
     const say = typeof st.say==='function'?st.say(session.conversation.data):st.say;
@@ -1784,7 +2035,7 @@ el('btnSell').addEventListener('click', ()=>{
   if(tState.kind==='targetHit'){
     openChat(); userScrolledUp=false;
     botSay(completionMessage(p));
-    session.conversation={state:'sessionComplete',data:{}}; persist();
+    session.conversation={state:'sessionComplete',data:{},history:[]}; persist();
     setInputEnabled(false,'Session সম্পন্ন — Reset করুন',null);
     return;
   }
@@ -1792,8 +2043,8 @@ el('btnSell').addEventListener('click', ()=>{
     toast('⚠️ কোনো PEPE নেই — Sell করা সম্ভব নয়');
     openChat(); userScrolledUp=false;
     botSay(`⚠️ বর্তমানে কোনো PEPE নেই।\n\nTotal Cost: ${fmtU(p.totalBuyCost)} USDT\nRealized Gross: ${fmtU(p.realizedGross)} USDT (${fmtPct(p.sessionReturnPct)})\nActive Exit: ${activeExitLabel(p)} · Plan: ${p.planTargetPct}% Gross\n\nনতুন Sell করতে হলে প্রথমে Buy করুন।`);
-    session.conversation={state:'afterBuyFilled',data:{}}; persist();
-    setInputEnabled(true,'buy / done',[{label:'📉 নতুন Buy',value:'buy'},{label:'✅ শেষ',value:'done'}]);
+    session.conversation={state:'afterBuyFilled',data:{},history:[]}; persist();
+    setInputEnabled(true,'buy / done',[{label:'📉 New Buy',value:'buy'},{label:'✅ Done',value:'done'}]);
     return;
   }
   openChat(); userScrolledUp=false;
@@ -1803,7 +2054,7 @@ el('btnSell').addEventListener('click', ()=>{
                     :`Suggested Sell Target: <span class="hl">${fmtP(p.sellTarget)} USDT</span>`) +
     `\nActive Exit: ${activeExitLabel(p)} · Plan: ${p.planTargetPct}% Gross · Est. Sell Fee: ${settings.feePct||0}%\n\n`+
     `MEXC-এ যেই price-এ sell করতে চান সেটি দিন।`);
-  session.conversation={state:'askSellPrice',data:{}}; persist();
+  session.conversation={state:'askSellPrice',data:{},history:[]}; persist();
   goToState('askSellPrice');
 });
 
@@ -1811,7 +2062,7 @@ el('btnReset').addEventListener('click', ()=>{
   confirmDialog('সব ডেটা রিসেট করবেন?',
     'বর্তমান Session-এর সব order, holdings, P/L, target এবং সম্পূর্ণ চ্যাট হিস্ট্রি মুছে যাবে এবং নতুন করে Session শুরু হবে। এটি আর ফিরিয়ে আনা যাবে না।',
     async ()=>{
-if(document.activeElement === input) input.blur();
+      if(document.activeElement === input) input.blur();
       await store.del('session'); await clearChat();
       session = newSession(1);
       orderSeq = 1;
@@ -1902,11 +2153,8 @@ function openChat(){
   chatwin.classList.add('open');
   fab.classList.add('hidden');
   fab.classList.remove('has-msg');
-  try{
-    history.pushState({ pepeChatOpen: true }, '');
-  }catch(e){}
+  try{ history.pushState({ pepeChatOpen: true }, ''); }catch(e){}
 }
-
 function closeChat(programmatic){
   if(!isOpen) return;
   isOpen=false;
@@ -1914,11 +2162,7 @@ function closeChat(programmatic){
   fab.classList.remove('hidden');
   try{ if(document.activeElement && chatwin.contains(document.activeElement)) document.activeElement.blur(); }catch(e){}
   if(!programmatic){
-    try{
-      if(history.state && history.state.pepeChatOpen){
-        history.back();
-      }
-    }catch(e){}
+    try{ if(history.state && history.state.pepeChatOpen) history.back(); }catch(e){}
   }
 }
 
@@ -1932,52 +2176,27 @@ fab.addEventListener('click', (e)=>{
   let tapCount = 0;
   let firstTapTime = 0;
   let resetTimer = null;
-
   function resetCounter(){
-    tapCount = 0;
-    firstTapTime = 0;
+    tapCount = 0; firstTapTime = 0;
     if(resetTimer){ clearTimeout(resetTimer); resetTimer = null; }
   }
-
   function registerTap(ev){
     const t = ev.target;
     const blockSel = 'input, button, a, textarea, select';
     if(t.closest && t.closest(blockSel)) return;
-
     const now = Date.now();
-
     if(tapCount === 0 || now - firstTapTime > TRIPLE_MS){
-      resetCounter();
-      tapCount = 1;
-      firstTapTime = now;
-    } else {
-      tapCount++;
-    }
-
+      resetCounter(); tapCount = 1; firstTapTime = now;
+    } else tapCount++;
     if(resetTimer) clearTimeout(resetTimer);
     resetTimer = setTimeout(resetCounter, TRIPLE_MS);
-
     if(tapCount >= 3){
-      resetCounter();
-      ev.preventDefault();
-      ev.stopPropagation();
-      closeChat();
+      resetCounter(); ev.preventDefault(); ev.stopPropagation(); closeChat();
     }
   }
-
-  chatwin.addEventListener('pointerup', (e)=>{
-    if(!isOpen) return;
-    registerTap(e);
-  }, {passive:false});
-
-  chatwin.addEventListener('dblclick', (e)=>{
-    e.preventDefault();
-    e.stopPropagation();
-  }, {passive:false});
-
-  chatwin.addEventListener('touchstart', (e)=>{
-    if(e.touches.length > 1) return;
-  }, {passive:true});
+  chatwin.addEventListener('pointerup', (e)=>{ if(!isOpen) return; registerTap(e); }, {passive:false});
+  chatwin.addEventListener('dblclick', (e)=>{ e.preventDefault(); e.stopPropagation(); }, {passive:false});
+  chatwin.addEventListener('touchstart', (e)=>{ if(e.touches.length > 1) return; }, {passive:true});
 })();
 
 document.addEventListener('pointerdown', (e)=>{
@@ -1989,11 +2208,8 @@ document.addEventListener('pointerdown', (e)=>{
 },{passive:true});
 
 document.addEventListener('keydown',(e)=>{ if(e.key==='Escape'&&isOpen) closeChat(); });
+window.addEventListener('popstate', ()=>{ if(isOpen) closeChat(true); });
 
-window.addEventListener('popstate', ()=>{
-  if(isOpen) closeChat(true);
-});
-  
 function onResizeOrViewportChange(){
   if(!fab.style.left) resetFabToDefault();
   else {
@@ -2065,7 +2281,7 @@ window.addEventListener('orientationchange', ()=>setTimeout(onResizeOrViewportCh
   });
 })();
 
-/* Translate killer (scoped, minimal) */
+/* Translate killer */
 (function killTranslate(){
   const kill=()=>{
     document.querySelectorAll('.goog-te-banner-frame,.skiptranslate>iframe,iframe.goog-te-banner-frame,#goog-gt-tt,.goog-te-balloon-frame').forEach(e=>e.remove());
