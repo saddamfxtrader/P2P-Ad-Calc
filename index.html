@@ -1120,18 +1120,19 @@ const STATES = {
     next:(v,d)=>{
       if(v.act==='stillPending'){ toast('⏳ এখনো pending — কোনো পরিবর্তন হয়নি'); return '__keep'; }
       const id=d.pendingOrderId||([...session.orders].reverse().find(o=>o.status==='pending')||{}).id;
+     
+      
+      
+      
       if(id){
-        if(v.act==='fillPartial') fillOrder(id,v.qty,v.usdt,true);
-        else if(v.
-
-
-
-
-
-                        if(v.act==='fillPartial') fillOrder(id, v.qty, v.usdt, true);
+        if(v.act==='fillPartial') fillOrder(id, v.qty, v.usdt, true);
         else if(v.act==='fill') fillOrder(id, null, null, true);
         else cancelOrder(id, true);
       }
+
+
+
+      
       if(d.pendingOrderId) delete d.pendingOrderId;
       return v.act==='cancel' ? 'askBuyPrice' : 'afterBuyFilled';
     }
@@ -1983,7 +1984,7 @@ function confirmDialog(title,msg,onOk){
    ═══════════════════════════════════════════════════════════════ */
 let fillCtx = null;
 const FILL_PERCENTS = [100,75,50,25,'custom'];
-let fillSelectedPct = 100;
+let fillSelectedP = 100;
 
 function openFillModal(orderId){
   const o = session.orders.find(x=>x.id===orderId);
@@ -2035,7 +2036,6 @@ function renderFillQuickBtns(){
   });
 }
 
-/* Apply % of remaining to qty+usdt fields */
 function applyFillPercent(pct){
   if(!fillCtx) return;
   const ratio = D.div(String(pct),'100',18);
@@ -2046,7 +2046,6 @@ function applyFillPercent(pct){
   updateFillPreview();
 }
 
-/* Preview "after this fill" */
 function updateFillPreview(){
   if(!fillCtx) return;
   const o = fillCtx.order;
@@ -2080,7 +2079,6 @@ function updateFillPreview(){
   el('fmPreview').innerHTML = line1 + '<br>' + line2;
 }
 
-/* Live auto-calc on input — qty ⇄ usdt */
 el('fmQty').addEventListener('input', ()=>{
   if(!fillCtx) return;
   const q = el('fmQty').value.trim();
@@ -2116,9 +2114,7 @@ el('fmSave').addEventListener('click', ()=>{
   fillOrder(id, q, u);
 });
 
-/* ═══════════════════════════════════════════════════════════════
-   HISTORY MODAL + EXPORT
-   ═══════════════════════════════════════════════════════════════ */
+/* ═══ History modal + export ═══ */
 function openHistoryModal(){
   const p = computePosition();
   let html = `<div class="hist-summary">
@@ -2204,7 +2200,7 @@ el('histClose').addEventListener('click', ()=>el('historyModal').classList.remov
 el('histExport').addEventListener('click', exportSessionJSON);
 el('btnHistory').addEventListener('click', openHistoryModal);
 
-/* ── Settings modal wiring ── */
+/* ═══ Settings modal wiring ═══ */
 el('setCancel').addEventListener('click', ()=>el('settingsModal').classList.remove('show'));
 el('setExport').addEventListener('click', exportSessionJSON);
 el('setSave').addEventListener('click', async ()=>{
@@ -2220,7 +2216,7 @@ el('setSave').addEventListener('click', async ()=>{
   toast('✅ Settings সেভ হয়েছে');
 });
 
-/* ── Send wiring ── */
+/* ═══ Send wiring ═══ */
 sendBtn.addEventListener('click', handleSubmit);
 input.addEventListener('keydown', e=>{
   if(e.key==='Enter' && !e.isComposing && !e.shiftKey){
@@ -2228,7 +2224,7 @@ input.addEventListener('keydown', e=>{
   }
 });
 
-/* ── Step restart button ── */
+/* ═══ Step restart ═══ */
 el('stepRestart').addEventListener('click', ()=>{
   const st = STATES[session.conversation.state];
   if(!st || st.end || session.conversation.state==='sessionComplete'){
@@ -2236,7 +2232,6 @@ el('stepRestart').addEventListener('click', ()=>{
     return;
   }
   if(submitLock) return;
-  // Clear current field's draft value and re-show the step
   const curField = st.field;
   if(curField && curField!=='_fill' && curField!=='_go' && session.conversation.data[curField]!==undefined){
     delete session.conversation.data[curField];
@@ -2246,9 +2241,7 @@ el('stepRestart').addEventListener('click', ()=>{
   toast('🔄 ধাপটি আবার শুরু হয়েছে');
 });
 
-/* ═══════════════════════════════════════════════════════════════
-   FLOATING WIDGET / FAB
-   ═══════════════════════════════════════════════════════════════ */
+/* ═══ FAB / floating widget ═══ */
 const fab=el('fab'), chatwin=el('chatwin');
 let isOpen=false, dragState=null, suppressClickUntil=0;
 
@@ -2337,7 +2330,6 @@ fab.addEventListener('click', (e)=>{
   if(isOpen) closeChat(); else openChat();
 });
 
-/* Triple-tap on chat to close */
 (function(){
   const TRIPLE_MS=600;
   let tapCount=0, firstTapTime=0, resetTimer=null;
@@ -2379,7 +2371,6 @@ function onResizeOrViewportChange(){
 window.addEventListener('resize', onResizeOrViewportChange);
 window.addEventListener('orientationchange', ()=>setTimeout(onResizeOrViewportChange,120));
 
-/* Keyboard handling */
 (function keyboardHandler(){
   const vv=window.visualViewport; if(!vv) return;
   let kbOpen=false;
@@ -2400,7 +2391,6 @@ window.addEventListener('orientationchange', ()=>setTimeout(onResizeOrViewportCh
   });
 })();
 
-/* ── PWA manifest (SVG → PNG data URI) ── */
 (function buildPWA(){
   const svg=`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
     <rect width="512" height="512" rx="96" fill="#0a0f1e"/>
@@ -2440,7 +2430,6 @@ window.addEventListener('orientationchange', ()=>setTimeout(onResizeOrViewportCh
   })();
 })();
 
-/* ── Service worker registration ── */
 (function sw(){
   if(!('serviceWorker' in navigator)) return;
   if(location.protocol!=='http:' && location.protocol!=='https:') return;
@@ -2449,7 +2438,6 @@ window.addEventListener('orientationchange', ()=>setTimeout(onResizeOrViewportCh
   });
 })();
 
-/* ── Translate killer ── */
 (function killTranslate(){
   const kill=()=>{
     document.querySelectorAll('.goog-te-banner-frame,.skiptranslate>iframe,iframe.goog-te-banner-frame,#goog-gt-tt,.goog-te-balloon-frame').forEach(e=>e.remove());
@@ -2459,7 +2447,6 @@ window.addEventListener('orientationchange', ()=>setTimeout(onResizeOrViewportCh
   kill(); setTimeout(kill,500); setTimeout(kill,1500);
 })();
 
-/* ── Boot ── */
 (async function boot(){
   await loadAll();
   renderDashboardButtons();
