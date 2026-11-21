@@ -1,12 +1,12 @@
 /* PEPE Smart Trader - Service Worker (offline-first app shell)
    Strategy:
      - Cache same-origin static app shell (index.html, sw.js).
-     - Do NOT cache Binance API (always network) so live prices stay fresh.
+     - Do NOT cache MEXC API (always network) so live prices stay fresh.
      - Fallback to cached index.html for navigation requests when offline.
 
-   Cache bumped to v5 to ship the v8.3 logical cleanup.
+   Cache bumped to v6 to ship v9.0 (Partial Fill + Back navigation rewrite).
 */
-const CACHE = 'pepe-shell-v5';
+const CACHE = 'pepe-shell-v6';
 const SHELL = ['./', './index.html', './sw.js'];
 
 self.addEventListener('install', (e) => {
@@ -27,7 +27,7 @@ self.addEventListener('fetch', (e) => {
   const req = e.request;
   const url = new URL(req.url);
 
-if (url.hostname.endsWith('mexc.com')) {
+  if (url.hostname.endsWith('mexc.com')) {
     e.respondWith(fetch(req).catch(() => new Response('', {status:503})));
     return;
   }
