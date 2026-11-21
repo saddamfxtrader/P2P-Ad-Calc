@@ -1,10 +1,10 @@
-/* PEPE Smart Trader - Service Worker (offline-first app shell)
+/* PEPE Smart Trader v9.0 — Service Worker
    Strategy:
-     - Cache same-origin static app shell (index.html, sw.js).
-     - Do NOT cache MEXC API (always network) so live prices stay fresh.
-     - Fallback to cached index.html for navigation requests when offline.
+     - Cache same-origin app shell (index.html, sw.js).
+     - Do NOT cache MEXC API (always live fetch).
+     - Navigation fallback → cached index.html.
 
-   Cache bumped to v6 to ship v9.0 (Partial Fill + Back navigation rewrite).
+   Cache bumped to v6 for v9.0 release.
 */
 const CACHE = 'pepe-shell-v6';
 const SHELL = ['./', './index.html', './sw.js'];
@@ -27,11 +27,13 @@ self.addEventListener('fetch', (e) => {
   const req = e.request;
   const url = new URL(req.url);
 
-  if (url.hostname.endsWith('mexc.com')) {
+  // MEXC API — always network, never cache
+  if (url.hostname.endsWith('mexc.com') || url.hostname.endsWith('cors.dev')) {
     e.respondWith(fetch(req).catch(() => new Response('', {status:503})));
     return;
   }
 
+  // Navigation → network-first, fallback to cached index.html
   if (req.mode === 'navigate') {
     e.respondWith(
       fetch(req).then(res => {
@@ -43,6 +45,7 @@ self.addEventListener('fetch', (e) => {
     return;
   }
 
+  // Same-origin GET → cache-first, fallback network
   if (req.method === 'GET' && url.origin === location.origin) {
     e.respondWith(
       caches.match(req).then(hit => hit || fetch(req).then(res => {
